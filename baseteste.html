@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portaria Control</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
+        .tab-active { background-color: white; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .tab-inactive { color: #64748b; }
+        .animate-fade-in { animation: fadeIn 0.15s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .input-field { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background-color: #f8fafc; font-weight: 600; font-size: 13px; outline: none; transition: all 0.2s; }
+        .input-field:focus { border-color: #2563eb; ring: 2px; ring-color: #2563eb; background-color: #fff; }
+        .photo-preview { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 2px solid #2563eb; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .modal-overlay { background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+        @media print {
+            header, #area-registro, #area-acoes, .no-print, .btn-acao, input, .filters-container { display: none !important; }
+            body { background: white; padding: 0; }
+            .card-unidade { border: 1px solid #eee !important; break-inside: avoid; margin-bottom: 10px; border-radius: 8px !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 pb-10">
+
+    <div id="modal-edit" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-fade-in">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-black text-slate-800 uppercase text-sm">Correção de Dados</h3>
+                <button onclick="closeEditModal()" class="text-slate-400 p-2"><i data-lucide="x"></i></button>
+            </div>
+            <div class="space-y-4 pt-2">
+                <input type="hidden" id="edit-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Unidade</label>
+                        <input id="edit-unidade" type="text" class="input-field uppercase">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Morador</label>
+                        <input id="edit-morador" type="text" class="input-field">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Descrição</label>
+                    <input id="edit-descricao" type="text" class="input-field">
+                </div>
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button onclick="closeEditModal()" class="flex-1 py-3 bg-slate-100 text-slate-500 font-black rounded-xl text-xs uppercase">Cancelar</button>
+                <button onclick="saveEdit()" class="flex-1 py-3 bg-blue-600 text-white font-black rounded-xl text-xs uppercase shadow-lg shadow-blue-100">Salvar Dados</button>
+            </div>
+        </div>
+    </div>
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 no-print">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                </div>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">Portaria Control</h1>
+            </div>
+            <div class="flex bg-slate-100 p-1 rounded-xl">
+                <button id="tab-p" onclick="switchTab('pendentes')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-active uppercase transition-all">Portaria</button>
+                <button id="tab-h" onclick="switchTab('entregues')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all">Histórico</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        
+        <div class="grid grid-cols-2 gap-4 no-print">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+                <p class="text-[10px] font-bold uppercase text-slate-400 mb-1">Aguardando Saída</p>
+                <div class="flex items-end justify-center gap-2">
+                    <span id="count-p" class="text-3xl font-black text-blue-600">0</span>
+                    <span class="text-[10px] text-slate-400 mb-1 font-bold">VOLS</span>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+                <p class="text-[10px] font-bold uppercase text-slate-400 mb-1">Entregas Hoje</p>
+                <div class="flex items-end justify-center gap-2">
+                    <span id="count-e" class="text-3xl font-black text-emerald-600">0</span>
+                    <span class="text-[10px] text-slate-400 mb-1 font-bold">UNIDS</span>
+                </div>
+            </div>
+        </div>
+
+        <section id="area-registro" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm no-print">
+            <h2 class="text-[10px] font-black mb-4 flex items-center gap-2 text-slate-400 uppercase tracking-widest">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-blue-600"></i> Registro e Envio WhatsApp
+            </h2>
+            <form id="form-main" onsubmit="handleRegistrar(event)" class="space-y-6">
+                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
+                    <div id="photo-container" class="hidden">
+                        <img id="preview-img" src="" class="photo-preview">
+                    </div>
+                    <div class="flex-1">
+                        <label for="input-foto" class="flex flex-col items-center justify-center cursor-pointer py-3 px-4 bg-blue-50 border border-blue-200 text-blue-600 rounded-xl font-bold text-xs uppercase hover:bg-blue-100 transition-all">
+                            <i data-lucide="camera" class="w-6 h-6 mb-1"></i>
+                            <span>Tirar Foto da Etiqueta</span>
+                            <input type="file" id="input-foto" accept="image/*" capture="environment" class="hidden" onchange="processarFoto(this)">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Unidade (Ex: 111J)</label>
+                        <input id="input-unidade" type="text" placeholder="Apto" oninput="validarInput(this)" class="input-field uppercase">
+                        <p id="feedback-val" class="text-[9px] mt-1 ml-1 font-bold text-slate-400">Pendente</p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Nome do Morador</label>
+                        <input id="input-morador" type="text" placeholder="Nome" class="input-field">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Empresa (Ex: Mercado Livre)</label>
+                        <input id="input-empresa" type="text" placeholder="Empresa" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Remetente</label>
+                        <input id="input-remetente" type="text" placeholder="Origem" class="input-field">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Descrição do Produto</label>
+                        <input id="input-descricao" type="text" placeholder="Ex: Pacote Pequeno Preto" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Volumes</label>
+                        <input id="input-qtd" type="number" value="1" min="1" class="input-field text-center">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">NF / Pedido</label>
+                        <input id="input-nf" type="text" placeholder="Nº Documento" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Porteiro / Recebedor</label>
+                        <input id="input-recebedor" type="text" placeholder="Seu nome" class="input-field">
+                    </div>
+                </div>
+
+                <button id="btn-gravar" type="submit" disabled class="w-full bg-blue-600 h-[60px] text-white font-black rounded-2xl active:scale-95 disabled:opacity-50 transition-all uppercase text-sm shadow-lg">
+                    Registrar e Notificar WhatsApp
+                </button>
+            </form>
+        </section>
+
+        <div id="area-acoes" class="flex flex-col gap-3 no-print">
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5"></i>
+                <input id="input-busca" type="text" placeholder="Pesquisar..." oninput="filtrar(this.value)"
+                    class="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 bg-white shadow-sm outline-none font-medium text-sm">
+            </div>
+        </div>
+
+        <div id="render-container" class="space-y-4 pb-10"></div>
+    </main>
+
+    <script>
+        let db = JSON.parse(localStorage.getItem('portaria_v26')) || [];
+        let abaAtiva = 'pendentes';
+        let termoBusca = '';
+        let currentPhoto = null;
+        let expandidoKey = null;
+
+        // --- Registro do Service Worker (Para funcionar Offline/App) ---
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => console.log("SW não registrado"));
+        }
+
+        function salvar() {
+            localStorage.setItem('portaria_v26', JSON.stringify(db));
+            render();
+        }
+
+        // Converte base64 para arquivo real (necessário para o WhatsApp)
+        function dataURLtoFile(dataurl, filename) {
+            var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+            while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+            return new File([u8arr], filename, {type:mime});
+        }
+
+        function processarFoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const max_w = 800;
+                        let w = img.width, h = img.height;
+                        if (w > max_w) { h *= max_w / w; w = max_w; }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+                        currentPhoto = canvas.toDataURL("image/jpeg", 0.7);
+                        document.getElementById('preview-img').src = currentPhoto;
+                        document.getElementById('photo-container').classList.remove('hidden');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function validarUnidade(txt) {
+            const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
+            const num = clean.match(/\d+/); const blk = clean.match(/[JP]/);
+            if (!num || !blk) return { ok: false, msg: "Falta J/P" };
+            return { ok: true, apto: parseInt(num[0]), bloco: blk[0], msg: `✓ Unidade: ${blk[0]}-${num[0]}` };
+        }
+
+        function validarInput(el) {
+            const res = validarUnidade(el.value);
+            const fb = document.getElementById('feedback-val');
+            fb.innerText = res.msg;
+            fb.className = `text-[10px] mt-1 ml-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
+            document.getElementById('btn-gravar').disabled = !res.ok;
+        }
+
+        async function handleRegistrar(e) {
+            e.preventDefault();
+            const res = validarUnidade(document.getElementById('input-unidade').value);
+            if (!res.ok) return;
+
+            const now = new Date();
+            const novo = {
+                id: Date.now(),
+                apto: res.apto.toString(), bloco: res.bloco,
+                morador: document.getElementById('input-morador').value || "Não informado",
+                empresa: document.getElementById('input-empresa').value || "Não informado",
+                remetente: document.getElementById('input-remetente').value || "Não informado",
+                descricao: document.getElementById('input-descricao').value || "Volume",
+                nf: document.getElementById('input-nf').value || "S/N",
+                recebedor: document.getElementById('input-recebedor').value || "Porteiro",
+                qtd: document.getElementById('input-qtd').value,
+                foto: currentPhoto,
+                data: now.toLocaleDateString('pt-BR'),
+                hora: now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+                status: 'pendente'
+            };
+
+            db.push(novo);
+            salvar();
+
+            // ENVIAR PARA WHATSAPP
+            if (navigator.share && currentPhoto) {
+                const file = dataURLtoFile(currentPhoto, 'etiqueta.jpg');
+                const mensagem = `*NOME RECEBEDOR:* ${novo.recebedor}\n` +
+                                 `*EMPRESA:* ${novo.empresa}\n` +
+                                 `*DESCRIÇÃO:* ${novo.qtd} ${novo.descricao}\n\n` +
+                                 `*MORADOR:* ${novo.morador}\n` +
+                                 `*DATA:* ${novo.data}\n` +
+                                 `*HORA:* ${novo.hora}\n` +
+                                 `*APTO:* ${novo.apto}${novo.bloco}\n\n` +
+                                 `*REMETENTE:* ${novo.remetente}\n` +
+                                 `*DOC/NF:* ${novo.nf}`;
+
+                try {
+                    await navigator.share({ files: [file], text: mensagem });
+                } catch (err) { console.log("Erro ao compartilhar"); }
+            }
+
+            document.getElementById('form-main').reset();
+            document.getElementById('photo-container').classList.add('hidden');
+            currentPhoto = null;
+            document.getElementById('feedback-val').innerText = "Aguardando...";
+        }
+
+        function switchTab(t) {
+            abaAtiva = t; render();
+            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase ${t==='pendentes'?'tab-active':'tab-inactive'}`;
+            document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase ${t==='entregues'?'tab-active':'tab-inactive'}`;
+            document.getElementById('area-registro').style.display = t==='pendentes'?'block':'none';
+        }
+
+        function render() {
+            const container = document.getElementById('render-container');
+            container.innerHTML = '';
+            const lista = db.filter(d => (abaAtiva==='pendentes'?d.status==='pendente':d.status==='entregue'));
+            
+            lista.reverse().forEach(it => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm animate-fade-in mb-3";
+                card.innerHTML = `
+                    <div class="flex gap-4">
+                        <img src="${it.foto}" class="w-16 h-16 rounded-lg object-cover">
+                        <div class="flex-1">
+                            <h3 class="text-sm font-black uppercase">Apto ${it.apto}${it.bloco} - ${it.morador}</h3>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase">${it.empresa} | ${it.descricao}</p>
+                            <p class="text-[9px] text-slate-400 mt-1">${it.data} às ${it.hora}</p>
+                        </div>
+                        ${it.status==='pendente'?`<button onclick="baixar(${it.id})" class="bg-emerald-100 text-emerald-600 p-2 rounded-xl"><i data-lucide="check"></i></button>`:''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+            document.getElementById('count-p').innerText = db.filter(d=>d.status==='pendente').length;
+            document.getElementById('count-e').innerText = db.filter(d=>d.status==='entregue').length;
+        }
+
+        window.baixar = (id) => {
+            const i = db.find(d=>d.id===id);
+            if(i) { i.status = 'entregue'; salvar(); }
+        }
+
+        window.onload = render;
+    </script>
+</body>
+</html>
