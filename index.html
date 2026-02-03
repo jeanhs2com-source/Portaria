@@ -22,7 +22,6 @@
         .photo-preview { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 2px solid #2563eb; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Estilo para esconder o conteúdo antes do login */
         #app-content { display: none; }
         #login-screen { position: fixed; inset: 0; background: #f8fafc; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
 
@@ -199,13 +198,12 @@
         let currentPhoto = null;
         let expandidoKey = null;
 
-        // --- NOVA FUNÇÃO DE LOGIN ---
         function checkPass() {
             const val = document.getElementById('pass-input').value;
             if(val === '2310') {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-content').style.display = 'block';
-                lucide.createIcons(); // Garante que os ícones do app carreguem
+                lucide.createIcons();
             } else {
                 const err = document.getElementById('login-err');
                 err.classList.remove('opacity-0');
@@ -213,7 +211,6 @@
             }
         }
 
-        // Permitir Enter no login
         document.getElementById('pass-input').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') checkPass();
         });
@@ -227,7 +224,45 @@
             }
         }
 
-        // --- Foto e Compressão ---
+        // --- NOVA FUNÇÃO DE COMPARTILHAMENTO ---
+        async function compartilharWhatsApp(id) {
+            const item = db.find(d => d.id === id);
+            if (!item) return;
+
+            const mensagemWhats = `NOME RECEBEDOR: ${item.recebedor}\n` +
+                                 `EMPRESA : ${item.empresa}\n` +
+                                 `DESCRIÇÃO DO PRODUTO : ${item.qtd} ${item.descricao}\n\n` +
+                                 `NOME MORADOR : ${item.morador}\n` +
+                                 `DATA : ${item.data}\n` +
+                                 `HORA : ${item.hora}\n` +
+                                 `APTO : ${item.apto}${item.bloco}\n\n` +
+                                 `EMPRESA/NOME DO REMETENTE :${item.remetente}\n` +
+                                 `NUMERO PEDIDO/ NF / ORDEM DE SERVIÇO : ${item.nf}`;
+
+            if (navigator.share) {
+                const shareData = { text: mensagemWhats };
+                
+                // Se houver foto, tenta anexar o arquivo
+                if (item.foto) {
+                    try {
+                        const fotoParaWhats = dataURLtoFile(item.foto, 'encomenda.jpg');
+                        shareData.files = [fotoParaWhats];
+                    } catch (e) { console.error("Erro foto", e); }
+                }
+
+                try {
+                    await navigator.share(shareData);
+                } catch (err) { 
+                    // Se o usuário cancelar ou o sistema falhar, abre link de texto como backup
+                    console.log("Compartilhamento interrompido");
+                }
+            } else {
+                // Caso o navegador não suporte Share API, usa o link direto (apenas texto)
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensagemWhats)}`, '_blank');
+            }
+        }
+        window.compartilharPorId = compartilharWhatsApp;
+
         function processarFoto(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -269,7 +304,6 @@
             }
         }
 
-        // --- Dados ---
         function exportarDados() {
             const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -292,7 +326,6 @@
             reader.readAsText(file);
         }
 
-        // --- Registro ---
         function validarUnidade(txt) {
             const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
             const num = clean.match(/\d+/); const blk = clean.match(/[JP]/);
@@ -310,7 +343,6 @@
             document.getElementById('btn-gravar').disabled = !res.ok;
         }
 
-        // --- FUNÇÃO DE AUXÍLIO PARA WHATSAPP (CONVERTE FOTO) ---
         function dataURLtoFile(dataurl, filename) {
             var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
             bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
@@ -342,36 +374,17 @@
             };
 
             db.push(dadosRegistro);
+            salvar(); // Salva primeiro
 
-            // --- NOVO: BLOCO DE COMPARTILHAMENTO WHATSAPP ---
-            if (navigator.share && currentPhoto) {
-                const fotoParaWhats = dataURLtoFile(currentPhoto, 'encomenda.jpg');
-                const mensagemWhats = `NOME RECEBEDOR: ${dadosRegistro.recebedor}\n` +
-                                     `EMPRESA : ${dadosRegistro.empresa}\n` +
-                                     `DESCRIÇÃO DO PRODUTO : ${dadosRegistro.qtd} ${dadosRegistro.descricao}\n\n` +
-                                     `NOME MORADOR : ${dadosRegistro.morador}\n` +
-                                     `DATA : ${dadosRegistro.data}\n` +
-                                     `HORA : ${dadosRegistro.hora}\n` +
-                                     `APTO : ${dadosRegistro.apto}${dadosRegistro.bloco}\n\n` +
-                                     `EMPRESA/NOME DO REMETENTE :${dadosRegistro.remetente}\n` +
-                                     `NUMERO PEDIDO/ NF / ORDEM DE SERVIÇO : ${dadosRegistro.nf}`;
-                try {
-                    await navigator.share({
-                        files: [fotoParaWhats],
-                        text: mensagemWhats
-                    });
-                } catch (err) { console.log("Compartilhamento cancelado."); }
-            }
-            // --- FIM DO BLOCO WHATSAPP ---
+            // Compartilha automaticamente ao registrar
+            compartilharWhatsApp(dadosRegistro.id);
 
             document.getElementById('form-main').reset();
             document.getElementById('photo-container').classList.add('hidden');
             currentPhoto = null;
             document.getElementById('feedback-val').innerText = "Aguardando...";
-            salvar();
         }
 
-        // --- Filtros ---
         function switchTab(t) {
             abaAtiva = t; expandidoKey = null; blocoFiltro = ''; tokenFiltro = ''; termoBusca = '';
             document.getElementById('input-busca').value = '';
@@ -476,6 +489,11 @@
                     ${isExp ? `<div class="bg-slate-50 border-t border-slate-100 p-4 space-y-4">
                         ${g.itens.map(it => `
                             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm relative animate-fade-in">
+                                
+                                <button onclick="compartilharPorId(${it.id})" class="absolute top-4 right-12 text-emerald-500 hover:text-emerald-700 transition-colors no-print">
+                                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                                </button>
+
                                 <div class="flex gap-4 mb-4">
                                     <div class="relative">
                                         ${it.foto ? `<img src="${it.foto}" class="w-20 h-20 rounded-lg object-cover border border-slate-200" onclick="window.open(this.src)">` : `
@@ -525,7 +543,7 @@
 
         window.onload = () => { 
             render(); 
-            lucide.createIcons(); // Carrega ícones da tela de login
+            lucide.createIcons();
         };
     </script>
 </body>
