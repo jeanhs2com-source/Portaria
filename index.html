@@ -199,38 +199,24 @@
         let expandidoKey = null;
 
 // --- SEGURANCA REFORCADA COM HASH SHA-256 ---
-        
-const SENHA_HASH_PROTEGIDA = "82f25459346617f223a6703b41d08e5473775f9227653c1f06240217ecf4591f";
-
-        async function gerarHash(texto) {
-            try {
-                const encoder = new TextEncoder();
-                const data = encoder.encode(texto);
-                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-                const hashArray = Array.from(new Uint8Array(hashBuffer));
-                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            } catch (e) {
-                return null;
-            }
-        }
-
-        async function checkPass() {
+        // --- FUNCAO DE LOGIN SIMPLIFICADA (PADRAO ANTERIOR) ---
+        function checkPass() {
             const input = document.getElementById('pass-input');
-            const senhaDigitada = input.value.trim();
-            
-            if (!window.crypto || !window.crypto.subtle) {
-                alert("Erro: Use HTTPS para o login funcionar.");
-                return;
-            }
+            const val = input.value;
 
-            const hashDigitado = await gerarHash(senhaDigitada);
-
-            if(hashDigitado === SENHA_HASH_PROTEGIDA) {
+            // Comparacao direta para garantir funcionamento imediato
+            if(val === '2310') {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-content').style.display = 'block';
+                
+                // Recarrega os icones do sistema
                 if(window.lucide) lucide.createIcons();
             } else {
-                alert("Senha Incorreta!");
+                // Alerta visual de erro
+                const err = document.getElementById('login-err');
+                err.classList.remove('opacity-0');
+                setTimeout(() => err.classList.add('opacity-0'), 2000);
+                
                 input.value = '';
                 input.focus();
             }
@@ -559,6 +545,7 @@ const SENHA_HASH_PROTEGIDA = "82f25459346617f223a6703b41d08e5473775f9227653c1f06
     </script>
 </body>
 </html>
+
 
 
 
