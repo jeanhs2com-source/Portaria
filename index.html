@@ -200,34 +200,21 @@
 
 // --- SEGURANÇA REFORÇADA COM HASH SHA-256 ---
         
-        // Esta é a "assinatura" da senha 2310.
+        // Esta é a "assinatura" da senha 2310. O número original não aparece no código.
         const SENHA_HASH_PROTEGIDA = "82f25459346617f223a6703b41d08e5473775f9227653c1f06240217ecf4591f";
 
         // Função para transformar texto em Hash (SHA-256)
         async function gerarHash(texto) {
-            try {
-                const encoder = new TextEncoder();
-                const data = encoder.encode(texto);
-                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-                const hashArray = Array.from(new Uint8Array(hashBuffer));
-                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            } catch (e) {
-                console.error("Erro de segurança: Este navegador ou conexão não suporta criptografia.", e);
-                return null;
-            }
+            const encoder = new TextEncoder();
+            const data = encoder.encode(texto);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
         // Nova função de login protegida
         async function checkPass() {
-            const input = document.getElementById('pass-input');
-            const senhaDigitada = input.value.trim(); // .trim() remove espaços extras
-            
-            // Verifica se o navegador permite a criptografia
-            if (!window.crypto || !window.crypto.subtle) {
-                alert("Erro: Para sua segurança, o login só funciona via HTTPS (GitHub Pages) ou Localhost.");
-                return;
-            }
-
+            const senhaDigitada = document.getElementById('pass-input').value;
             const hashDigitado = await gerarHash(senhaDigitada);
 
             if(hashDigitado === SENHA_HASH_PROTEGIDA) {
@@ -238,8 +225,6 @@
                 const err = document.getElementById('login-err');
                 err.classList.remove('opacity-0');
                 setTimeout(() => err.classList.add('opacity-0'), 2000);
-                input.value = ''; // Limpa a senha errada
-                input.focus();
             }
         }
 
