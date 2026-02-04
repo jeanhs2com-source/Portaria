@@ -200,7 +200,6 @@
 
 // --- SEGURANCA REFORCADA COM HASH SHA-256 ---
         
-        // Esta linha PRECISA estar no codigo, logo acima das funcoes
         const SENHA_HASH_PROTEGIDA = "82f25459346617f223a6703b41d08e5473775f9227653c1f06240217ecf4591f";
 
         async function gerarHash(texto) {
@@ -220,7 +219,7 @@
             const senhaDigitada = input.value.trim();
             
             if (!window.crypto || !window.crypto.subtle) {
-                alert("Erro: Use HTTPS (GitHub Pages) para o login funcionar.");
+                alert("Erro: Use HTTPS para o login funcionar.");
                 return;
             }
 
@@ -231,7 +230,7 @@
                 document.getElementById('app-content').style.display = 'block';
                 if(window.lucide) lucide.createIcons();
             } else {
-                alert("Senha Incorreta!");
+                alert("Senha Incorreta!"); 
                 input.value = '';
                 input.focus();
             }
@@ -560,3 +559,4 @@
     </script>
 </body>
 </html>
+
