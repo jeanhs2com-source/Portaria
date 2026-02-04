@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-pt">
 <head>
@@ -198,29 +199,32 @@
         let currentPhoto = null;
         let expandidoKey = null;
 
-// --- SEGURANCA REFORCADA COM HASH SHA-256 ---
-        // --- FUNCAO DE LOGIN SIMPLIFICADA (PADRAO ANTERIOR) ---
         function checkPass() {
-            const input = document.getElementById('pass-input');
-            const val = input.value;
-
-            // Comparacao direta para garantir funcionamento imediato
+            const val = document.getElementById('pass-input').value;
             if(val === '2310') {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-content').style.display = 'block';
-                
-                // Recarrega os icones do sistema
-                if(window.lucide) lucide.createIcons();
+                lucide.createIcons();
             } else {
-                // Alerta visual de erro
                 const err = document.getElementById('login-err');
                 err.classList.remove('opacity-0');
                 setTimeout(() => err.classList.add('opacity-0'), 2000);
-                
-                input.value = '';
-                input.focus();
             }
-        } //
+        }
+
+        document.getElementById('pass-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkPass();
+        });
+
+        function salvar() {
+            try {
+                localStorage.setItem('portaria_v23', JSON.stringify(db));
+                render();
+            } catch (e) {
+                alert("Memória cheia! Exporte os dados e limpe o histórico.");
+            }
+        }
+
         // --- NOVA FUNÇÃO DE COMPARTILHAMENTO ---
         async function compartilharWhatsApp(id) {
             const item = db.find(d => d.id === id);
@@ -545,7 +549,3 @@
     </script>
 </body>
 </html>
-
-
-
-
