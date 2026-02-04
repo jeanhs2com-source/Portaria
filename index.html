@@ -198,49 +198,44 @@
         let currentPhoto = null;
         let expandidoKey = null;
 
-// --- SEGURANÇA REFORÇADA COM HASH SHA-256 ---
+// --- SEGURANCA REFORCADA COM HASH SHA-256 ---
         
-        // Esta é a "assinatura" da senha 2310. O número original não aparece no código.
+        // Esta linha PRECISA estar no codigo, logo acima das funcoes
         const SENHA_HASH_PROTEGIDA = "82f25459346617f223a6703b41d08e5473775f9227653c1f06240217ecf4591f";
 
-        // Função para transformar texto em Hash (SHA-256)
         async function gerarHash(texto) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(texto);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            try {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(texto);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            } catch (e) {
+                return null;
+            }
         }
 
-        // Nova função de login protegida
         async function checkPass() {
-            const senhaDigitada = document.getElementById('pass-input').value;
+            const input = document.getElementById('pass-input');
+            const senhaDigitada = input.value.trim();
+            
+            if (!window.crypto || !window.crypto.subtle) {
+                alert("Erro: Use HTTPS (GitHub Pages) para o login funcionar.");
+                return;
+            }
+
             const hashDigitado = await gerarHash(senhaDigitada);
 
             if(hashDigitado === SENHA_HASH_PROTEGIDA) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-content').style.display = 'block';
-                lucide.createIcons();
+                if(window.lucide) lucide.createIcons();
             } else {
-                const err = document.getElementById('login-err');
-                err.classList.remove('opacity-0');
-                setTimeout(() => err.classList.add('opacity-0'), 2000);
+                alert("Senha Incorreta!");
+                input.value = '';
+                input.focus();
             }
         }
-
-        document.getElementById('pass-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') checkPass();
-        });
-
-        function salvar() {
-            try {
-                localStorage.setItem('portaria_v23', JSON.stringify(db));
-                render();
-            } catch (e) {
-                alert("Memória cheia! Exporte os dados e limpe o histórico.");
-            }
-        }
-
         // --- NOVA FUNÇÃO DE COMPARTILHAMENTO ---
         async function compartilharWhatsApp(id) {
             const item = db.find(d => d.id === id);
