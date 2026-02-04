@@ -200,7 +200,7 @@
 
 // --- SEGURANCA REFORCADA COM HASH SHA-256 ---
         
-        const SENHA_HASH_PROTEGIDA = "82f25459346617f223a6703b41d08e5473775f9227653c1f06240217ecf4591f";
+const SENHA_HASH_PROTEGIDA = "82f25459346617f223a6703b41d08e5473775f9227653c1f06240217ecf4591f";
 
         async function gerarHash(texto) {
             try {
@@ -230,7 +230,7 @@
                 document.getElementById('app-content').style.display = 'block';
                 if(window.lucide) lucide.createIcons();
             } else {
-                alert("Senha Incorreta!"); 
+                alert("Senha Incorreta!");
                 input.value = '';
                 input.focus();
             }
@@ -559,5 +559,6 @@
     </script>
 </body>
 </html>
+
 
 
