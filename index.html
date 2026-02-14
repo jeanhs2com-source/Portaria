@@ -63,7 +63,7 @@
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Descrição do Produto</label>
                     <input id="edit-descricao" type="text" class="input-field">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-3 gap-3">
                     <div>
                         <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">NF / Pedido</label>
                         <input id="edit-nf" type="text" class="input-field">
@@ -72,15 +72,19 @@
                         <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Recebedor</label>
                         <input id="edit-recebedor" type="text" class="input-field">
                     </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Portaria até</label>
+                        <input id="edit-permanencia" type="text" class="input-field" placeholder="Ex: 18:00">
+                    </div>
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Token / Código de Saída</label>
-                    <input id="edit-tokens" type="text" class="input-field" placeholder="Ex: 1234, Nome do Parentesco">
+                    <input id="edit-tokens" type="text" class="input-field" placeholder="Ex: 1234">
                 </div>
             </div>
             <div class="flex gap-3 pt-4">
                 <button onclick="closeEditModal()" class="flex-1 py-3 bg-slate-100 text-slate-500 font-black rounded-xl text-xs uppercase">Cancelar</button>
-                <button onclick="saveEdit()" class="flex-1 py-3 bg-blue-600 text-white font-black rounded-xl text-xs uppercase shadow-lg shadow-blue-100">Salvar Dados</button>
+                <button onclick="saveEdit()" class="flex-1 py-3 bg-blue-600 text-white font-black rounded-xl text-xs uppercase shadow-lg">Salvar</button>
             </div>
         </div>
     </div>
@@ -102,7 +106,6 @@
 
     <main class="max-w-4xl mx-auto px-4 py-6 space-y-6">
         
-        <!-- Dashboards -->
         <div class="grid grid-cols-2 gap-4 no-print">
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
                 <p class="text-[10px] font-bold uppercase text-slate-400 mb-1">Aguardando Saída</p>
@@ -120,7 +123,6 @@
             </div>
         </div>
 
-        <!-- Registro Section -->
         <section id="area-registro" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm no-print">
             <h2 class="text-[10px] font-black mb-4 flex items-center gap-2 text-slate-400 uppercase tracking-widest">
                 <i data-lucide="camera" class="w-4 h-4 text-blue-600"></i> Registro de Encomenda
@@ -173,14 +175,18 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">NF / Pedido</label>
-                        <input id="input-nf" type="text" placeholder="Nº Documento" class="input-field">
+                        <input id="input-nf" type="text" placeholder="Doc" class="input-field">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Porteiro</label>
-                        <input id="input-recebedor" type="text" placeholder="Seu nome" class="input-field">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Recebedor</label>
+                        <input id="input-recebedor" type="text" placeholder="Porteiro" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Portaria até as...</label>
+                        <input id="input-permanencia" type="text" placeholder="18:00" class="input-field">
                     </div>
                 </div>
 
@@ -190,7 +196,6 @@
             </form>
         </section>
 
-        <!-- Filtros e Busca -->
         <div id="area-acoes" class="flex flex-col gap-3 no-print">
             <div class="relative">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5"></i>
@@ -199,11 +204,9 @@
             </div>
 
             <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                <button onclick="setFastFilter('')" id="ff-all" class="whitespace-nowrap px-4 py-2 rounded-xl bg-blue-600 text-white text-[10px] font-bold uppercase transition-all">Todos</button>
+                <button onclick="setFastFilter('')" id="ff-all" class="whitespace-nowrap px-4 py-2 rounded-xl bg-blue-600 text-white text-[10px] font-bold uppercase transition-all border">Todos</button>
                 <button onclick="setFastFilter('J')" id="ff-j" class="whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all border">Bloco J</button>
                 <button onclick="setFastFilter('P')" id="ff-p" class="whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all border">Bloco P</button>
-                <button id="ff-token" onclick="setTokenFilter('com')" class="hidden whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all border">Com Token</button>
-                <button id="ff-notoken" onclick="setTokenFilter('sem')" class="hidden whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all border">Sem Token</button>
             </div>
             
             <div id="controles-historico" class="hidden flex flex-col gap-2">
@@ -228,7 +231,6 @@
         let abaAtiva = 'pendentes';
         let termoBusca = '';
         let blocoFiltro = '';
-        let tokenFiltro = ''; 
         let currentPhoto = null;
         let expandidoKey = null;
 
@@ -236,10 +238,9 @@
             try {
                 localStorage.setItem('portaria_v26', JSON.stringify(db));
                 render();
-            } catch (e) { alert("Memória cheia! Limpe o histórico."); }
+            } catch (e) { alert("Memória cheia!"); }
         }
 
-        // --- Foto e Compressão ---
         function processarFoto(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -272,8 +273,8 @@
                         canvas.width = 500; canvas.height = (img.height / img.width) * 500;
                         canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
                         const compressed = canvas.toDataURL("image/jpeg", 0.5);
-                        const item = db.find(d => d.id === id);
-                        if (item) { item.foto = compressed; salvar(); }
+                        const it = db.find(d => d.id === id);
+                        if (it) { it.foto = compressed; salvar(); }
                     };
                     img.src = e.target.result;
                 };
@@ -281,50 +282,91 @@
             }
         }
 
-        // --- WhatsApp Logic ---
-        window.compartilharWhatsApp = async (id) => {
-            const item = db.find(d => d.id === id);
-            if (!item) return;
-
-            const msg = `📢 *AVISO DE ENCOMENDA - PORTARIA* \n\n` +
-                        `👤 *Morador:* ${item.morador}\n` +
-                        `🏢 *Unidade:* ${item.apto} - Bloco ${item.bloco}\n` +
-                        `📦 *Produto:* ${item.descricao}\n` +
-                        `🚚 *Empresa:* ${item.empresa}\n` +
-                        `🏷️ *Remetente:* ${item.remetente}\n` +
-                        `🔢 *NF/Doc:* ${item.nf}\n` +
-                        `👮 *Recebido por:* ${item.recebedor}\n` +
-                        `⏰ *Entrada:* ${item.data} às ${item.hora}`;
-
-            const encodedMsg = encodeURIComponent(msg);
-
-            if (navigator.share && item.foto && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                try {
-                    const response = await fetch(item.foto);
-                    const blob = await response.blob();
-                    const file = new File([blob], `encomenda_${item.apto}.jpg`, { type: 'image/jpeg' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        await navigator.share({ files: [file], title: 'Aviso de Encomenda', text: msg });
-                        return;
-                    }
-                } catch (err) {}
-            }
-            window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
+        async function obterFicheiroFoto(base64, nome) {
+            if (!base64) return null;
+            try {
+                const response = await fetch(base64);
+                const blob = await response.blob();
+                return new File([blob], nome, { type: 'image/jpeg' });
+            } catch (e) { return null; }
         }
 
-        // --- Edição ---
+        window.enviarGrupoCondominio = async (id) => {
+            const it = db.find(d => d.id === id);
+            if (!it) return;
+            const msg = `📢 *CONTROLE DE ENCOMENDA - PORTARIA* \n\n` +
+                   `👤 *Morador:* ${it.morador}\n` +
+                   `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
+                   `📦 *Produto:* ${it.descricao}\n` +
+                   `🚚 *Empresa:* ${it.empresa}\n` +
+                   `🏷️ *Remetente:* ${it.remetente}\n` +
+                   `🔢 *NF/Doc:* ${it.nf}\n` +
+                   `👮 *Recebido por:* ${it.recebedor}\n` +
+                   `⏰ *Chegada:* ${it.data} às ${it.hora}\n` +
+                   `⏳ *Portaria até:* ${it.permanencia || 'N/A'}`;
+            
+            const file = await obterFicheiroFoto(it.foto, `encomenda.jpg`);
+            if (navigator.share && file) {
+                try {
+                    await navigator.share({ files: [file], title: 'Controle Portaria', text: msg });
+                    return;
+                } catch (err) {}
+            }
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        window.enviarAvisoMorador = (id) => {
+            const it = db.find(d => d.id === id);
+            if (!it) return;
+            let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*. Após este horário, ela será encaminhada para a Mensageria.` : '';
+            const msg = `Olá! 👋 Temos uma ótima notícia: uma encomenda sua acaba de chegar à nossa portaria!\n\n` +
+                   `👤 *Para:* ${it.morador}\n` +
+                   `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
+                   `📦 *Item:* ${it.descricao}\n` +
+                   `🏷️ *Remetente:* ${it.remetente}\n` +
+                   `🚚 *Empresa:* ${it.empresa}\n` +
+                   `🔢 *Doc/NF:* ${it.nf}\n` +
+                   `👮 *Recebido por:* ${it.recebedor}\n` +
+                   `⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\n` +
+                   `A portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
+            
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+            it.notificadoPortariaMorador = true; 
+            salvar();
+        }
+
+        // --- MENSAGEM DA MENSAGERIA REFINADA (CONFORME SOLICITADO) ---
+        window.enviarAvisoMensageria = (id) => {
+            const it = db.find(d => d.id === id);
+            if (!it) return;
+            
+            // Pega o horário atual do envio da mensagem
+            const agora = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
+            
+            const msg = `Olá! 👋 Informamos que sua encomenda saiu da portaria e chegou à nossa *MENSAGERIA* e já está pronta para retirada.\n\n` +
+                   `🏢 *Local:* Unidade ${it.apto} - Bloco ${it.bloco}\n` +
+                   `📦 *Item:* ${it.descricao}\n` +
+                   `⏰ *Aviso enviado às:* ${agora}\n\n` +
+                   `Aguardamos sua visita para a retirada. Tenha um excelente dia! 📦✨`;
+            
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+            it.notificadoMensageria = true;
+            salvar();
+        }
+
         window.openEditModal = (id) => {
-            const item = db.find(d => d.id === id);
-            if (!item) return;
-            document.getElementById('edit-id').value = item.id;
-            document.getElementById('edit-unidade').value = item.apto + item.bloco;
-            document.getElementById('edit-morador').value = item.morador;
-            document.getElementById('edit-remetente').value = item.remetente;
-            document.getElementById('edit-empresa').value = item.empresa;
-            document.getElementById('edit-descricao').value = item.descricao;
-            document.getElementById('edit-nf').value = item.nf;
-            document.getElementById('edit-recebedor').value = item.recebedor;
-            document.getElementById('edit-tokens').value = (item.tokens || []).join(', ');
+            const it = db.find(d => d.id === id);
+            if (!it) return;
+            document.getElementById('edit-id').value = it.id;
+            document.getElementById('edit-unidade').value = it.apto + it.bloco;
+            document.getElementById('edit-morador').value = it.morador;
+            document.getElementById('edit-remetente').value = it.remetente;
+            document.getElementById('edit-empresa').value = it.empresa;
+            document.getElementById('edit-descricao').value = it.descricao;
+            document.getElementById('edit-nf').value = it.nf;
+            document.getElementById('edit-recebedor').value = it.recebedor;
+            document.getElementById('edit-permanencia').value = it.permanencia || '';
+            document.getElementById('edit-tokens').value = (it.tokens || []).join(', ');
             document.getElementById('modal-edit').classList.remove('hidden');
         }
 
@@ -334,36 +376,36 @@
             const id = parseFloat(document.getElementById('edit-id').value);
             const res = validarUnidade(document.getElementById('edit-unidade').value);
             if (!res.ok) { alert(res.msg); return; }
-            const index = db.findIndex(d => d.id === id);
-            if (index !== -1) {
-                db[index].apto = res.apto.toString(); db[index].bloco = res.bloco;
-                db[index].morador = document.getElementById('edit-morador').value;
-                db[index].remetente = document.getElementById('edit-remetente').value;
-                db[index].empresa = document.getElementById('edit-empresa').value;
-                db[index].descricao = document.getElementById('edit-descricao').value;
-                db[index].nf = document.getElementById('edit-nf').value;
-                db[index].recebedor = document.getElementById('edit-recebedor').value;
-                const tokenVal = document.getElementById('edit-tokens').value;
-                db[index].tokens = tokenVal ? tokenVal.split(',').map(s => s.trim()).filter(s => s !== '') : [];
+            const idx = db.findIndex(d => d.id === id);
+            if (idx !== -1) {
+                db[idx].apto = res.apto.toString(); db[idx].bloco = res.bloco;
+                db[idx].morador = document.getElementById('edit-morador').value;
+                db[idx].remetente = document.getElementById('edit-remetente').value;
+                db[idx].empresa = document.getElementById('edit-empresa').value;
+                db[idx].descricao = document.getElementById('edit-descricao').value;
+                db[idx].nf = document.getElementById('edit-nf').value;
+                db[idx].recebedor = document.getElementById('edit-recebedor').value;
+                db[idx].permanencia = document.getElementById('edit-permanencia').value;
+                const tv = document.getElementById('edit-tokens').value;
+                db[idx].tokens = tv ? tv.split(',').map(s => s.trim()).filter(s => s !== '') : [];
                 closeEditModal(); salvar();
             }
         }
 
-        // --- Validação/Registro ---
         function validarUnidade(txt) {
             const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
             const num = clean.match(/\d+/); const blk = clean.match(/[JP]/);
-            if (!num || !blk) return { ok: false, msg: "Falta Bloco" };
+            if (!num || !blk) return { ok: false, msg: "Bloco?" };
             const n = parseInt(num[0]); const b = blk[0];
             if (n < 11 || n > 181 || n % 10 !== 1) return { ok: false, msg: "Inválida" };
-            return { ok: true, apto: n, bloco: b, msg: `✓ Unidade: ${b}-${n}` };
+            return { ok: true, apto: n, bloco: b, msg: `✓ ${b}-${n}` };
         }
 
         function validarInput(el) {
             const res = validarUnidade(el.value);
             const fb = document.getElementById('feedback-val');
             fb.innerText = res.msg;
-            fb.className = `text-[10px] mt-1 ml-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
+            fb.className = `text-[10px] mt-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
             document.getElementById('btn-gravar').disabled = !res.ok;
         }
 
@@ -372,122 +414,93 @@
             const res = validarUnidade(document.getElementById('input-unidade').value);
             if (!res.ok) return;
             const now = new Date();
-            const newId = Date.now() + Math.random();
+            const nid = Date.now() + Math.random();
             db.push({
-                id: newId, apto: res.apto.toString(), bloco: res.bloco,
-                morador: document.getElementById('input-morador').value || "Não informado",
-                empresa: document.getElementById('input-empresa').value || "Não informado",
-                remetente: document.getElementById('input-remetente').value || "Não informado",
+                id: nid, apto: res.apto.toString(), bloco: res.bloco,
+                morador: document.getElementById('input-morador').value || "Morador",
+                empresa: document.getElementById('input-empresa').value || "Empresa",
+                remetente: document.getElementById('input-remetente').value || "Remetente",
                 descricao: document.getElementById('input-descricao').value || "Volume",
                 nf: document.getElementById('input-nf').value || "S/N",
                 recebedor: document.getElementById('input-recebedor').value || "Porteiro",
+                permanencia: document.getElementById('input-permanencia').value || "",
                 qtd: parseInt(document.getElementById('input-qtd').value) || 1,
                 foto: currentPhoto, data: now.toLocaleDateString('pt-PT'),
-                hora: now.toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'}),
-                timestamp: now.toISOString(), saida: null, status: 'pendente', destino: null, tokens: []
+                hora: now.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}),
+                status: 'pendente', tokens: [],
+                notificadoPortariaMorador: false, notificadoMensageria: false
             });
             document.getElementById('form-main').reset();
             document.getElementById('photo-container').classList.add('hidden');
             currentPhoto = null;
-            document.getElementById('feedback-val').innerText = "Aguardando...";
             salvar();
-            compartilharWhatsApp(newId);
+            enviarGrupoCondominio(nid);
         }
 
-        // --- Navegação/Filtros ---
         function switchTab(t) {
-            abaAtiva = t; expandidoKey = null; blocoFiltro = ''; tokenFiltro = '';
-            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase ${t === 'pendentes' ? 'tab-active' : 'tab-inactive'}`;
-            document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase ${t === 'entregues' ? 'tab-active' : 'tab-inactive'}`;
-            document.getElementById('area-registro').style.display = t === 'pendentes' ? 'block' : 'none';
-            document.getElementById('controles-historico').style.display = t === 'entregues' ? 'flex' : 'none';
-            document.getElementById('ff-token').classList.toggle('hidden', t !== 'entregues');
-            document.getElementById('ff-notoken').classList.toggle('hidden', t !== 'entregues');
-            setFastFilter('');
+            abaAtiva = t; expandidoKey = null; blocoFiltro = '';
+            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase ${t==='pendentes'?'tab-active':'tab-inactive'}`;
+            document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase ${t==='entregues'?'tab-active':'tab-inactive'}`;
+            document.getElementById('area-registro').style.display = t==='pendentes'?'block':'none';
+            document.getElementById('controles-historico').style.display = t==='entregues'?'flex':'none';
+            render();
         }
 
         function filtrar(v) { termoBusca = v.toLowerCase().trim(); render(); }
         function setFastFilter(f) { blocoFiltro = f; render(); }
-        function setTokenFilter(f) { tokenFiltro = tokenFiltro === f ? '' : f; render(); }
         function toggleExpand(key) { expandidoKey = expandidoKey === key ? null : key; render(); }
 
-        // --- FUNÇÕES DE BAIXA ---
         window.darBaixaItem = (id, dest) => {
-            const index = db.findIndex(d => d.id === id);
-            if (index !== -1) {
-                const tokenInput = document.getElementById(`token-item-${id}`);
-                const tks = tokenInput && tokenInput.value.trim() ? [tokenInput.value.trim()] : [];
-                db[index].status = 'entregue';
-                db[index].saida = new Date().toISOString();
-                db[index].destino = dest;
-                db[index].tokens = tks;
+            const idx = db.findIndex(d => d.id === id);
+            if (idx !== -1) {
+                const ti = document.getElementById(`token-item-${id}`);
+                db[idx].status = 'entregue';
+                db[idx].saida = new Date().toISOString();
+                db[idx].destino = dest;
+                db[idx].tokens = ti && ti.value ? [ti.value.trim()] : [];
                 salvar();
             }
         }
 
-        window.darBaixaTudo = (blk, apt, dest) => {
-            let alterado = false;
-            db.forEach(d => {
-                if (d.bloco === blk && d.apto === apt && d.status === 'pendente') {
-                    d.status = 'entregue'; d.saida = new Date().toISOString(); d.destino = dest;
-                    alterado = true;
-                }
-            });
-            if (alterado) { expandidoKey = null; salvar(); }
-        }
-
-        window.excluirUm = (id) => { if(confirm("Apagar registro?")) { db = db.filter(d => d.id !== id); salvar(); } }
+        window.excluirUm = (id) => { if(confirm("Apagar?")) { db = db.filter(d => d.id !== id); salvar(); } }
         window.limparHistorico = () => { if(confirm("Limpar todo turno?")) { db = db.filter(d => d.status === 'pendente'); salvar(); } }
-        function exportarDados() { const b = new Blob([JSON.stringify(db,null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=`backup_${Date.now()}.json`; a.click(); }
+        function exportarDados() { const b = new Blob([JSON.stringify(db,null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=`backup.json`; a.click(); }
         function importarDados(input) {
-            const f = input.files[0]; if (!f) return;
-            const r = new FileReader(); r.onload = (e) => {
-                try { const d = JSON.parse(e.target.result); if (Array.isArray(d)) { if (confirm("Substituir dados atuais?")) { db = d; salvar(); } } } catch(err) { alert("Erro arquivo"); }
-            }; r.readAsText(f);
+            if(input.files && input.files[0]) {
+                const r = new FileReader();
+                r.onload = (e) => { try { db = JSON.parse(e.target.result); salvar(); } catch(e){alert("Erro!");} };
+                r.readAsText(input.files[0]);
+            }
         }
 
-        // --- RENDERIZAÇÃO ---
         function render() {
-            // SINALIZAÇÃO DOS FILTROS ATIVOS EM AZUL
-            const activeClass = "bg-blue-600 text-white border-blue-600 shadow-md";
-            const inactiveClass = "bg-white border-slate-200 text-slate-500";
-
-            document.getElementById('ff-all').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro === '' ? activeClass : inactiveClass}`;
-            document.getElementById('ff-j').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro === 'J' ? activeClass : inactiveClass}`;
-            document.getElementById('ff-p').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro === 'P' ? activeClass : inactiveClass}`;
+            const ac = "bg-blue-600 text-white border-blue-600 shadow-md";
+            const inac = "bg-white border-slate-200 text-slate-500";
+            document.getElementById('ff-all').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro===''?ac:inac}`;
+            document.getElementById('ff-j').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro==='J'?ac:inac}`;
+            document.getElementById('ff-p').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro==='P'?ac:inac}`;
             
-            if (abaAtiva === 'entregues') {
-                document.getElementById('ff-token').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${tokenFiltro === 'com' ? activeClass : inactiveClass}`;
-                document.getElementById('ff-notoken').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${tokenFiltro === 'sem' ? activeClass : inactiveClass}`;
-            }
-
-            const statusAlvo = abaAtiva === 'pendentes' ? 'pendente' : 'entregue';
-            const listaBase = db.filter(d => d.status === statusAlvo);
+            const listaBase = db.filter(d => d.status === (abaAtiva==='pendentes'?'pendente':'entregue'));
             const grupos = {};
-            
             listaBase.forEach(d => {
                 const k = `${d.bloco}-${d.apto}`;
-                const txt = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao}`.toLowerCase();
-                if (termoBusca && !txt.includes(termoBusca)) return;
-                if (blocoFiltro && d.bloco !== blocoFiltro) return;
-                if (!grupos[k]) grupos[k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, hasToken: false, destino: d.destino };
-                grupos[k].itens.push(d);
-                grupos[k].total += d.qtd;
-                if(d.tokens && d.tokens.length > 0) grupos[k].hasToken = true;
+                const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao}`.toLowerCase();
+                if(termoBusca && !t.includes(termoBusca)) return;
+                if(blocoFiltro && d.bloco !== blocoFiltro) return;
+                
+                if(!grupos[k]) grupos[k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, statusNotificado: false };
+                grupos[k].itens.push(d); grupos[k].total += d.qtd;
+                
+                if(abaAtiva === 'pendentes' && d.notificadoPortariaMorador) grupos[k].statusNotificado = true;
+                if(abaAtiva === 'entregues' && d.notificadoMensageria) grupos[k].statusNotificado = true;
             });
 
-            const filtrados = Object.values(grupos).filter(g => {
-                if (abaAtiva === 'entregues' && tokenFiltro) {
-                    return tokenFiltro === 'com' ? g.hasToken : !g.hasToken;
-                }
-                return true;
-            }).sort((x, y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
-
-            document.getElementById('count-p').innerText = db.filter(d => d.status === 'pendente').reduce((a, b) => a + b.qtd, 0);
+            const filtrados = Object.values(grupos).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
+            document.getElementById('count-p').innerText = db.filter(d => d.status === 'pendente').reduce((a,b)=>a+b.qtd,0);
             document.getElementById('count-e').innerText = db.filter(d => d.status === 'entregue').length;
 
             const container = document.getElementById('render-container');
-            container.innerHTML = filtrados.length === 0 ? `<div class="p-10 text-center text-slate-400 font-bold text-xs uppercase">Sem registros</div>` : '';
+            container.innerHTML = filtrados.length === 0 ? `<div class="p-10 text-center text-slate-400 font-bold text-xs uppercase">Vazio</div>` : '';
 
             filtrados.forEach(g => {
                 const key = `${g.b}-${g.a}`;
@@ -500,23 +513,27 @@
                     const d = g.itens[0].destino === 'mensageria' ? 'MENSAGERIA' : 'MORADOR';
                     const c = g.itens[0].destino === 'mensageria' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600';
                     badgesHist = `<span class="text-[8px] ${c} font-black px-1.5 py-0.5 rounded uppercase mr-1">${d}</span>`;
-                    if(g.hasToken) badgesHist += `<span class="text-[8px] bg-slate-100 text-slate-500 font-black px-1.5 py-0.5 rounded uppercase">TOKEN</span>`;
                 }
 
                 card.innerHTML = `
                     <div onclick="toggleExpand('${key}')" class="p-4 flex items-center gap-3 cursor-pointer active:bg-slate-50">
                         <div class="w-12 h-12 flex items-center justify-center rounded-xl font-bold text-lg ${abaAtiva==='entregues'?'bg-slate-100 text-slate-400 border border-dashed':'bg-blue-600 text-white shadow-md'}">${g.b}</div>
                         <div class="flex-1">
-                            <h3 class="text-sm font-black text-slate-800 uppercase">Apto ${g.a} - ${g.morador}</h3>
+                            <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                                Apto ${g.a} - ${g.morador}
+                                ${g.statusNotificado ? '<i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>' : ''}
+                            </h3>
                             <div class="flex gap-1 items-center">
-                                ${abaAtiva === 'pendentes' ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${g.total>1?'bg-orange-500 text-white':'bg-slate-100 text-slate-400'} uppercase">${g.total} VOLS</span>` : badgesHist}
+                                ${abaAtiva==='pendentes' ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${g.total>1?'bg-orange-500 text-white':'bg-slate-100 text-slate-400'} uppercase">${g.total} VOLS</span>` : badgesHist}
                             </div>
                         </div>
                         <i data-lucide="${isExp?'chevron-up':'chevron-down'}" class="text-slate-300"></i>
                     </div>
                     ${isExp ? `<div class="bg-slate-50 border-t border-slate-100 p-4 space-y-4">
                         ${g.itens.map(it => `
-                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm relative animate-fade-in">
+                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm animate-fade-in relative overflow-hidden">
+                                ${((abaAtiva==='pendentes'&&it.notificadoPortariaMorador)||(abaAtiva==='entregues'&&it.notificadoMensageria)) ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-2 h-2"></i> Mensagem Enviada</div>` : ''}
+                                
                                 <div class="flex gap-4 mb-4">
                                     <div class="relative">
                                         ${it.foto ? `<img src="${it.foto}" class="w-20 h-20 rounded-lg object-cover border border-slate-200" onclick="window.open(this.src)">` : `
@@ -527,9 +544,14 @@
                                     </div>
                                     <div class="flex-1 space-y-1">
                                         <div class="flex justify-between items-start">
-                                            <div class="mb-1"><p class="text-[8px] font-black text-slate-400 uppercase">Remetente</p><p class="text-[11px] font-black text-blue-700 uppercase">${it.remetente}</p></div>
+                                            <div><p class="text-[8px] font-black text-slate-400 uppercase">Remetente</p><p class="text-[11px] font-black text-blue-700 uppercase">${it.remetente}</p></div>
                                             <div class="flex gap-2 no-print">
-                                                <button onclick="compartilharWhatsApp(${it.id})" class="p-1.5 text-emerald-500 bg-emerald-50 rounded-lg"><i data-lucide="send" class="w-4 h-4"></i></button>
+                                                ${abaAtiva === 'pendentes' ? `
+                                                    <button onclick="enviarGrupoCondominio(${it.id})" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Grupo Administrativo"><i data-lucide="send" class="w-4 h-4"></i></button>
+                                                    <button onclick="enviarAvisoMorador(${it.id})" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador"><i data-lucide="bell" class="w-4 h-4"></i></button>
+                                                ` : `
+                                                    ${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria(${it.id})" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Aviso Mensageria"><i data-lucide="send" class="w-4 h-4"></i></button>` : ''}
+                                                `}
                                                 <button onclick="openEditModal(${it.id})" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                                                 <button onclick="excluirUm(${it.id})" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                             </div>
@@ -540,27 +562,21 @@
                                 </div>
                                 <div class="grid grid-cols-2 gap-x-2 gap-y-3 border-t pt-2 text-[9px] font-black uppercase text-slate-400">
                                     <div><p class="text-[7px]">Doc / NF</p><p class="text-slate-700">${it.nf}</p></div>
+                                    <div><p class="text-[7px]">Recebedor</p><p class="text-slate-700">${it.recebedor}</p></div>
                                     <div><p class="text-[7px]">Entrada</p><p class="text-slate-700">${it.data} às ${it.hora}</p></div>
-                                    ${it.saida ? `<div class="col-span-2 mt-1"><p class="text-[7px] text-emerald-500 font-black">Saída</p><p class="text-emerald-600 font-black">${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p></div>` : ''}
+                                    <div><p class="text-[7px] text-blue-500">Portaria até:</p><p class="text-blue-600 font-bold">${it.permanencia || 'N/A'}</p></div>
+                                    ${it.saida ? `<div class="col-span-2 border-t pt-1"><p class="text-[7px] text-emerald-500 font-black uppercase">Saída: ${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p></div>` : ''}
                                 </div>
                                 ${abaAtiva === 'pendentes' ? `
                                     <div class="mt-4 pt-3 border-t space-y-2 no-print">
-                                        <input type="text" id="token-item-${it.id}" placeholder="Escreva o token/parentesco aqui..." class="w-full p-2 border border-slate-200 rounded-lg text-[10px] font-bold outline-none bg-slate-50 focus:bg-white">
+                                        <input type="text" id="token-item-${it.id}" placeholder="Escreva o token ou parentesco..." class="w-full p-2 border rounded-lg text-[10px] font-bold outline-none bg-slate-50 focus:bg-white">
                                         <div class="grid grid-cols-2 gap-2">
-                                            <button onclick="darBaixaItem(${it.id}, 'morador')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm active:bg-emerald-700">Morador</button>
-                                            <button onclick="darBaixaItem(${it.id}, 'mensageria')" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm active:bg-blue-700">Mensageria</button>
+                                            <button onclick="darBaixaItem(${it.id}, 'morador')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Entrega Morador</button>
+                                            <button onclick="darBaixaItem(${it.id}, 'mensageria')" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Encaminhar Mensageria</button>
                                         </div>
                                     </div>` : ''}
-                                ${it.tokens && it.tokens.length > 0 ? `<div class="mt-2 p-2 bg-slate-50 rounded border flex flex-wrap gap-1">${it.tokens.map(t => `<span class="bg-white border border-slate-200 px-2 py-0.5 rounded font-black text-[10px] text-slate-600 shadow-sm">${t}</span>`).join('')}</div>` : ''}
                             </div>
                         `).join('')}
-                        ${abaAtiva === 'pendentes' && g.itens.length > 1 ? `<div class="pt-4 no-print border-t space-y-2">
-                            <p class="text-[9px] font-black text-slate-400 uppercase text-center">Dar Baixa em Tudo:</p>
-                            <div class="grid grid-cols-2 gap-3">
-                                <button onclick="darBaixaTudo('${g.b}','${g.a}','morador')" class="py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg">Morador (Tudo)</button>
-                                <button onclick="darBaixaTudo('${g.b}','${g.a}','mensageria')" class="py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg">Mensageria (Tudo)</button>
-                            </div>
-                        </div>` : ''}
                     </div>` : ''}
                 `;
                 container.appendChild(card);
