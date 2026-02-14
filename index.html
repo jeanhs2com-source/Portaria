@@ -200,10 +200,10 @@
 
             <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                 <button onclick="setFastFilter('')" id="ff-all" class="whitespace-nowrap px-4 py-2 rounded-xl bg-blue-600 text-white text-[10px] font-bold uppercase transition-all">Todos</button>
-                <button onclick="setFastFilter('J')" id="ff-j" class="whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all">Bloco J</button>
-                <button onclick="setFastFilter('P')" id="ff-p" class="whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all">Bloco P</button>
-                <button id="ff-token" onclick="setTokenFilter('com')" class="hidden whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all">Com Token</button>
-                <button id="ff-notoken" onclick="setTokenFilter('sem')" class="hidden whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all">Sem Token</button>
+                <button onclick="setFastFilter('J')" id="ff-j" class="whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all border">Bloco J</button>
+                <button onclick="setFastFilter('P')" id="ff-p" class="whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all border">Bloco P</button>
+                <button id="ff-token" onclick="setTokenFilter('com')" class="hidden whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all border">Com Token</button>
+                <button id="ff-notoken" onclick="setTokenFilter('sem')" class="hidden whitespace-nowrap px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-bold uppercase transition-all border">Sem Token</button>
             </div>
             
             <div id="controles-historico" class="hidden flex flex-col gap-2">
@@ -293,6 +293,7 @@
                         `🚚 *Empresa:* ${item.empresa}\n` +
                         `🏷️ *Remetente:* ${item.remetente}\n` +
                         `🔢 *NF/Doc:* ${item.nf}\n` +
+                        `👮 *Recebido por:* ${item.recebedor}\n` +
                         `⏰ *Entrada:* ${item.data} às ${item.hora}`;
 
             const encodedMsg = encodeURIComponent(msg);
@@ -447,6 +448,19 @@
 
         // --- RENDERIZAÇÃO ---
         function render() {
+            // SINALIZAÇÃO DOS FILTROS ATIVOS EM AZUL
+            const activeClass = "bg-blue-600 text-white border-blue-600 shadow-md";
+            const inactiveClass = "bg-white border-slate-200 text-slate-500";
+
+            document.getElementById('ff-all').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro === '' ? activeClass : inactiveClass}`;
+            document.getElementById('ff-j').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro === 'J' ? activeClass : inactiveClass}`;
+            document.getElementById('ff-p').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro === 'P' ? activeClass : inactiveClass}`;
+            
+            if (abaAtiva === 'entregues') {
+                document.getElementById('ff-token').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${tokenFiltro === 'com' ? activeClass : inactiveClass}`;
+                document.getElementById('ff-notoken').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${tokenFiltro === 'sem' ? activeClass : inactiveClass}`;
+            }
+
             const statusAlvo = abaAtiva === 'pendentes' ? 'pendente' : 'entregue';
             const listaBase = db.filter(d => d.status === statusAlvo);
             const grupos = {};
@@ -481,7 +495,6 @@
                 const card = document.createElement('div');
                 card.className = `card-unidade bg-white rounded-2xl border ${abaAtiva==='pendentes'&&g.total>1?'border-orange-200 ring-2 ring-orange-50':'border-slate-100'} shadow-sm overflow-hidden mb-3 animate-fade-in`;
                 
-                // Mostrar info de destino no histórico sem abrir
                 let badgesHist = '';
                 if(abaAtiva === 'entregues'){
                     const d = g.itens[0].destino === 'mensageria' ? 'MENSAGERIA' : 'MORADOR';
