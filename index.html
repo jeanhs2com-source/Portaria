@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Control</title>
+    <title>Portaria Control - TrackEasy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -30,7 +30,6 @@
 </head>
 <body class="bg-slate-50 text-slate-900 pb-10">
 
-    <!-- Modal de Edição -->
     <div id="modal-edit" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
         <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-fade-in">
             <div class="flex justify-between items-center border-b pb-3">
@@ -89,6 +88,34 @@
         </div>
     </div>
 
+    <div id="modal-baixa" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-black text-slate-800 uppercase text-sm">Realizar Entrega</h3>
+                <button onclick="closeBaixaModal()" class="text-slate-400 p-2"><i data-lucide="x"></i></button>
+            </div>
+            <div class="space-y-4 pt-2">
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                    <p class="text-[10px] text-blue-600 font-bold uppercase mb-1">Unidade / Morador</p>
+                    <p id="baixa-info-morador" class="text-sm font-black text-slate-800">Bloco X - Apto Y</p>
+                </div>
+                
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Quem está entregando? (Funcionário)</label>
+                    <input id="baixa-entregador" type="text" class="input-field" placeholder="Ex: Porteiro João">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Quem está retirando? (Morador)</label>
+                    <input id="baixa-retirado" type="text" class="input-field" placeholder="Ex: O Próprio, Esposa, Filho...">
+                </div>
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button onclick="closeBaixaModal()" class="flex-1 py-3 bg-slate-100 text-slate-500 font-black rounded-xl text-xs uppercase">Voltar</button>
+                <button onclick="confirmarBaixaReal()" class="flex-1 py-3 bg-emerald-600 text-white font-black rounded-xl text-xs uppercase shadow-lg">Confirmar Entrega</button>
+            </div>
+        </div>
+    </div>
+
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 no-print">
         <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -97,8 +124,10 @@
                 </div>
                 <h1 class="text-xl font-bold text-slate-800 tracking-tight">Portaria Control</h1>
             </div>
+            
             <div class="flex bg-slate-100 p-1 rounded-xl">
                 <button id="tab-p" onclick="switchTab('pendentes')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-active uppercase transition-all">Portaria</button>
+                <button id="tab-m" onclick="switchTab('mensageria')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all">Mensageria</button>
                 <button id="tab-h" onclick="switchTab('entregues')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all">Histórico</button>
             </div>
         </div>
@@ -106,19 +135,26 @@
 
     <main class="max-w-4xl mx-auto px-4 py-6 space-y-6">
         
-        <div class="grid grid-cols-2 gap-4 no-print">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-                <p class="text-[10px] font-bold uppercase text-slate-400 mb-1">Aguardando Saída</p>
-                <div class="flex items-end justify-center gap-2">
-                    <span id="count-p" class="text-3xl font-black text-blue-600">0</span>
-                    <span class="text-[10px] text-slate-400 mb-1 font-bold">VOLS</span>
+        <div class="grid grid-cols-3 gap-2 no-print">
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center">
+                <p class="text-[9px] font-bold uppercase text-slate-400 mb-1">Portaria</p>
+                <div class="flex items-end justify-center gap-1">
+                    <span id="count-p" class="text-2xl font-black text-blue-600">0</span>
+                    <span class="text-[8px] text-slate-400 mb-1 font-bold">VOLS</span>
                 </div>
             </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-                <p class="text-[10px] font-bold uppercase text-slate-400 mb-1">Total Turno</p>
-                <div class="flex items-end justify-center gap-2">
-                    <span id="count-e" class="text-3xl font-black text-emerald-600">0</span>
-                    <span class="text-[10px] text-slate-400 mb-1 font-bold">UNIDS</span>
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center">
+                <p class="text-[9px] font-bold uppercase text-slate-400 mb-1">Mensageria</p>
+                <div class="flex items-end justify-center gap-1">
+                    <span id="count-m" class="text-2xl font-black text-orange-500">0</span>
+                    <span class="text-[8px] text-slate-400 mb-1 font-bold">UNIDS</span>
+                </div>
+            </div>
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center">
+                <p class="text-[9px] font-bold uppercase text-slate-400 mb-1">Histórico</p>
+                <div class="flex items-end justify-center gap-1">
+                    <span id="count-e" class="text-2xl font-black text-emerald-600">0</span>
+                    <span class="text-[8px] text-slate-400 mb-1 font-bold">UNIDS</span>
                 </div>
             </div>
         </div>
@@ -233,6 +269,10 @@
         let blocoFiltro = '';
         let currentPhoto = null;
         let expandidoKey = null;
+        
+        // VARIÁVEIS PARA A NOVA MODAL DE BAIXA
+        let baixaTargetId = null;
+        let baixaTargetOrigem = null;
 
         function salvar() {
             try {
@@ -335,12 +375,9 @@
             salvar();
         }
 
-        // --- MENSAGEM DA MENSAGERIA REFINADA (CONFORME SOLICITADO) ---
         window.enviarAvisoMensageria = (id) => {
             const it = db.find(d => d.id === id);
             if (!it) return;
-            
-            // Pega o horário atual do envio da mensagem
             const agora = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
             
             const msg = `Olá! 👋 Informamos que sua encomenda saiu da portaria e chegou à nossa *MENSAGERIA* e já está pronta para retirada.\n\n` +
@@ -392,6 +429,46 @@
             }
         }
 
+        // --- LÓGICA DA NOVA MODAL DE BAIXA ---
+        window.openBaixaModal = (id, origem) => {
+            const it = db.find(d => d.id === id);
+            if (!it) return;
+            baixaTargetId = id;
+            baixaTargetOrigem = origem;
+            
+            document.getElementById('baixa-info-morador').innerText = `Bloco ${it.bloco} - Apto ${it.apto} (${it.morador})`;
+            document.getElementById('baixa-entregador').value = ""; // Limpa campo
+            document.getElementById('baixa-retirado').value = ""; // Limpa campo
+            document.getElementById('modal-baixa').classList.remove('hidden');
+        }
+
+        window.closeBaixaModal = () => document.getElementById('modal-baixa').classList.add('hidden');
+
+        window.confirmarBaixaReal = () => {
+            if (!baixaTargetId) return;
+            const idx = db.findIndex(d => d.id === baixaTargetId);
+            if (idx !== -1) {
+                const entregador = document.getElementById('baixa-entregador').value || "Não informado";
+                const retiradoPor = document.getElementById('baixa-retirado').value || "O Próprio";
+                
+                db[idx].status = 'entregue';
+                db[idx].saida = new Date().toISOString();
+                db[idx].entreguePor = entregador; // Novo campo
+                db[idx].retiradoPor = retiradoPor; // Novo campo
+                
+                // Define destino baseado na origem da baixa
+                if (baixaTargetOrigem === 'mensageria') {
+                    db[idx].destino = 'entregue_mensageria';
+                } else {
+                    db[idx].destino = 'morador';
+                }
+                
+                salvar();
+                closeBaixaModal();
+            }
+        }
+        // -------------------------------------
+
         function validarUnidade(txt) {
             const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
             const num = clean.match(/\d+/); const blk = clean.match(/[JP]/);
@@ -439,10 +516,17 @@
 
         function switchTab(t) {
             abaAtiva = t; expandidoKey = null; blocoFiltro = '';
-            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase ${t==='pendentes'?'tab-active':'tab-inactive'}`;
-            document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase ${t==='entregues'?'tab-active':'tab-inactive'}`;
+            
+            const ativo = "bg-white text-blue-600 shadow-sm";
+            const inativo = "text-slate-500 hover:bg-slate-200";
+            
+            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='pendentes'?ativo:inativo}`;
+            document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='mensageria'?ativo:inativo}`;
+            document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='entregues'?ativo:inativo}`;
+
             document.getElementById('area-registro').style.display = t==='pendentes'?'block':'none';
-            document.getElementById('controles-historico').style.display = t==='entregues'?'flex':'none';
+            document.getElementById('controles-historico').style.display = t==='pendentes'?'none':'flex';
+            
             render();
         }
 
@@ -450,14 +534,13 @@
         function setFastFilter(f) { blocoFiltro = f; render(); }
         function toggleExpand(key) { expandidoKey = expandidoKey === key ? null : key; render(); }
 
-        window.darBaixaItem = (id, dest) => {
-            const idx = db.findIndex(d => d.id === id);
+        // Função Antiga Simplificada para apenas Transferência Interna
+        window.darBaixaDiretaMensageria = (id) => {
+             const idx = db.findIndex(d => d.id === id);
             if (idx !== -1) {
-                const ti = document.getElementById(`token-item-${id}`);
                 db[idx].status = 'entregue';
                 db[idx].saida = new Date().toISOString();
-                db[idx].destino = dest;
-                db[idx].tokens = ti && ti.value ? [ti.value.trim()] : [];
+                db[idx].destino = 'mensageria';
                 salvar();
             }
         }
@@ -480,7 +563,15 @@
             document.getElementById('ff-j').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro==='J'?ac:inac}`;
             document.getElementById('ff-p').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${blocoFiltro==='P'?ac:inac}`;
             
-            const listaBase = db.filter(d => d.status === (abaAtiva==='pendentes'?'pendente':'entregue'));
+            let listaBase = [];
+            if (abaAtiva === 'pendentes') {
+                listaBase = db.filter(d => d.status === 'pendente');
+            } else if (abaAtiva === 'mensageria') {
+                listaBase = db.filter(d => d.status === 'entregue' && d.destino === 'mensageria');
+            } else {
+                listaBase = db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria');
+            }
+
             const grupos = {};
             listaBase.forEach(d => {
                 const k = `${d.bloco}-${d.apto}`;
@@ -492,12 +583,14 @@
                 grupos[k].itens.push(d); grupos[k].total += d.qtd;
                 
                 if(abaAtiva === 'pendentes' && d.notificadoPortariaMorador) grupos[k].statusNotificado = true;
-                if(abaAtiva === 'entregues' && d.notificadoMensageria) grupos[k].statusNotificado = true;
+                if((abaAtiva === 'entregues' || abaAtiva === 'mensageria') && d.notificadoMensageria) grupos[k].statusNotificado = true;
             });
 
             const filtrados = Object.values(grupos).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
+            
             document.getElementById('count-p').innerText = db.filter(d => d.status === 'pendente').reduce((a,b)=>a+b.qtd,0);
-            document.getElementById('count-e').innerText = db.filter(d => d.status === 'entregue').length;
+            document.getElementById('count-m').innerText = db.filter(d => d.status === 'entregue' && d.destino === 'mensageria').length;
+            document.getElementById('count-e').innerText = db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria').length;
 
             const container = document.getElementById('render-container');
             container.innerHTML = filtrados.length === 0 ? `<div class="p-10 text-center text-slate-400 font-bold text-xs uppercase">Vazio</div>` : '';
@@ -509,15 +602,17 @@
                 card.className = `card-unidade bg-white rounded-2xl border ${abaAtiva==='pendentes'&&g.total>1?'border-orange-200 ring-2 ring-orange-50':'border-slate-100'} shadow-sm overflow-hidden mb-3 animate-fade-in`;
                 
                 let badgesHist = '';
-                if(abaAtiva === 'entregues'){
-                    const d = g.itens[0].destino === 'mensageria' ? 'MENSAGERIA' : 'MORADOR';
-                    const c = g.itens[0].destino === 'mensageria' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600';
-                    badgesHist = `<span class="text-[8px] ${c} font-black px-1.5 py-0.5 rounded uppercase mr-1">${d}</span>`;
+                if(abaAtiva !== 'pendentes'){
+                    let label = 'ENTREGUE (PORTARIA)';
+                    let color = 'bg-emerald-100 text-emerald-600';
+                    if(g.itens[0].destino === 'mensageria') { label = 'NA MENSAGERIA'; color = 'bg-orange-100 text-orange-600'; }
+                    else if (g.itens[0].destino === 'entregue_mensageria') { label = 'ENTREGUE (MENSAGERIA)'; color = 'bg-indigo-100 text-indigo-600'; }
+                    badgesHist = `<span class="text-[8px] ${color} font-black px-1.5 py-0.5 rounded uppercase mr-1">${label}</span>`;
                 }
 
                 card.innerHTML = `
                     <div onclick="toggleExpand('${key}')" class="p-4 flex items-center gap-3 cursor-pointer active:bg-slate-50">
-                        <div class="w-12 h-12 flex items-center justify-center rounded-xl font-bold text-lg ${abaAtiva==='entregues'?'bg-slate-100 text-slate-400 border border-dashed':'bg-blue-600 text-white shadow-md'}">${g.b}</div>
+                        <div class="w-12 h-12 flex items-center justify-center rounded-xl font-bold text-lg ${abaAtiva!=='pendentes'?'bg-slate-100 text-slate-400 border border-dashed':'bg-blue-600 text-white shadow-md'}">${g.b}</div>
                         <div class="flex-1">
                             <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
                                 Apto ${g.a} - ${g.morador}
@@ -532,7 +627,7 @@
                     ${isExp ? `<div class="bg-slate-50 border-t border-slate-100 p-4 space-y-4">
                         ${g.itens.map(it => `
                             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm animate-fade-in relative overflow-hidden">
-                                ${((abaAtiva==='pendentes'&&it.notificadoPortariaMorador)||(abaAtiva==='entregues'&&it.notificadoMensageria)) ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-2 h-2"></i> Mensagem Enviada</div>` : ''}
+                                ${((abaAtiva==='pendentes'&&it.notificadoPortariaMorador)||(abaAtiva!=='pendentes'&&it.notificadoMensageria)) ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-2 h-2"></i> Mensagem Enviada</div>` : ''}
                                 
                                 <div class="flex gap-4 mb-4">
                                     <div class="relative">
@@ -565,15 +660,21 @@
                                     <div><p class="text-[7px]">Recebedor</p><p class="text-slate-700">${it.recebedor}</p></div>
                                     <div><p class="text-[7px]">Entrada</p><p class="text-slate-700">${it.data} às ${it.hora}</p></div>
                                     <div><p class="text-[7px] text-blue-500">Portaria até:</p><p class="text-blue-600 font-bold">${it.permanencia || 'N/A'}</p></div>
-                                    ${it.saida ? `<div class="col-span-2 border-t pt-1"><p class="text-[7px] text-emerald-500 font-black uppercase">Saída: ${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p></div>` : ''}
+                                    ${it.saida ? `<div class="col-span-2 border-t pt-1"><p class="text-[7px] text-emerald-500 font-black uppercase">Saída: ${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p>
+                                    ${it.entreguePor ? `<p class="text-[7px] text-slate-500 mt-0.5 font-medium">Entregue por: ${it.entreguePor} | Retirado por: ${it.retiradoPor}</p>` : ''}
+                                    </div>` : ''}
                                 </div>
                                 ${abaAtiva === 'pendentes' ? `
                                     <div class="mt-4 pt-3 border-t space-y-2 no-print">
-                                        <input type="text" id="token-item-${it.id}" placeholder="Escreva o token ou parentesco..." class="w-full p-2 border rounded-lg text-[10px] font-bold outline-none bg-slate-50 focus:bg-white">
                                         <div class="grid grid-cols-2 gap-2">
-                                            <button onclick="darBaixaItem(${it.id}, 'morador')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Entrega Morador</button>
-                                            <button onclick="darBaixaItem(${it.id}, 'mensageria')" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Encaminhar Mensageria</button>
+                                            <button onclick="openBaixaModal(${it.id}, 'portaria')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Entrega Morador</button>
+                                            <button onclick="darBaixaDiretaMensageria(${it.id})" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Encaminhar Mensageria</button>
                                         </div>
+                                    </div>` : ''}
+                                
+                                ${abaAtiva === 'mensageria' ? `
+                                    <div class="mt-4 pt-3 border-t space-y-2 no-print">
+                                        <button onclick="openBaixaModal(${it.id}, 'mensageria')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm active:scale-95 transition-all">Confirmar Entrega ao Morador</button>
                                     </div>` : ''}
                             </div>
                         `).join('')}
@@ -587,4 +688,3 @@
     </script>
 </body>
 </html>
-
