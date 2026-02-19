@@ -686,98 +686,10 @@
         }
         window.onload = () => render();
     </script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
-    authDomain: "trackeasy-669e3.firebaseapp.com",
-    projectId: "trackeasy-669e3",
-    storageBucket: "trackeasy-669e3.firebasestorage.app",
-    messagingSenderId: "656055712426",
-    appId: "1:656055712426:web:c393bdb7ccf0afe820eed3"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const dbFirebase = getFirestore(app); 
-
-  async function enviarWhatsFirebase(id, tipoAviso) {
-    const it = db.find(d => d.id === id);
-    if (!it) return;
-
-    const idFirebase = it.apto + it.bloco;
-    
-    // Identifica se é celular ou computador
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    // TRUQUE DO PC: Só abre a aba fantasma se estiver no computador
-    let abaNativa = null;
-    if (!isMobile) {
-      abaNativa = window.open('about:blank', '_blank');
-    }
-
-    try {
-      const docRef = doc(dbFirebase, "moradores", idFirebase);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const dados = docSnap.data();
-        
-        // Limpeza do número
-        let numeroWhats = String(dados.whatsapp1).replace(/\D/g, ''); 
-        if (numeroWhats.length <= 11) {
-            numeroWhats = '55' + numeroWhats;
-        }
-
-        let msg = "";
-
-        // Monta a mensagem
-        if (tipoAviso === 'portaria') {
-          let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*. Após este horário, ela será encaminhada para a Mensageria.` : '';
-          msg = `Olá! 👋 Temos uma ótima notícia: uma encomenda sua acaba de chegar à nossa portaria!\n\n` +
-                `👤 *Para:* ${it.morador}\n🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n📦 *Item:* ${it.descricao}\n🏷️ *Remetente:* ${it.remetente}\n🚚 *Empresa:* ${it.empresa}\n🔢 *Doc/NF:* ${it.nf}\n👮 *Recebido por:* ${it.recebedor}\n⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\nA portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
-          it.notificadoPortariaMorador = true;
-          
-        } else if (tipoAviso === 'mensageria') {
-          const agora = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
-          msg = `Olá! 👋 Informamos que sua encomenda saiu da portaria e chegou à nossa *MENSAGERIA* e já está pronta para retirada.\n\n` +
-                `🏢 *Local:* Unidade ${it.apto} - Bloco ${it.bloco}\n📦 *Item:* ${it.descricao}\n⏰ *Aviso enviado às:* ${agora}\n\nAguardamos sua visita para a retirada. Tenha um excelente dia! 📦✨`;
-          it.notificadoMensageria = true;
-        }
-        
-        const linkOficial = `https://wa.me/${numeroWhats}?text=${encodeURIComponent(msg)}`;
-
-        // DISPARO IMEDIATO
-        if (isMobile) {
-          // No celular, redirecionamos a própria aba (isso força o Android/iOS a abrir o aplicativo na hora)
-          window.location.href = linkOficial;
-        } else {
-          // No PC, injetamos o link na aba que já criamos
-          abaNativa.location.href = linkOficial;
-        }
-        
-        salvar(); 
-        if (typeof render === "function") render();
-
-      } else {
-        if (abaNativa) abaNativa.close();
-        alert(`❌ O apartamento ${idFirebase} ainda não tem número salvo no banco de dados!`);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar no Firebase:", error);
-      if (abaNativa) abaNativa.close();
-      alert("Erro ao tentar conectar no banco de dados.");
-    }
-  }
-
-  // Atalhos para os seus botões
-  window.enviarAvisoMorador = (id) => enviarWhatsFirebase(id, 'portaria');
-  window.enviarAvisoMensageria = (id) => enviarWhatsFirebase(id, 'mensageria');
-
-</script>
+<script type="module" src="firebase-trackeasy.js"></script>
 </body>
 </html>
+
 
 
 
