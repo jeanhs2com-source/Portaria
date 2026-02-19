@@ -686,5 +686,75 @@
         }
         window.onload = () => render();
     </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
+    authDomain: "trackeasy-669e3.firebaseapp.com",
+    projectId: "trackeasy-669e3",
+    storageBucket: "trackeasy-669e3.firebasestorage.app",
+    messagingSenderId: "656055712426",
+    appId: "1:656055712426:web:c393bdb7ccf0afe820eed3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  // Mudei o nome para dbFirebase para não dar conflito com o seu let db
+  const dbFirebase = getFirestore(app); 
+
+  // Aqui nós conectamos o Firebase ao seu botão azul (Avisar Morador) original!
+  window.enviarAvisoMorador = async (id) => {
+    // 1. Pega os dados da encomenda no seu sistema local
+    const it = db.find(d => d.id === id);
+    if (!it) return;
+
+    // 2. O seu sistema separa Apto e Bloco. Vamos juntar (Ex: "11" + "P" = "11P")
+    const idFirebase = it.apto + it.bloco;
+
+    // 3. A janelinha de confirmação que você pediu
+    const confirmar = confirm(`Deseja enviar WhatsApp para o morador do Apto ${it.apto} (Bloco ${it.bloco})?`);
+    
+    if (confirmar) {
+      try {
+        // Vai no banco do Google procurar a coleção "moradores" e o documento "11P"
+        const docRef = doc(dbFirebase, "moradores", idFirebase);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const dados = docSnap.data();
+          const numeroWhats = dados.whatsapp1; 
+          
+          // 4. Monta a SUA mensagem original
+          let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*. Após este horário, ela será encaminhada para a Mensageria.` : '';
+          const msg = `Olá! 👋 Temos uma ótima notícia: uma encomenda sua acaba de chegar à nossa portaria!\n\n` +
+                 `👤 *Para:* ${it.morador}\n` +
+                 `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
+                 `📦 *Item:* ${it.descricao}\n` +
+                 `🏷️ *Remetente:* ${it.remetente}\n` +
+                 `🚚 *Empresa:* ${it.empresa}\n` +
+                 `🔢 *Doc/NF:* ${it.nf}\n` +
+                 `👮 *Recebido por:* ${it.recebedor}\n` +
+                 `⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\n` +
+                 `A portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
+          
+          // 5. Abre o WhatsApp DIRETO para o número que veio do Firebase
+          window.open(`https://wa.me/${numeroWhats}?text=${encodeURIComponent(msg)}`, '_blank');
+          
+          // 6. Atualiza seu sistema para mostrar o check verde de "Mensagem Enviada"
+          it.notificadoPortariaMorador = true; 
+          salvar(); 
+          location.reload(); 
+        } else {
+          alert(`❌ O apartamento ${idFirebase} ainda não tem número salvo no banco de dados!`);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar no Firebase:", error);
+        alert("Erro ao tentar conectar no banco de dados.");
+      }
+    }
+  };
+</script>
 </body>
 </html>
+
