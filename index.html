@@ -702,66 +702,73 @@
   const app = initializeApp(firebaseConfig);
   const dbFirebase = getFirestore(app); 
 
-  window.enviarAvisoMorador = async (id) => {
+  // Função central que atende os dois botões
+  async function enviarWhatsFirebase(id, tipoAviso) {
     const it = db.find(d => d.id === id);
     if (!it) return;
 
     const idFirebase = it.apto + it.bloco;
     const confirmar = confirm(`Deseja enviar WhatsApp para o morador do Apto ${it.apto} (Bloco ${it.bloco})?`);
     
-    if (confirmar) {
-      try {
-        const docRef = doc(dbFirebase, "moradores", idFirebase);
-        const docSnap = await getDoc(docRef);
+    if (!confirmar) return;
 
-        if (docSnap.exists()) {
-          const dados = docSnap.data();
-          const numeroWhats = dados.whatsapp1; 
-          
-          let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*. Após este horário, ela será encaminhada para a Mensageria.` : '';
-          const msg = `Olá! 👋 Temos uma ótima notícia: uma encomenda sua acaba de chegar à nossa portaria!\n\n` +
-                 `👤 *Para:* ${it.morador}\n` +
-                 `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
-                 `📦 *Item:* ${it.descricao}\n` +
-                 `🏷️ *Remetente:* ${it.remetente}\n` +
-                 `🚚 *Empresa:* ${it.empresa}\n` +
-                 `🔢 *Doc/NF:* ${it.nf}\n` +
-                 `👮 *Recebido por:* ${it.recebedor}\n` +
-                 `⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\n` +
-                 `A portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
-          
-          // Verifica se é celular para usar o comando mais agressivo
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // O TRUQUE MESTRE: Abre uma aba neutra IMEDIATAMENTE no clique para o celular não bloquear
+    const abaNativa = window.open('about:blank', '_blank');
 
-          if (isMobile) {
-            // Comando matador para forçar o APP nativo no celular (sem passar pelo navegador)
-            window.location.href = `whatsapp://send?phone=${numeroWhats}&text=${encodeURIComponent(msg)}`;
-          } else {
-            // No PC, usa o link oficial da web abrindo numa nova guia
-            window.open(`https://wa.me/${numeroWhats}?text=${encodeURIComponent(msg)}`, '_blank');
-          }
-          
-          // Salva que a mensagem foi enviada
-          it.notificadoPortariaMorador = true; 
-          salvar(); 
-          
-          // Atualiza a interface do seu sistema suavemente, SEM dar reload na página
-          if (typeof render === "function") {
-            render();
-          }
+    try {
+      const docRef = doc(dbFirebase, "moradores", idFirebase);
+      const docSnap = await getDoc(docRef);
 
-        } else {
-          alert(`❌ O apartamento ${idFirebase} ainda não tem número salvo no banco de dados!`);
+      if (docSnap.exists()) {
+        const dados = docSnap.data();
+        
+        // Garante que o número está limpo e com o 55 do Brasil
+        let numeroWhats = String(dados.whatsapp1).replace(/\D/g, ''); 
+        if (numeroWhats.length <= 11) {
+            numeroWhats = '55' + numeroWhats;
         }
-      } catch (error) {
-        console.error("Erro ao buscar no Firebase:", error);
-        alert("Erro ao tentar conectar no banco de dados.");
+
+        let msg = "";
+
+        // Monta a mensagem certa dependendo do botão que você clicou
+        if (tipoAviso === 'portaria') {
+          let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*. Após este horário, ela será encaminhada para a Mensageria.` : '';
+          msg = `Olá! 👋 Temos uma ótima notícia: uma encomenda sua acaba de chegar à nossa portaria!\n\n` +
+                `👤 *Para:* ${it.morador}\n🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n📦 *Item:* ${it.descricao}\n🏷️ *Remetente:* ${it.remetente}\n🚚 *Empresa:* ${it.empresa}\n🔢 *Doc/NF:* ${it.nf}\n👮 *Recebido por:* ${it.recebedor}\n⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\nA portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
+          it.notificadoPortariaMorador = true;
+          
+        } else if (tipoAviso === 'mensageria') {
+          const agora = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
+          msg = `Olá! 👋 Informamos que sua encomenda saiu da portaria e chegou à nossa *MENSAGERIA* e já está pronta para retirada.\n\n` +
+                `🏢 *Local:* Unidade ${it.apto} - Bloco ${it.bloco}\n📦 *Item:* ${it.descricao}\n⏰ *Aviso enviado às:* ${agora}\n\nAguardamos sua visita para a retirada. Tenha um excelente dia! 📦✨`;
+          it.notificadoMensageria = true;
+        }
+        
+        // Manda a aba que já estava aberta ir direto para o WhatsApp Oficial
+        abaNativa.location.href = `https://wa.me/${numeroWhats}?text=${encodeURIComponent(msg)}`;
+        
+        salvar(); 
+        if (typeof render === "function") render();
+
+      } else {
+        abaNativa.close(); // Se não achar o número, fecha a aba fantasma
+        alert(`❌ O apartamento ${idFirebase} ainda não tem número salvo no banco de dados!`);
       }
+    } catch (error) {
+      console.error("Erro ao buscar no Firebase:", error);
+      abaNativa.close();
+      alert("Erro ao tentar conectar no banco de dados.");
     }
-  };
+  }
+
+  // Conectando os seus botões originais à nova função inteligente
+  window.enviarAvisoMorador = (id) => enviarWhatsFirebase(id, 'portaria');
+  window.enviarAvisoMensageria = (id) => enviarWhatsFirebase(id, 'mensageria');
+
 </script>
 </body>
 </html>
+
 
 
 
