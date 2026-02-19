@@ -730,25 +730,25 @@
                  `⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\n` +
                  `A portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
           
-          // A MÁGICA NOVA ACONTECE AQUI:
-          const urlFormatada = `https://api.whatsapp.com/send?phone=${numeroWhats}&text=${encodeURIComponent(msg)}`;
-
-          // Detecta se é celular ou computador
+          // Verifica se é celular para usar o comando mais agressivo
           const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
           if (isMobile) {
-            // No celular, abre na mesma janela para forçar o App do WhatsApp a abrir direto
-            window.location.href = urlFormatada;
+            // Comando matador para forçar o APP nativo no celular (sem passar pelo navegador)
+            window.location.href = `whatsapp://send?phone=${numeroWhats}&text=${encodeURIComponent(msg)}`;
           } else {
-            // No PC, abre em nova aba (pergunta se quer usar Web ou App Desktop)
-            window.open(urlFormatada, '_blank');
+            // No PC, usa o link oficial da web abrindo numa nova guia
+            window.open(`https://wa.me/${numeroWhats}?text=${encodeURIComponent(msg)}`, '_blank');
           }
           
+          // Salva que a mensagem foi enviada
           it.notificadoPortariaMorador = true; 
           salvar(); 
           
-          // Pequeno delay para recarregar a tela, garantindo que o WhatsApp tenha tempo de abrir no celular
-          setTimeout(() => location.reload(), 1500);
+          // Atualiza a interface do seu sistema suavemente, SEM dar reload na página
+          if (typeof render === "function") {
+            render();
+          }
 
         } else {
           alert(`❌ O apartamento ${idFirebase} ainda não tem número salvo no banco de dados!`);
@@ -762,5 +762,6 @@
 </script>
 </body>
 </html>
+
 
 
