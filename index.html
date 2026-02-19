@@ -735,6 +735,145 @@
     }
   };
 </script>
+<script type="module">
+    // 1. Importações necessárias
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+        getFirestore, collection, addDoc, onSnapshot, query, 
+        doc, updateDoc, deleteDoc, orderBy, getDoc 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 2. Sua Configuração (Mantida)
+    const firebaseConfig = {
+        apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
+        authDomain: "trackeasy-669e3.firebaseapp.com",
+        projectId: "trackeasy-669e3",
+        storageBucket: "trackeasy-669e3.firebasestorage.app",
+        messagingSenderId: "656055712426",
+        appId: "1:656055712426:web:c393bdb7ccf0afe820eed3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const dbFirestore = getFirestore(app);
+    const colRef = collection(dbFirestore, "encomendas");
+
+    // Variáveis de Controle de Interface
+    let listaEncomendas = [];
+    window.abaAtiva = 'pendentes';
+    window.termoBusca = '';
+    window.blocoFiltro = '';
+    window.expandidoKey = null;
+
+    // --- ESCUTA EM TEMPO REAL (A MÁGICA ACONTECE AQUI) ---
+    const q = query(colRef, orderBy("timestamp", "desc"));
+    onSnapshot(q, (snapshot) => {
+        listaEncomendas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        render(); // Re-renderiza a tela sempre que o banco mudar
+    });
+
+    // --- FUNÇÃO PARA GRAVAR NO FIREBASE ---
+    window.handleRegistrar = async (e) => {
+        e.preventDefault();
+        const res = validarUnidade(document.getElementById('input-unidade').value);
+        if (!res.ok) return;
+
+        const btn = document.getElementById('btn-gravar');
+        btn.disabled = true;
+        btn.innerText = "GRAVANDO...";
+
+        try {
+            const novaDoc = {
+                apto: res.apto.toString(),
+                bloco: res.bloco,
+                morador: document.getElementById('input-morador').value || "Morador",
+                empresa: document.getElementById('input-empresa').value || "Empresa",
+                remetente: document.getElementById('input-remetente').value || "Remetente",
+                descricao: document.getElementById('input-descricao').value || "Volume",
+                nf: document.getElementById('input-nf').value || "S/N",
+                recebedor: document.getElementById('input-recebedor').value || "Porteiro",
+                permanencia: document.getElementById('input-permanencia').value || "",
+                qtd: parseInt(document.getElementById('input-qtd').value) || 1,
+                foto: window.currentPhoto || null,
+                data: new Date().toLocaleDateString('pt-PT'),
+                hora: new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}),
+                timestamp: Date.now(),
+                status: 'pendente',
+                destino: '',
+                notificadoPortariaMorador: false,
+                notificadoMensageria: false
+            };
+
+            await addDoc(colRef, novaDoc);
+            
+            document.getElementById('form-main').reset();
+            document.getElementById('photo-container').classList.add('hidden');
+            window.currentPhoto = null;
+            alert("Registrado com sucesso!");
+        } catch (err) {
+            console.error(err);
+            alert("Erro ao salvar no banco!");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Gravar Registro";
+        }
+    };
+
+    // --- DAR BAIXA (ATUALIZAR STATUS NO FIREBASE) ---
+    window.confirmarBaixaReal = async () => {
+        const id = window.baixaTargetId;
+        if (!id) return;
+
+        const docRef = doc(dbFirestore, "encomendas", id);
+        const entregador = document.getElementById('baixa-entregador').value || "Não informado";
+        const retiradoPor = document.getElementById('baixa-retirado').value || "O Próprio";
+        
+        const updates = {
+            status: 'entregue',
+            saida: new Date().toISOString(),
+            entreguePor: entregador,
+            retiradoPor: retiradoPor,
+            destino: window.baixaTargetOrigem === 'mensageria' ? 'entregue_mensageria' : 'morador'
+        };
+
+        await updateDoc(docRef, updates);
+        closeBaixaModal();
+    };
+
+    window.darBaixaDiretaMensageria = async (id) => {
+        const docRef = doc(dbFirestore, "encomendas", id);
+        await updateDoc(docRef, {
+            status: 'entregue',
+            saida: new Date().toISOString(),
+            destino: 'mensageria'
+        });
+    };
+
+    window.excluirUm = async (id) => {
+        if(confirm("Deseja realmente apagar este registro do banco de dados?")) {
+            await deleteDoc(doc(dbFirestore, "encomendas", id));
+        }
+    };
+
+    // --- FUNÇÃO DE RENDERIZAÇÃO ADAPTADA ---
+    window.render = () => {
+        // (Aqui entra a sua lógica de filtros exata, mas usando 'listaEncomendas')
+        // Vou resumir para você aplicar no seu código:
+        
+        let filtrados = [];
+        if (window.abaAtiva === 'pendentes') {
+            filtrados = listaEncomendas.filter(d => d.status === 'pendente');
+        } else if (window.abaAtiva === 'mensageria') {
+            filtrados = listaEncomendas.filter(d => d.status === 'entregue' && d.destino === 'mensageria');
+        } else {
+            filtrados = listaEncomendas.filter(d => d.status === 'entregue' && d.destino !== 'mensageria');
+        }
+
+        // ... Restante da sua lógica de agrupamento por unidade e Lucide Icons ...
+        // Importante: Onde seu código usava 'db', agora usa 'filtrados' ou 'listaEncomendas'
+    };
+
+</script>
 </body>
 </html>
+
 
