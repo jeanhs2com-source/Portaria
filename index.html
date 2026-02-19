@@ -686,55 +686,5 @@
         }
         window.onload = () => render();
     </script>
-<script type="module">
-  // 1. Importando o Firebase direto do Google
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-  // 2. A sua configuração exata do TrackEasy
-  const firebaseConfig = {
-    apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
-    authDomain: "trackeasy-669e3.firebaseapp.com",
-    projectId: "trackeasy-669e3",
-    storageBucket: "trackeasy-669e3.firebasestorage.app",
-    messagingSenderId: "656055712426",
-    appId: "1:656055712426:web:c393bdb7ccf0afe820eed3"
-  };
-
-  // 3. Ligando o motor
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // 4. A função mágica que seu botão vai chamar
-  window.enviarWhatsFirebase = async function(numeroApto) {
-    // A janelinha de confirmação que você pediu
-    const confirmar = confirm(`Deseja enviar mensagem de encomenda para o Apto ${numeroApto}?`);
-    
-    if (confirmar) {
-      try {
-        // Vai no banco "moradores" e procura o documento do apartamento
-        const docRef = doc(db, "moradores", numeroApto.toString());
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const dados = docSnap.data();
-          const numeroWhats = dados.whatsapp1; // O campo que criamos no Firestore
-          
-          // Monta a mensagem e abre o WhatsApp
-          const mensagem = encodeURIComponent(`Olá! Identificamos uma encomenda para o apartamento ${numeroApto} na portaria. Pode retirar!`);
-          const url = `https://wa.me/${numeroWhats}?text=${mensagem}`;
-          
-          window.open(url, '_blank');
-        } else {
-          alert(`O apartamento ${numeroApto} ainda não tem número salvo no banco de dados!`);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar no Firebase:", error);
-        alert("Deu um erro ao tentar conectar no banco.");
-      }
-    }
-  };
-</script>
 </body>
 </html>
-
