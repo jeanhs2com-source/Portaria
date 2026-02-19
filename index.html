@@ -702,18 +702,20 @@
   const app = initializeApp(firebaseConfig);
   const dbFirebase = getFirestore(app); 
 
-  // Função central que atende os dois botões
   async function enviarWhatsFirebase(id, tipoAviso) {
     const it = db.find(d => d.id === id);
     if (!it) return;
 
     const idFirebase = it.apto + it.bloco;
-    const confirmar = confirm(`Deseja enviar WhatsApp para o morador do Apto ${it.apto} (Bloco ${it.bloco})?`);
     
-    if (!confirmar) return;
+    // Identifica se é celular ou computador
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // O TRUQUE MESTRE: Abre uma aba neutra IMEDIATAMENTE no clique para o celular não bloquear
-    const abaNativa = window.open('about:blank', '_blank');
+    // TRUQUE DO PC: Só abre a aba fantasma se estiver no computador
+    let abaNativa = null;
+    if (!isMobile) {
+      abaNativa = window.open('about:blank', '_blank');
+    }
 
     try {
       const docRef = doc(dbFirebase, "moradores", idFirebase);
@@ -722,7 +724,7 @@
       if (docSnap.exists()) {
         const dados = docSnap.data();
         
-        // Garante que o número está limpo e com o 55 do Brasil
+        // Limpeza do número
         let numeroWhats = String(dados.whatsapp1).replace(/\D/g, ''); 
         if (numeroWhats.length <= 11) {
             numeroWhats = '55' + numeroWhats;
@@ -730,7 +732,7 @@
 
         let msg = "";
 
-        // Monta a mensagem certa dependendo do botão que você clicou
+        // Monta a mensagem
         if (tipoAviso === 'portaria') {
           let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*. Após este horário, ela será encaminhada para a Mensageria.` : '';
           msg = `Olá! 👋 Temos uma ótima notícia: uma encomenda sua acaba de chegar à nossa portaria!\n\n` +
@@ -744,30 +746,39 @@
           it.notificadoMensageria = true;
         }
         
-        // Manda a aba que já estava aberta ir direto para o WhatsApp Oficial
-        abaNativa.location.href = `https://wa.me/${numeroWhats}?text=${encodeURIComponent(msg)}`;
+        const linkOficial = `https://wa.me/${numeroWhats}?text=${encodeURIComponent(msg)}`;
+
+        // DISPARO IMEDIATO
+        if (isMobile) {
+          // No celular, redirecionamos a própria aba (isso força o Android/iOS a abrir o aplicativo na hora)
+          window.location.href = linkOficial;
+        } else {
+          // No PC, injetamos o link na aba que já criamos
+          abaNativa.location.href = linkOficial;
+        }
         
         salvar(); 
         if (typeof render === "function") render();
 
       } else {
-        abaNativa.close(); // Se não achar o número, fecha a aba fantasma
+        if (abaNativa) abaNativa.close();
         alert(`❌ O apartamento ${idFirebase} ainda não tem número salvo no banco de dados!`);
       }
     } catch (error) {
       console.error("Erro ao buscar no Firebase:", error);
-      abaNativa.close();
+      if (abaNativa) abaNativa.close();
       alert("Erro ao tentar conectar no banco de dados.");
     }
   }
 
-  // Conectando os seus botões originais à nova função inteligente
+  // Atalhos para os seus botões
   window.enviarAvisoMorador = (id) => enviarWhatsFirebase(id, 'portaria');
   window.enviarAvisoMensageria = (id) => enviarWhatsFirebase(id, 'mensageria');
 
 </script>
 </body>
 </html>
+
 
 
 
