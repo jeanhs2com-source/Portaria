@@ -117,18 +117,16 @@
 
     <div id="modal-whatsapp" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
         <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in text-center">
-            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2">
+            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2">
                 <i data-lucide="message-circle" class="w-8 h-8"></i>
             </div>
             <h3 class="font-black text-slate-800 uppercase text-lg">WhatsApp Pronto!</h3>
             <p id="wa-numero-display" class="text-xs font-bold text-slate-400 mb-4">Apto --</p>
             <div class="flex gap-3 pt-2">
                 <button onclick="document.getElementById('modal-whatsapp').classList.add('hidden')" class="flex-1 py-3 bg-slate-100 text-slate-500 font-black rounded-xl text-xs uppercase">Cancelar</button>
-                <a id="btn-wa-enviar" href="#" target="_blank" class="flex-1 py-3 bg-emerald-500 text-white font-black rounded-xl text-xs uppercase shadow-lg flex items-center justify-center gap-2">Abrir App</a>
+                <a id="btn-wa-enviar" href="#" target="_blank" class="flex-1 py-3 bg-blue-600 text-white font-black rounded-xl text-xs uppercase shadow-lg flex items-center justify-center gap-2">Abrir WhatsApp</a>
             </div>
         </div>
-    </div>
-
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 no-print">
         <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -654,12 +652,15 @@
                                         <div class="flex justify-between items-start">
                                             <div><p class="text-[8px] font-black text-slate-400 uppercase">Remetente</p><p class="text-[11px] font-black text-blue-700 uppercase">${it.remetente}</p></div>
                                             <div class="flex gap-2 no-print">
-                                                ${abaAtiva === 'pendentes' ? `
-                                                    <button onclick="enviarGrupoCondominio(${it.id})" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Grupo Administrativo"><i data-lucide="send" class="w-4 h-4"></i></button>
-                                                    <button onclick="enviarAvisoMorador(${it.id})" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador"><i data-lucide="bell" class="w-4 h-4"></i></button>
-                                                ` : `
-                                                    ${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria(${it.id})" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Aviso Mensageria"><i data-lucide="send" class="w-4 h-4"></i></button>` : ''}
-                                                `}
+                                        ${window.abaAtiva === 'pendentes' ? `
+                                            <button onclick="window.enviarGrupoCondominioPorObjeto(window.db.find(d => d.id === ${it.id}))" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Grupo Administrativo"><i data-lucide="send" class="w-4 h-4"></i></button>
+                                            <button onclick="window.enviarAvisoMorador(${it.id})" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador"><i data-lucide="bell" class="w-4 h-4"></i></button>
+                                        ` : `
+                                            ${it.destino === 'mensageria' ? `<button onclick="window.enviarAvisoMensageria(${it.id})" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Aviso Mensageria"><i data-lucide="bell" class="w-4 h-4"></i></button>` : ''}
+                                        `}
+                                        <button onclick="window.openEditModal(${it.id})" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                        <button onclick="window.excluirUm(${it.id})" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    </div>
                                                 <button onclick="openEditModal(${it.id})" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                                                 <button onclick="excluirUm(${it.id})" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                             </div>
@@ -771,9 +772,40 @@
         document.getElementById('feedback-val').innerText = "Pendente";
 
         // GATILHO RESTAURADO: Aguarda um pouquinho para a nuvem sincronizar e dispara a foto pro Condomínio
-        setTimeout(() => { window.enviarGrupoCondominio(novoRegistro.id); }, 1000);
+        document.getElementById('feedback-val').innerText = "Pendente";
+
+        // DISPARO AUTOMÁTICO PARA O GRUPO
+        window.enviarGrupoCondominioPorObjeto(novoRegistro);
 
     } catch(err) { alert("Erro ao salvar!"); console.error(err); }
+  };
+
+  // FUNÇÃO DE COMPARTILHAMENTO (Resolve o erro do botão verde e do automático)
+  window.enviarGrupoCondominioPorObjeto = async (it) => {
+    if (!it) return;
+    const msg = `📢 *CONTROLE DE ENCOMENDA - PORTARIA* \n\n` +
+                `👤 *Morador:* ${it.morador}\n` +
+                `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
+                `📦 *Produto:* ${it.descricao}\n` +
+                `🚚 *Empresa:* ${it.empresa}\n` +
+                `🏷️ *Remetente:* ${it.remetente}\n` +
+                `🔢 *NF/Doc:* ${it.nf}\n` +
+                `👮 *Recebido por:* ${it.recebedor}\n` +
+                `⏰ *Chegada:* ${it.data} às ${it.hora}\n` +
+                `⏳ *Portaria até:* ${it.permanencia || 'N/A'}`;
+    
+    // Se tiver foto, tenta usar o compartilhamento nativo do celular
+    if (it.foto && navigator.share) {
+        try {
+            const response = await fetch(it.foto);
+            const blob = await response.blob();
+            const file = new File([blob], 'encomenda.jpg', { type: 'image/jpeg' });
+            await navigator.share({ files: [file], title: 'Controle Portaria', text: msg });
+            return;
+        } catch (e) { console.log("Compartilhamento nativo falhou, abrindo link..."); }
+    }
+    // Plano B: Abre o WhatsApp com o texto
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   // 3. ATUALIZAÇÕES E BAIXAS (Edita o documento no Firebase)
@@ -1074,3 +1106,15 @@
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
