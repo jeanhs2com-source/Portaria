@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Control - TrackEasy</title>
+    <title> TrackEasy </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -89,6 +89,20 @@
     </div>
 
     <div id="modal-baixa" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
+        <div id="modal-whatsapp" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in text-center">
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                <i data-lucide="message-circle" class="w-8 h-8"></i>
+            </div>
+            <h3 class="font-black text-slate-800 uppercase text-lg">WhatsApp Pronto!</h3>
+            <p id="wa-numero-display" class="text-xs font-bold text-slate-400 mb-4">Apto --</p>
+            <div class="flex gap-3 pt-2">
+                <button onclick="document.getElementById('modal-whatsapp').classList.add('hidden')" class="flex-1 py-3 bg-slate-100 text-slate-500 font-black rounded-xl text-xs uppercase">Cancelar</button>
+                
+                <a id="btn-wa-enviar" href="#" target="_blank" class="flex-1 py-3 bg-green-500 text-white font-black rounded-xl text-xs uppercase shadow-lg flex items-center justify-center gap-2">Abrir App</a>
+            </div>
+        </div>
+    </div>
         <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="font-black text-slate-800 uppercase text-sm">Realizar Entrega</h3>
@@ -689,6 +703,7 @@
 <script type="module" src="firebase-trackeasy.js"></script>
 </body>
 </html>
+
 
 
 
