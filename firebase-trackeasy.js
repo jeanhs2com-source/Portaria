@@ -22,7 +22,6 @@ window.enviarWhatsFirebase = async function(id, tipoAviso) {
   const idFirebase = (it.apto + it.bloco).toUpperCase();
 
   try {
-    // 1. O SISTEMA VAI NO FIREBASE PRIMEIRO (Em segundo plano)
     const docRef = doc(dbFirebase, "moradores", idFirebase);
     const docSnap = await getDoc(docRef);
 
@@ -31,7 +30,7 @@ window.enviarWhatsFirebase = async function(id, tipoAviso) {
       
       let numeroWhats = String(dados.whatsapp1).replace(/\D/g, ''); 
       if (numeroWhats.length <= 11) {
-          numeroWhats = '55' + numeroWhats;
+          numeroWhats = '55' + numeroWhats; // Garante o 55 do Brasil
       }
 
       let msg = "";
@@ -43,17 +42,16 @@ window.enviarWhatsFirebase = async function(id, tipoAviso) {
         msg = `Olá! 👋 Informamos que sua encomenda saiu da portaria e chegou à nossa *MENSAGERIA* e já está pronta para retirada.\n\n🏢 *Local:* Unidade ${it.apto} - Bloco ${it.bloco}\n📦 *Item:* ${it.descricao}\n⏰ *Aviso enviado às:* ${agora}\n\nAguardamos sua visita para a retirada. Tenha um excelente dia! 📦✨`;
       }
       
-      // Usa o link oficial e mais estável do WhatsApp
       const linkFinal = `https://wa.me/${numeroWhats}?text=${encodeURIComponent(msg)}`;
 
-      // 2. A MÁGICA ACONTECE AQUI: A confirmação zera o bloqueador de segurança do celular!
-      const confirmarEnvio = confirm(`✅ Número encontrado no sistema!\n\nDeseja abrir o WhatsApp agora para o Apto ${idFirebase}?`);
+      // PREPARA A JANELINHA MODAL
+      document.getElementById('wa-numero-display').innerText = `Apto: ${idFirebase} | Nº: +${numeroWhats}`;
       
-      if (confirmarEnvio) {
-        // 3. Abertura imediata após o seu clique (Garantia de 100% de sucesso)
-        window.open(linkFinal, '_blank');
-        
-        // 4. Salva o check verde de Mensagem Enviada
+      const btnEnviar = document.getElementById('btn-wa-enviar');
+      btnEnviar.href = linkFinal; // Coloca o link direto no botão verde
+      
+      // Quando você clicar fisicamente em "Abrir App", ele salva o check verde no sistema!
+      btnEnviar.onclick = () => {
         if (tipoAviso === 'portaria') it.notificadoPortariaMorador = true;
         else it.notificadoMensageria = true;
         
@@ -62,8 +60,14 @@ window.enviarWhatsFirebase = async function(id, tipoAviso) {
            bancoLocal[index] = it;
            localStorage.setItem('portaria_v26', JSON.stringify(bancoLocal));
         }
-        if (typeof window.render === "function") window.render();
-      }
+        
+        document.getElementById('modal-whatsapp').classList.add('hidden'); // Esconde a janela
+        if (typeof window.render === "function") window.render(); // Atualiza a tela
+      };
+
+      // Mostra a janelinha na tela
+      document.getElementById('modal-whatsapp').classList.remove('hidden');
+      if (typeof lucide !== 'undefined') lucide.createIcons(); // Carrega o ícone
 
     } else {
       alert(`❌ O apartamento ${idFirebase} ainda não tem número salvo no banco de dados!`);
