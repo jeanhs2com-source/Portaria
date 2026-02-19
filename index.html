@@ -727,10 +727,9 @@
         }
         window.onload = () => render();
     </script>
-<script type="module" src="firebase-trackeasy.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
@@ -743,11 +742,129 @@
 
   const app = initializeApp(firebaseConfig);
   const dbFirebase = getFirestore(app);
+  const encomendasRef = collection(dbFirebase, "encomendas");
 
+  // VARIÁVEIS GLOBAIS
+  window.db = []; 
+  window.abaAtiva = 'pendentes'; window.termoBusca = ''; window.blocoFiltro = '';
+  window.currentPhoto = null; window.expandidoKey = null;
+  window.baixaTargetId = null; window.baixaTargetOrigem = null;
+
+  // 1. O CORAÇÃO: Lendo da Nuvem em Tempo Real!
+  onSnapshot(encomendasRef, (snapshot) => {
+    window.db = snapshot.docs.map(doc => ({ firebaseId: doc.id, ...doc.data() }));
+    window.render(); // Atualiza a tela sozinho sempre que chegar encomenda nova!
+  });
+
+  // Função ajudante para achar o ID da nuvem
+  function getFbId(localId) {
+    const item = window.db.find(d => d.id === localId);
+    return item ? item.firebaseId : null;
+  }
+
+  // 2. REGISTRAR ENCOMENDA (Salva direto no Firebase)
+  window.handleRegistrar = async (e) => {
+    e.preventDefault();
+    const res = window.validarUnidade(document.getElementById('input-unidade').value);
+    if (!res.ok) return;
+    
+    const now = new Date();
+    const novoRegistro = {
+        id: Date.now() + Math.random(), // ID interno de segurança
+        apto: res.apto.toString(), bloco: res.bloco,
+        morador: document.getElementById('input-morador').value || "Morador",
+        empresa: document.getElementById('input-empresa').value || "Empresa",
+        remetente: document.getElementById('input-remetente').value || "Remetente",
+        descricao: document.getElementById('input-descricao').value || "Volume",
+        nf: document.getElementById('input-nf').value || "S/N",
+        recebedor: document.getElementById('input-recebedor').value || "Porteiro",
+        permanencia: document.getElementById('input-permanencia').value || "",
+        qtd: parseInt(document.getElementById('input-qtd').value) || 1,
+        foto: window.currentPhoto, 
+        data: now.toLocaleDateString('pt-PT'),
+        hora: now.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}),
+        status: 'pendente', tokens: [],
+        notificadoPortariaMorador: false, notificadoMensageria: false
+    };
+
+    try {
+        document.getElementById('btn-gravar').innerText = "Salvando na Nuvem...";
+        await addDoc(encomendasRef, novoRegistro);
+        
+        document.getElementById('form-main').reset();
+        document.getElementById('photo-container').classList.add('hidden');
+        window.currentPhoto = null;
+        document.getElementById('btn-gravar').innerText = "Gravar Registro";
+        document.getElementById('btn-gravar').disabled = true;
+        document.getElementById('feedback-val').innerText = "Pendente";
+    } catch(err) { alert("Erro ao salvar!"); console.error(err); }
+  };
+
+  // 3. ATUALIZAÇÕES E BAIXAS (Edita o documento no Firebase)
+  window.saveEdit = async () => {
+    const id = parseFloat(document.getElementById('edit-id').value);
+    const fbId = getFbId(id);
+    if(!fbId) return;
+
+    const res = window.validarUnidade(document.getElementById('edit-unidade').value);
+    if (!res.ok) { alert(res.msg); return; }
+
+    const tv = document.getElementById('edit-tokens').value;
+    const tokensArray = tv ? tv.split(',').map(s => s.trim()).filter(s => s !== '') : [];
+
+    await updateDoc(doc(dbFirebase, "encomendas", fbId), {
+        apto: res.apto.toString(), bloco: res.bloco,
+        morador: document.getElementById('edit-morador').value,
+        remetente: document.getElementById('edit-remetente').value,
+        empresa: document.getElementById('edit-empresa').value,
+        descricao: document.getElementById('edit-descricao').value,
+        nf: document.getElementById('edit-nf').value,
+        recebedor: document.getElementById('edit-recebedor').value,
+        permanencia: document.getElementById('edit-permanencia').value,
+        tokens: tokensArray
+    });
+    window.closeEditModal();
+  };
+
+  window.confirmarBaixaReal = async () => {
+    const fbId = getFbId(window.baixaTargetId);
+    if (!fbId) return;
+    
+    const entregador = document.getElementById('baixa-entregador').value || "Não informado";
+    const retiradoPor = document.getElementById('baixa-retirado').value || "O Próprio";
+    let destinoFinal = window.baixaTargetOrigem === 'mensageria' ? 'entregue_mensageria' : 'morador';
+
+    await updateDoc(doc(dbFirebase, "encomendas", fbId), {
+        status: 'entregue', saida: new Date().toISOString(),
+        entreguePor: entregador, retiradoPor: retiradoPor, destino: destinoFinal
+    });
+    window.closeBaixaModal();
+  };
+
+  window.darBaixaDiretaMensageria = async (id) => {
+    const fbId = getFbId(id);
+    if(fbId) await updateDoc(doc(dbFirebase, "encomendas", fbId), { status: 'entregue', saida: new Date().toISOString(), destino: 'mensageria' });
+  };
+
+  window.excluirUm = async (id) => {
+    if(confirm("Apagar da nuvem permanentemente?")) {
+        const fbId = getFbId(id);
+        if(fbId) await deleteDoc(doc(dbFirebase, "encomendas", fbId));
+    }
+  };
+
+  window.limparHistorico = () => { 
+    if(confirm("Limpar todo o histórico do turno na nuvem?")) { 
+        window.db.forEach(async d => {
+            if(d.status !== 'pendente') await deleteDoc(doc(dbFirebase, "encomendas", d.firebaseId));
+        });
+    } 
+  };
+
+  // 4. INTEGRAÇÃO COM WHATSAPP (A Janelinha Anti-Bloqueio)
   window.enviarWhatsFirebase = async function(id, tipoAviso) {
-    const it = db.find(d => d.id === id);
+    const it = window.db.find(d => d.id === id);
     if (!it) return;
-
     const idFirebase = (it.apto + it.bloco).toUpperCase();
 
     try {
@@ -756,11 +873,8 @@
 
       if (docSnap.exists()) {
         const dados = docSnap.data();
-        
         let numeroWhats = String(dados.whatsapp1).replace(/\D/g, ''); 
-        if (numeroWhats.length <= 11) {
-            numeroWhats = '55' + numeroWhats;
-        }
+        if (numeroWhats.length <= 11) numeroWhats = '55' + numeroWhats;
 
         let msg = "";
         if (tipoAviso === 'portaria') {
@@ -772,23 +886,21 @@
         }
         
         const linkFinal = `https://wa.me/${numeroWhats}?text=${encodeURIComponent(msg)}`;
-
-        // PREPARA A JANELINHA NA TELA
-        document.getElementById('wa-numero-display').innerText = `Apto: ${idFirebase} | Nº: +${numeroWhats}`;
         
+        document.getElementById('wa-numero-display').innerText = `Apto: ${idFirebase} | Nº: +${numeroWhats}`;
         const btnEnviar = document.getElementById('btn-wa-enviar');
         btnEnviar.href = linkFinal; 
         
-        btnEnviar.onclick = () => {
-          if (tipoAviso === 'portaria') it.notificadoPortariaMorador = true;
-          else it.notificadoMensageria = true;
-          
-          salvar(); 
+        // Quando confirmar o envio, registra na nuvem que foi notificado
+        btnEnviar.onclick = async () => {
+          const fbId = getFbId(id);
+          if (fbId) {
+              if (tipoAviso === 'portaria') await updateDoc(doc(dbFirebase, "encomendas", fbId), { notificadoPortariaMorador: true });
+              else await updateDoc(doc(dbFirebase, "encomendas", fbId), { notificadoMensageria: true });
+          }
           document.getElementById('modal-whatsapp').classList.add('hidden');
-          setTimeout(() => { location.reload(); }, 1500);
         };
 
-        // MOSTRA A JANELINHA
         document.getElementById('modal-whatsapp').classList.remove('hidden');
 
       } else {
@@ -800,12 +912,188 @@
     }
   };
 
-  // Sobrescreve os botões do sistema para usar essa lógica
   window.enviarAvisoMorador = (id) => window.enviarWhatsFirebase(id, 'portaria');
   window.enviarAvisoMensageria = (id) => window.enviarWhatsFirebase(id, 'mensageria');
+
+  // FUNÇÕES VISUAIS DA INTERFACE (Mantecidas idênticas, apenas conectadas ao window)
+  window.processarFoto = function(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let w = img.width, h = img.height;
+                if (w > 600) { h *= 600 / w; w = 600; }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+                window.currentPhoto = canvas.toDataURL("image/jpeg", 0.6);
+                document.getElementById('preview-img').src = window.currentPhoto;
+                document.getElementById('photo-container').classList.remove('hidden');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+  };
+
+  window.validarUnidade = function(txt) {
+    const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
+    const num = clean.match(/\d+/); const blk = clean.match(/[JP]/);
+    if (!num || !blk) return { ok: false, msg: "Bloco?" };
+    const n = parseInt(num[0]); const b = blk[0];
+    if (n < 11 || n > 181 || n % 10 !== 1) return { ok: false, msg: "Inválida" };
+    return { ok: true, apto: n, bloco: b, msg: `✓ ${b}-${n}` };
+  };
+
+  window.validarInput = function(el) {
+    const res = window.validarUnidade(el.value);
+    const fb = document.getElementById('feedback-val');
+    fb.innerText = res.msg;
+    fb.className = `text-[10px] mt-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
+    document.getElementById('btn-gravar').disabled = !res.ok;
+  };
+
+  window.switchTab = function(t) {
+    window.abaAtiva = t; window.expandidoKey = null; window.blocoFiltro = '';
+    const ativo = "bg-white text-blue-600 shadow-sm";
+    const inativo = "text-slate-500 hover:bg-slate-200";
+    document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='pendentes'?ativo:inativo}`;
+    document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='mensageria'?ativo:inativo}`;
+    document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='entregues'?ativo:inativo}`;
+    document.getElementById('area-registro').style.display = t==='pendentes'?'block':'none';
+    document.getElementById('controles-historico').style.display = t==='pendentes'?'none':'flex';
+    window.render();
+  };
+
+  window.filtrar = function(v) { window.termoBusca = v.toLowerCase().trim(); window.render(); };
+  window.setFastFilter = function(f) { window.blocoFiltro = f; window.render(); };
+  window.toggleExpand = function(key) { window.expandidoKey = window.expandidoKey === key ? null : key; window.render(); };
+  
+  window.openEditModal = (id) => {
+    const it = window.db.find(d => d.id === id);
+    if (!it) return;
+    document.getElementById('edit-id').value = it.id;
+    document.getElementById('edit-unidade').value = it.apto + it.bloco;
+    document.getElementById('edit-morador').value = it.morador;
+    document.getElementById('edit-remetente').value = it.remetente;
+    document.getElementById('edit-empresa').value = it.empresa;
+    document.getElementById('edit-descricao').value = it.descricao;
+    document.getElementById('edit-nf').value = it.nf;
+    document.getElementById('edit-recebedor').value = it.recebedor;
+    document.getElementById('edit-permanencia').value = it.permanencia || '';
+    document.getElementById('edit-tokens').value = (it.tokens || []).join(', ');
+    document.getElementById('modal-edit').classList.remove('hidden');
+  };
+  window.closeEditModal = () => document.getElementById('modal-edit').classList.add('hidden');
+  
+  window.openBaixaModal = (id, origem) => {
+    const it = window.db.find(d => d.id === id);
+    if (!it) return;
+    window.baixaTargetId = id; window.baixaTargetOrigem = origem;
+    document.getElementById('baixa-info-morador').innerText = `Bloco ${it.bloco} - Apto ${it.apto} (${it.morador})`;
+    document.getElementById('baixa-entregador').value = "";
+    document.getElementById('baixa-retirado').value = "";
+    document.getElementById('modal-baixa').classList.remove('hidden');
+  };
+  window.closeBaixaModal = () => document.getElementById('modal-baixa').classList.add('hidden');
+
+  // FUNÇÃO ORIGINAL DE RENDERIZAÇÃO (Apenas conectada a Nuvem)
+  window.render = function() {
+    const ac = "bg-blue-600 text-white border-blue-600 shadow-md";
+    const inac = "bg-white border-slate-200 text-slate-500";
+    document.getElementById('ff-all').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${window.blocoFiltro===''?ac:inac}`;
+    document.getElementById('ff-j').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${window.blocoFiltro==='J'?ac:inac}`;
+    document.getElementById('ff-p').className = `whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${window.blocoFiltro==='P'?ac:inac}`;
+    
+    let listaBase = [];
+    if (window.abaAtiva === 'pendentes') listaBase = window.db.filter(d => d.status === 'pendente');
+    else if (window.abaAtiva === 'mensageria') listaBase = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria');
+    else listaBase = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria');
+
+    const grupos = {};
+    listaBase.forEach(d => {
+        const k = `${d.bloco}-${d.apto}`;
+        const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao}`.toLowerCase();
+        if(window.termoBusca && !t.includes(window.termoBusca)) return;
+        if(window.blocoFiltro && d.bloco !== window.blocoFiltro) return;
+        if(!grupos[k]) grupos[k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, statusNotificado: false };
+        grupos[k].itens.push(d); grupos[k].total += d.qtd;
+        if(window.abaAtiva === 'pendentes' && d.notificadoPortariaMorador) grupos[k].statusNotificado = true;
+        if((window.abaAtiva === 'entregues' || window.abaAtiva === 'mensageria') && d.notificadoMensageria) grupos[k].statusNotificado = true;
+    });
+
+    const filtrados = Object.values(grupos).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
+    
+    document.getElementById('count-p').innerText = window.db.filter(d => d.status === 'pendente').reduce((a,b)=>a+b.qtd,0);
+    document.getElementById('count-m').innerText = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria').length;
+    document.getElementById('count-e').innerText = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria').length;
+
+    const container = document.getElementById('render-container');
+    container.innerHTML = filtrados.length === 0 ? `<div class="p-10 text-center text-slate-400 font-bold text-xs uppercase">Vazio</div>` : '';
+
+    filtrados.forEach(g => {
+        const key = `${g.b}-${g.a}`; const isExp = window.expandidoKey === key;
+        const card = document.createElement('div');
+        card.className = `card-unidade bg-white rounded-2xl border ${window.abaAtiva==='pendentes'&&g.total>1?'border-orange-200 ring-2 ring-orange-50':'border-slate-100'} shadow-sm overflow-hidden mb-3 animate-fade-in`;
+        
+        let badgesHist = '';
+        if(window.abaAtiva !== 'pendentes'){
+            let label = 'ENTREGUE (PORTARIA)'; let color = 'bg-emerald-100 text-emerald-600';
+            if(g.itens[0].destino === 'mensageria') { label = 'NA MENSAGERIA'; color = 'bg-orange-100 text-orange-600'; }
+            else if (g.itens[0].destino === 'entregue_mensageria') { label = 'ENTREGUE (MENSAGERIA)'; color = 'bg-indigo-100 text-indigo-600'; }
+            badgesHist = `<span class="text-[8px] ${color} font-black px-1.5 py-0.5 rounded uppercase mr-1">${label}</span>`;
+        }
+
+        card.innerHTML = `
+            <div onclick="toggleExpand('${key}')" class="p-4 flex items-center gap-3 cursor-pointer active:bg-slate-50">
+                <div class="w-12 h-12 flex items-center justify-center rounded-xl font-bold text-lg ${window.abaAtiva!=='pendentes'?'bg-slate-100 text-slate-400 border border-dashed':'bg-blue-600 text-white shadow-md'}">${g.b}</div>
+                <div class="flex-1">
+                    <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">Apto ${g.a} - ${g.morador} ${g.statusNotificado ? '<i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>' : ''}</h3>
+                    <div class="flex gap-1 items-center">${window.abaAtiva==='pendentes' ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${g.total>1?'bg-orange-500 text-white':'bg-slate-100 text-slate-400'} uppercase">${g.total} VOLS</span>` : badgesHist}</div>
+                </div>
+                <i data-lucide="${isExp?'chevron-up':'chevron-down'}" class="text-slate-300"></i>
+            </div>
+            ${isExp ? `<div class="bg-slate-50 border-t border-slate-100 p-4 space-y-4">
+                ${g.itens.map(it => `
+                    <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm animate-fade-in relative overflow-hidden">
+                        ${((window.abaAtiva==='pendentes'&&it.notificadoPortariaMorador)||(window.abaAtiva!=='pendentes'&&it.notificadoMensageria)) ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-2 h-2"></i> Mensagem Enviada</div>` : ''}
+                        <div class="flex gap-4 mb-4">
+                            <div class="relative">${it.foto ? `<img src="${it.foto}" class="w-20 h-20 rounded-lg object-cover border border-slate-200" onclick="window.open(this.src)">` : `<div class="w-20 h-20 bg-slate-100 rounded-lg flex flex-col items-center justify-center text-slate-400"><i data-lucide="image" class="w-5 h-5"></i></div>`}</div>
+                            <div class="flex-1 space-y-1">
+                                <div class="flex justify-between items-start">
+                                    <div><p class="text-[8px] font-black text-slate-400 uppercase">Remetente</p><p class="text-[11px] font-black text-blue-700 uppercase">${it.remetente}</p></div>
+                                    <div class="flex gap-2 no-print">
+                                        ${window.abaAtiva === 'pendentes' ? `<button onclick="enviarAvisoMorador(${it.id})" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador"><i data-lucide="bell" class="w-4 h-4"></i></button>` : `${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria(${it.id})" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Aviso Mensageria"><i data-lucide="send" class="w-4 h-4"></i></button>` : ''}`}
+                                        <button onclick="openEditModal(${it.id})" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                        <button onclick="excluirUm(${it.id})" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] font-bold text-slate-700 uppercase">${it.empresa}</p>
+                                <p class="text-[10px] italic text-slate-600 mt-1">${it.descricao}</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-3 border-t pt-2 text-[9px] font-black uppercase text-slate-400">
+                            <div><p class="text-[7px]">Doc / NF</p><p class="text-slate-700">${it.nf}</p></div>
+                            <div><p class="text-[7px]">Recebedor</p><p class="text-slate-700">${it.recebedor}</p></div>
+                            <div><p class="text-[7px]">Entrada</p><p class="text-slate-700">${it.data} às ${it.hora}</p></div>
+                            <div><p class="text-[7px] text-blue-500">Portaria até:</p><p class="text-blue-600 font-bold">${it.permanencia || 'N/A'}</p></div>
+                            ${it.saida ? `<div class="col-span-2 border-t pt-1"><p class="text-[7px] text-emerald-500 font-black uppercase">Saída: ${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p>${it.entreguePor ? `<p class="text-[7px] text-slate-500 mt-0.5 font-medium">Entregue por: ${it.entreguePor} | Retirado por: ${it.retiradoPor}</p>` : ''}</div>` : ''}
+                        </div>
+                        ${window.abaAtiva === 'pendentes' ? `<div class="mt-4 pt-3 border-t space-y-2 no-print"><div class="grid grid-cols-2 gap-2"><button onclick="openBaixaModal(${it.id}, 'portaria')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Entrega Morador</button><button onclick="darBaixaDiretaMensageria(${it.id})" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Encaminhar Mensageria</button></div></div>` : ''}
+                        ${window.abaAtiva === 'mensageria' ? `<div class="mt-4 pt-3 border-t space-y-2 no-print"><button onclick="openBaixaModal(${it.id}, 'mensageria')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm active:scale-95 transition-all">Confirmar Entrega ao Morador</button></div>` : ''}
+                    </div>
+                `).join('')}
+            </div>` : ''}
+        `;
+        container.appendChild(card);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  };
 </script>
 </body>
 </html>
+
 
 
 
