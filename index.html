@@ -738,33 +738,23 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // =======================================================================
-        // ATENÇÃO: SUBSTITUA OS VALORES ABAIXO PELOS DADOS DO SEU FIREBASE
-        // (Acesse as configurações do seu projeto no console do Firebase)
-        // =======================================================================
-        const firebaseConfig = { 
-  apiKey : "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08" , 
-  authDomain : "trackeasy-669e3.firebaseapp.com" , 
-  ID do projeto : "trackeasy-669e3 " 
-  bucket de armazenamento : "trackeasy-669e3.firebasestorage.app" , 
-  messagingSenderId : " 656055712426" 
-  appId : "1:656055712426:web:c393bdb7ccf0afe820eed3" , 
-  ID da medição : "G-GVDPNYDNEY" 
-};
-
-// Inicializar o Firebase
-const app = initializeApp ( firebaseConfig );
-const analytics = getAnalytics ( app );
-        // =======================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
+            authDomain: "trackeasy-669e3.firebaseapp.com",
+            projectId: "trackeasy-669e3",
+            storageBucket: "trackeasy-669e3.firebasestorage.app",
+            messagingSenderId: "656055712426",
+            appId: "1:656055712426:web:c393bdb7ccf0afe820eed3",
+            measurementId: "G-GVDPNYDNEY"
+        };
 
         let app;
         try {
-            // Alterado para FORÇAR o uso do seu Firebase (ignora o ambiente de teste)
             app = initializeApp(firebaseConfig);
         } catch(e) {
             console.error("Erro ao inicializar Firebase", e);
-            loginError.innerHTML = `Erro de Configuração:<br><span class="text-[9px] font-normal text-red-400">${e.message}</span>`;
-            loginError.classList.remove('hidden');
+            document.getElementById('login-error').innerHTML = `Erro de Configuração:<br><span class="text-[9px] font-normal text-red-400">${e.message}</span>`;
+            document.getElementById('login-error').classList.remove('hidden');
         }
 
         const auth = getAuth(app);
