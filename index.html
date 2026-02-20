@@ -492,6 +492,24 @@
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
+        // Nova função inteligente para WhatsApp do Morador
+        window.enviarWhatsAppMorador = (msg) => {
+            const urlText = encodeURIComponent(msg);
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                // Em celulares, força o app nativo diretamente para evitar falhas no navegador
+                window.location.href = `whatsapp://send?text=${urlText}`;
+            } else {
+                // No computador, pergunta ao usuário para dar total controle
+                if (confirm("📱 Notificar Morador\n\nComo deseja abrir o WhatsApp?\n\n[ OK ] = Usar WhatsApp WEB (Navegador)\n[ CANCELAR ] = Usar Aplicativo do PC (Windows/Mac)")) {
+                    window.open(`https://web.whatsapp.com/send?text=${urlText}`, '_blank');
+                } else {
+                    window.open(`https://api.whatsapp.com/send?text=${urlText}`, '_blank');
+                }
+            }
+        };
+
         window.enviarAvisoMorador = async (id) => {
             const it = window.db.find(d => String(d.id) === String(id));
             if (!it) return;
@@ -507,7 +525,7 @@
                    `⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\n` +
                    `A portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
             
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+            window.enviarWhatsAppMorador(msg);
             it.notificadoPortariaMorador = true; 
             await setDoc(doc(encomendasRef, String(it.id)), it); // Salva status de envio
         }
@@ -523,7 +541,7 @@
                    `⏰ *Aviso enviado às:* ${agora}\n\n` +
                    `Aguardamos sua visita para a retirada. Tenha um excelente dia! 📦✨`;
             
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+            window.enviarWhatsAppMorador(msg);
             it.notificadoMensageria = true;
             await setDoc(doc(encomendasRef, String(it.id)), it);
         }
@@ -847,7 +865,7 @@
                                                     <button onclick="enviarGrupoCondominio('${it.id}')" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Grupo Administrativo"><i data-lucide="send" class="w-4 h-4"></i></button>
                                                     <button onclick="enviarAvisoMorador('${it.id}')" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador"><i data-lucide="bell" class="w-4 h-4"></i></button>
                                                 ` : `
-                                                    ${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria('${it.id}')" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Aviso Mensageria"><i data-lucide="send" class="w-4 h-4"></i></button>` : ''}
+                                                    ${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria('${it.id}')" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador (Mensageria)"><i data-lucide="bell" class="w-4 h-4"></i></button>` : ''}
                                                 `}
                                                 <button onclick="openEditModal('${it.id}')" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                                                 <button onclick="excluirUm('${it.id}')" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
