@@ -51,9 +51,7 @@
                     <input id="login-password" type="password" required class="input-field" placeholder="••••••••">
                 </div>
                 
-                <div id="login-error" class="hidden text-[10px] font-bold text-red-500 text-center bg-red-50 p-2 rounded-lg border border-red-100">
-                    Acesso negado. Verifique suas credenciais.
-                </div>
+                <div id="login-error" class="hidden text-[10px] font-bold text-red-500 text-center bg-red-50 p-2 rounded-lg border border-red-100"></div>
 
                 <button type="submit" id="btn-login" class="w-full bg-blue-600 h-[50px] mt-2 text-white font-black rounded-2xl active:scale-95 transition-all uppercase text-xs shadow-lg flex items-center justify-center gap-2">
                     <span>Entrar no Sistema</span>
@@ -62,7 +60,7 @@
         </div>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL DO APP (Oculto até login) -->
+    <!-- CONTEÚDO PRINCIPAL DO APP -->
     <div id="app-content" class="hidden">
         
         <!-- Modal de Edição -->
@@ -169,7 +167,6 @@
                         <button id="tab-m" onclick="switchTab('mensageria')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all">Mensageria</button>
                         <button id="tab-h" onclick="switchTab('entregues')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all">Histórico</button>
                     </div>
-                    <!-- Botão de Sair adicionado -->
                     <button onclick="realizarLogout()" class="p-2 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-lg transition-colors" title="Sair">
                         <i data-lucide="log-out" class="w-5 h-5"></i>
                     </button>
@@ -270,7 +267,7 @@
                         </div>
                     </div>
 
-                    <button id="btn-gravar" type="submit" disabled class="w-full bg-blue-600 h-[50px] text-white font-black rounded-2xl active:scale-95 disabled:opacity-50 transition-all uppercase text-xs shadow-lg">
+                    <button id="btn-gravar" type="submit" disabled class="w-full bg-blue-600 h-[50px] text-white font-black rounded-2xl active:scale-95 disabled:opacity-50 transition-all uppercase text-xs shadow-lg flex items-center justify-center gap-2">
                         Gravar Registro
                     </button>
                 </form>
@@ -292,11 +289,11 @@
                 
                 <div id="controles-historico" class="hidden flex flex-col gap-2">
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="exportarDados()" class="py-3 bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-xl flex items-center justify-center gap-2">
+                        <button onclick="exportarDados()" class="py-3 bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-xl flex items-center justify-center gap-2 transition-colors hover:bg-slate-50">
                             <i data-lucide="download" class="w-3 h-3 text-blue-500"></i> Backup JSON
                         </button>
-                        <label class="py-3 bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer">
-                            <i data-lucide="upload" class="w-3 h-3 text-emerald-500"></i> Importar Backup
+                        <label class="py-3 bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors hover:bg-slate-50">
+                            <i data-lucide="upload" class="w-3 h-3 text-emerald-500"></i> Importar Backup Nuvem
                             <input type="file" class="hidden" accept=".json" onchange="importarDados(this)">
                         </label>
                     </div>
@@ -308,435 +305,11 @@
         </main>
     </div>
 
-    <!-- Lógica Principal da Aplicação -->
-    <script>
-        let db = JSON.parse(localStorage.getItem('portaria_v26')) || [];
-        let abaAtiva = 'pendentes';
-        let termoBusca = '';
-        let blocoFiltro = '';
-        let currentPhoto = null;
-        let expandidoKey = null;
-        
-        // VARIÁVEIS PARA A MODAL DE BAIXA
-        let baixaTargetId = null;
-        let baixaTargetOrigem = null;
-
-        function salvar() {
-            try {
-                localStorage.setItem('portaria_v26', JSON.stringify(db));
-                render();
-            } catch (e) { alert("Memória cheia!"); }
-        }
-
-        function processarFoto(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        const max_w = 600;
-                        let w = img.width, h = img.height;
-                        if (w > max_w) { h *= max_w / w; w = max_w; }
-                        canvas.width = w; canvas.height = h;
-                        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-                        currentPhoto = canvas.toDataURL("image/jpeg", 0.6);
-                        document.getElementById('preview-img').src = currentPhoto;
-                        document.getElementById('photo-container').classList.remove('hidden');
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        window.addPhotoToRecord = (id, input) => {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 500; canvas.height = (img.height / img.width) * 500;
-                        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const compressed = canvas.toDataURL("image/jpeg", 0.5);
-                        const it = db.find(d => d.id === id);
-                        if (it) { it.foto = compressed; salvar(); }
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        async function obterFicheiroFoto(base64, nome) {
-            if (!base64) return null;
-            try {
-                const response = await fetch(base64);
-                const blob = await response.blob();
-                return new File([blob], nome, { type: 'image/jpeg' });
-            } catch (e) { return null; }
-        }
-
-        window.enviarGrupoCondominio = async (id) => {
-            const it = db.find(d => d.id === id);
-            if (!it) return;
-            const msg = `📢 *CONTROLE DE ENCOMENDA - PORTARIA* \n\n` +
-                   `👤 *Morador:* ${it.morador}\n` +
-                   `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
-                   `📦 *Produto:* ${it.descricao}\n` +
-                   `🚚 *Empresa:* ${it.empresa}\n` +
-                   `🏷️ *Remetente:* ${it.remetente}\n` +
-                   `🔢 *NF/Doc:* ${it.nf}\n` +
-                   `👮 *Recebido por:* ${it.recebedor}\n` +
-                   `⏰ *Chegada:* ${it.data} às ${it.hora}\n` +
-                   `⏳ *Portaria até:* ${it.permanencia || 'N/A'}`;
-            
-            const file = await obterFicheiroFoto(it.foto, `encomenda.jpg`);
-            if (navigator.share && file) {
-                try {
-                    await navigator.share({ files: [file], title: 'Controle Portaria', text: msg });
-                    return;
-                } catch (err) {}
-            }
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        window.enviarAvisoMorador = (id) => {
-            const it = db.find(d => d.id === id);
-            if (!it) return;
-            let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*. Após este horário, ela será encaminhada para a Mensageria.` : '';
-            const msg = `Olá! 👋 Temos uma ótima notícia: uma encomenda sua acaba de chegar à nossa portaria!\n\n` +
-                   `👤 *Para:* ${it.morador}\n` +
-                   `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
-                   `📦 *Item:* ${it.descricao}\n` +
-                   `🏷️ *Remetente:* ${it.remetente}\n` +
-                   `🚚 *Empresa:* ${it.empresa}\n` +
-                   `🔢 *Doc/NF:* ${it.nf}\n` +
-                   `👮 *Recebido por:* ${it.recebedor}\n` +
-                   `⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\n` +
-                   `A portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
-            
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-            it.notificadoPortariaMorador = true; 
-            salvar();
-        }
-
-        window.enviarAvisoMensageria = (id) => {
-            const it = db.find(d => d.id === id);
-            if (!it) return;
-            const agora = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
-            
-            const msg = `Olá! 👋 Informamos que sua encomenda saiu da portaria e chegou à nossa *MENSAGERIA* e já está pronta para retirada.\n\n` +
-                   `🏢 *Local:* Unidade ${it.apto} - Bloco ${it.bloco}\n` +
-                   `📦 *Item:* ${it.descricao}\n` +
-                   `⏰ *Aviso enviado às:* ${agora}\n\n` +
-                   `Aguardamos sua visita para a retirada. Tenha um excelente dia! 📦✨`;
-            
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-            it.notificadoMensageria = true;
-            salvar();
-        }
-
-        window.openEditModal = (id) => {
-            const it = db.find(d => d.id === id);
-            if (!it) return;
-            document.getElementById('edit-id').value = it.id;
-            document.getElementById('edit-unidade').value = it.apto + it.bloco;
-            document.getElementById('edit-morador').value = it.morador;
-            document.getElementById('edit-remetente').value = it.remetente;
-            document.getElementById('edit-empresa').value = it.empresa;
-            document.getElementById('edit-descricao').value = it.descricao;
-            document.getElementById('edit-nf').value = it.nf;
-            document.getElementById('edit-recebedor').value = it.recebedor;
-            document.getElementById('edit-permanencia').value = it.permanencia || '';
-            document.getElementById('edit-tokens').value = (it.tokens || []).join(', ');
-            document.getElementById('modal-edit').classList.remove('hidden');
-        }
-
-        window.closeEditModal = () => document.getElementById('modal-edit').classList.add('hidden');
-
-        window.saveEdit = () => {
-            const id = parseFloat(document.getElementById('edit-id').value);
-            const res = validarUnidade(document.getElementById('edit-unidade').value);
-            if (!res.ok) { alert(res.msg); return; }
-            const idx = db.findIndex(d => d.id === id);
-            if (idx !== -1) {
-                db[idx].apto = res.apto.toString(); db[idx].bloco = res.bloco;
-                db[idx].morador = document.getElementById('edit-morador').value;
-                db[idx].remetente = document.getElementById('edit-remetente').value;
-                db[idx].empresa = document.getElementById('edit-empresa').value;
-                db[idx].descricao = document.getElementById('edit-descricao').value;
-                db[idx].nf = document.getElementById('edit-nf').value;
-                db[idx].recebedor = document.getElementById('edit-recebedor').value;
-                db[idx].permanencia = document.getElementById('edit-permanencia').value;
-                const tv = document.getElementById('edit-tokens').value;
-                db[idx].tokens = tv ? tv.split(',').map(s => s.trim()).filter(s => s !== '') : [];
-                closeEditModal(); salvar();
-            }
-        }
-
-        window.openBaixaModal = (id, origem) => {
-            const it = db.find(d => d.id === id);
-            if (!it) return;
-            baixaTargetId = id;
-            baixaTargetOrigem = origem;
-            
-            document.getElementById('baixa-info-morador').innerText = `Bloco ${it.bloco} - Apto ${it.apto} (${it.morador})`;
-            document.getElementById('baixa-entregador').value = "";
-            document.getElementById('baixa-retirado').value = "";
-            document.getElementById('modal-baixa').classList.remove('hidden');
-        }
-
-        window.closeBaixaModal = () => document.getElementById('modal-baixa').classList.add('hidden');
-
-        window.confirmarBaixaReal = () => {
-            if (!baixaTargetId) return;
-            const idx = db.findIndex(d => d.id === baixaTargetId);
-            if (idx !== -1) {
-                const entregador = document.getElementById('baixa-entregador').value || "Não informado";
-                const retiradoPor = document.getElementById('baixa-retirado').value || "O Próprio";
-                
-                db[idx].status = 'entregue';
-                db[idx].saida = new Date().toISOString();
-                db[idx].entreguePor = entregador;
-                db[idx].retiradoPor = retiradoPor;
-                
-                if (baixaTargetOrigem === 'mensageria') {
-                    db[idx].destino = 'entregue_mensageria';
-                } else {
-                    db[idx].destino = 'morador';
-                }
-                
-                salvar();
-                closeBaixaModal();
-            }
-        }
-
-        function validarUnidade(txt) {
-            const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
-            const num = clean.match(/\d+/); const blk = clean.match(/[JP]/);
-            if (!num || !blk) return { ok: false, msg: "Bloco?" };
-            const n = parseInt(num[0]); const b = blk[0];
-            if (n < 11 || n > 181 || n % 10 !== 1) return { ok: false, msg: "Inválida" };
-            return { ok: true, apto: n, bloco: b, msg: `✓ ${b}-${n}` };
-        }
-
-        function validarInput(el) {
-            const res = validarUnidade(el.value);
-            const fb = document.getElementById('feedback-val');
-            fb.innerText = res.msg;
-            fb.className = `text-[10px] mt-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
-            document.getElementById('btn-gravar').disabled = !res.ok;
-        }
-
-        function handleRegistrar(e) {
-            e.preventDefault();
-            const res = validarUnidade(document.getElementById('input-unidade').value);
-            if (!res.ok) return;
-            const now = new Date();
-            const nid = Date.now() + Math.random();
-            db.push({
-                id: nid, apto: res.apto.toString(), bloco: res.bloco,
-                morador: document.getElementById('input-morador').value || "Morador",
-                empresa: document.getElementById('input-empresa').value || "Empresa",
-                remetente: document.getElementById('input-remetente').value || "Remetente",
-                descricao: document.getElementById('input-descricao').value || "Volume",
-                nf: document.getElementById('input-nf').value || "S/N",
-                recebedor: document.getElementById('input-recebedor').value || "Porteiro",
-                permanencia: document.getElementById('input-permanencia').value || "",
-                qtd: parseInt(document.getElementById('input-qtd').value) || 1,
-                foto: currentPhoto, data: now.toLocaleDateString('pt-PT'),
-                hora: now.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}),
-                status: 'pendente', tokens: [],
-                notificadoPortariaMorador: false, notificadoMensageria: false
-            });
-            document.getElementById('form-main').reset();
-            document.getElementById('photo-container').classList.add('hidden');
-            currentPhoto = null;
-            salvar();
-            enviarGrupoCondominio(nid);
-        }
-
-        function switchTab(t) {
-            abaAtiva = t; expandidoKey = null; blocoFiltro = '';
-            
-            const ativo = "bg-white text-blue-600 shadow-sm";
-            const inativo = "text-slate-500 hover:bg-slate-200";
-            
-            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='pendentes'?ativo:inativo}`;
-            document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='mensageria'?ativo:inativo}`;
-            document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='entregues'?ativo:inativo}`;
-
-            document.getElementById('area-registro').style.display = t==='pendentes'?'block':'none';
-            document.getElementById('controles-historico').style.display = t==='pendentes'?'none':'flex';
-            
-            render();
-        }
-
-        function filtrar(v) { termoBusca = v.toLowerCase().trim(); render(); }
-        function setFastFilter(f) { blocoFiltro = f; render(); }
-        function toggleExpand(key) { expandidoKey = expandidoKey === key ? null : key; render(); }
-
-        window.darBaixaDiretaMensageria = (id) => {
-             const idx = db.findIndex(d => d.id === id);
-            if (idx !== -1) {
-                db[idx].status = 'entregue';
-                db[idx].saida = new Date().toISOString();
-                db[idx].destino = 'mensageria';
-                salvar();
-            }
-        }
-
-        window.excluirUm = (id) => { if(confirm("Apagar?")) { db = db.filter(d => d.id !== id); salvar(); } }
-        window.limparHistorico = () => { if(confirm("Limpar todo turno?")) { db = db.filter(d => d.status === 'pendente'); salvar(); } }
-        function exportarDados() { const b = new Blob([JSON.stringify(db,null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=`backup.json`; a.click(); }
-        function importarDados(input) {
-            if(input.files && input.files[0]) {
-                const r = new FileReader();
-                r.onload = (e) => { try { db = JSON.parse(e.target.result); salvar(); } catch(e){alert("Erro!");} };
-                r.readAsText(input.files[0]);
-            }
-        }
-
-        function render() {
-            // SOLUÇÃO DA ANIMAÇÃO DOS BOTÕES DE FILTRO: 
-            // Usamos strings de classe completas para o Tailwind CDN processar e incluímos duration-300
-            const activeClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-blue-600 text-white border-blue-600 shadow-md";
-            const inactiveClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-white border-slate-200 text-slate-500 hover:bg-slate-50";
-            
-            document.getElementById('ff-all').className = blocoFiltro === '' ? activeClasses : inactiveClasses;
-            document.getElementById('ff-j').className = blocoFiltro === 'J' ? activeClasses : inactiveClasses;
-            document.getElementById('ff-p').className = blocoFiltro === 'P' ? activeClasses : inactiveClasses;
-            
-            let listaBase = [];
-            if (abaAtiva === 'pendentes') {
-                listaBase = db.filter(d => d.status === 'pendente');
-            } else if (abaAtiva === 'mensageria') {
-                listaBase = db.filter(d => d.status === 'entregue' && d.destino === 'mensageria');
-            } else {
-                listaBase = db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria');
-            }
-
-            const grupos = {};
-            listaBase.forEach(d => {
-                const k = `${d.bloco}-${d.apto}`;
-                const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao}`.toLowerCase();
-                if(termoBusca && !t.includes(termoBusca)) return;
-                if(blocoFiltro && d.bloco !== blocoFiltro) return;
-                
-                if(!grupos[k]) grupos[k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, statusNotificado: false };
-                grupos[k].itens.push(d); grupos[k].total += d.qtd;
-                
-                if(abaAtiva === 'pendentes' && d.notificadoPortariaMorador) grupos[k].statusNotificado = true;
-                if((abaAtiva === 'entregues' || abaAtiva === 'mensageria') && d.notificadoMensageria) grupos[k].statusNotificado = true;
-            });
-
-            const filtrados = Object.values(grupos).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
-            
-            document.getElementById('count-p').innerText = db.filter(d => d.status === 'pendente').reduce((a,b)=>a+b.qtd,0);
-            document.getElementById('count-m').innerText = db.filter(d => d.status === 'entregue' && d.destino === 'mensageria').length;
-            document.getElementById('count-e').innerText = db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria').length;
-
-            const container = document.getElementById('render-container');
-            container.innerHTML = filtrados.length === 0 ? `<div class="p-10 text-center text-slate-400 font-bold text-xs uppercase">Vazio</div>` : '';
-
-            filtrados.forEach(g => {
-                const key = `${g.b}-${g.a}`;
-                const isExp = expandidoKey === key;
-                const card = document.createElement('div');
-                card.className = `card-unidade bg-white rounded-2xl border ${abaAtiva==='pendentes'&&g.total>1?'border-orange-200 ring-2 ring-orange-50':'border-slate-100'} shadow-sm overflow-hidden mb-3 animate-fade-in`;
-                
-                let badgesHist = '';
-                if(abaAtiva !== 'pendentes'){
-                    let label = 'ENTREGUE (PORTARIA)';
-                    let color = 'bg-emerald-100 text-emerald-600';
-                    if(g.itens[0].destino === 'mensageria') { label = 'NA MENSAGERIA'; color = 'bg-orange-100 text-orange-600'; }
-                    else if (g.itens[0].destino === 'entregue_mensageria') { label = 'ENTREGUE (MENSAGERIA)'; color = 'bg-indigo-100 text-indigo-600'; }
-                    badgesHist = `<span class="text-[8px] ${color} font-black px-1.5 py-0.5 rounded uppercase mr-1">${label}</span>`;
-                }
-
-                card.innerHTML = `
-                    <div onclick="toggleExpand('${key}')" class="p-4 flex items-center gap-3 cursor-pointer active:bg-slate-50">
-                        <div class="w-12 h-12 flex items-center justify-center rounded-xl font-bold text-lg ${abaAtiva!=='pendentes'?'bg-slate-100 text-slate-400 border border-dashed':'bg-blue-600 text-white shadow-md'}">${g.b}</div>
-                        <div class="flex-1">
-                            <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                                Apto ${g.a} - ${g.morador}
-                                ${g.statusNotificado ? '<i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>' : ''}
-                            </h3>
-                            <div class="flex gap-1 items-center">
-                                ${abaAtiva==='pendentes' ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${g.total>1?'bg-orange-500 text-white':'bg-slate-100 text-slate-400'} uppercase">${g.total} VOLS</span>` : badgesHist}
-                            </div>
-                        </div>
-                        <i data-lucide="${isExp?'chevron-up':'chevron-down'}" class="text-slate-300"></i>
-                    </div>
-                    ${isExp ? `<div class="bg-slate-50 border-t border-slate-100 p-4 space-y-4">
-                        ${g.itens.map(it => `
-                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm animate-fade-in relative overflow-hidden">
-                                ${((abaAtiva==='pendentes'&&it.notificadoPortariaMorador)||(abaAtiva!=='pendentes'&&it.notificadoMensageria)) ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-2 h-2"></i> Mensagem Enviada</div>` : ''}
-                                
-                                <div class="flex gap-4 mb-4">
-                                    <div class="relative">
-                                        ${it.foto ? `<img src="${it.foto}" class="w-20 h-20 rounded-lg object-cover border border-slate-200" onclick="window.open(this.src)">` : `
-                                            <label class="w-20 h-20 bg-slate-100 rounded-lg flex flex-col items-center justify-center text-blue-500 cursor-pointer no-print">
-                                                <i data-lucide="camera" class="w-5 h-5"></i><span class="text-[7px] font-black text-center">FOTO</span>
-                                                <input type="file" accept="image/*" capture="environment" class="hidden" onchange="addPhotoToRecord(${it.id}, this)">
-                                            </label>`}
-                                    </div>
-                                    <div class="flex-1 space-y-1">
-                                        <div class="flex justify-between items-start">
-                                            <div><p class="text-[8px] font-black text-slate-400 uppercase">Remetente</p><p class="text-[11px] font-black text-blue-700 uppercase">${it.remetente}</p></div>
-                                            <div class="flex gap-2 no-print">
-                                                ${abaAtiva === 'pendentes' ? `
-                                                    <button onclick="enviarGrupoCondominio(${it.id})" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Grupo Administrativo"><i data-lucide="send" class="w-4 h-4"></i></button>
-                                                    <button onclick="enviarAvisoMorador(${it.id})" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador"><i data-lucide="bell" class="w-4 h-4"></i></button>
-                                                ` : `
-                                                    ${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria(${it.id})" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Aviso Mensageria"><i data-lucide="send" class="w-4 h-4"></i></button>` : ''}
-                                                `}
-                                                <button onclick="openEditModal(${it.id})" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                                                <button onclick="excluirUm(${it.id})" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                            </div>
-                                        </div>
-                                        <p class="text-[10px] font-bold text-slate-700 uppercase">${it.empresa}</p>
-                                        <p class="text-[10px] italic text-slate-600 mt-1">${it.descricao}</p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-x-2 gap-y-3 border-t pt-2 text-[9px] font-black uppercase text-slate-400">
-                                    <div><p class="text-[7px]">Doc / NF</p><p class="text-slate-700">${it.nf}</p></div>
-                                    <div><p class="text-[7px]">Recebedor</p><p class="text-slate-700">${it.recebedor}</p></div>
-                                    <div><p class="text-[7px]">Entrada</p><p class="text-slate-700">${it.data} às ${it.hora}</p></div>
-                                    <div><p class="text-[7px] text-blue-500">Portaria até:</p><p class="text-blue-600 font-bold">${it.permanencia || 'N/A'}</p></div>
-                                    ${it.saida ? `<div class="col-span-2 border-t pt-1"><p class="text-[7px] text-emerald-500 font-black uppercase">Saída: ${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p>
-                                    ${it.entreguePor ? `<p class="text-[7px] text-slate-500 mt-0.5 font-medium">Entregue por: ${it.entreguePor} | Retirado por: ${it.retiradoPor}</p>` : ''}
-                                    </div>` : ''}
-                                </div>
-                                ${abaAtiva === 'pendentes' ? `
-                                    <div class="mt-4 pt-3 border-t space-y-2 no-print">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <button onclick="openBaixaModal(${it.id}, 'portaria')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Entrega Morador</button>
-                                            <button onclick="darBaixaDiretaMensageria(${it.id})" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Encaminhar Mensageria</button>
-                                        </div>
-                                    </div>` : ''}
-                                
-                                ${abaAtiva === 'mensageria' ? `
-                                    <div class="mt-4 pt-3 border-t space-y-2 no-print">
-                                        <button onclick="openBaixaModal(${it.id}, 'mensageria')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm active:scale-95 transition-all">Confirmar Entrega ao Morador</button>
-                                    </div>` : ''}
-                            </div>
-                        `).join('')}
-                    </div>` : ''}
-                `;
-                container.appendChild(card);
-            });
-            lucide.createIcons();
-        }
-        window.onload = () => render();
-    </script>
-
-    <!-- FIREBASE AUTHENTICATION CONFIG -->
+    <!-- Firebase + Lógica Principal Unificada -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
@@ -758,6 +331,11 @@
         }
 
         const auth = getAuth(app);
+        const dbFS = getFirestore(app);
+        
+        // Regra de segurança/estrutura exigida na nuvem
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'portaria-trackeasy';
+        const encomendasRef = collection(dbFS, 'artifacts', appId, 'public', 'data', 'encomendas');
         
         // Elementos da Interface
         const loginOverlay = document.getElementById('login-overlay');
@@ -766,16 +344,38 @@
         const loginError = document.getElementById('login-error');
         const btnLogin = document.getElementById('btn-login');
 
-        // Monitorar Status de Login
+        // Estado da Aplicação Global (O que antes era o LocalStorage)
+        window.db = [];
+        window.abaAtiva = 'pendentes';
+        window.termoBusca = '';
+        window.blocoFiltro = '';
+        window.currentPhoto = null;
+        window.expandidoKey = null;
+        window.baixaTargetId = null;
+        window.baixaTargetOrigem = null;
+
+        let unsubscribeSnapshot = null;
+
+        // Monitorar Status de Login e Sincronizar Firebase Real-Time
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Usuário logado: oculta login e mostra app
                 loginOverlay.classList.add('hidden');
                 appContent.classList.remove('hidden');
+                
+                // Inicia sincronização com o Firebase em tempo real
+                unsubscribeSnapshot = onSnapshot(encomendasRef, (snapshot) => {
+                    window.db = snapshot.docs.map(doc => doc.data());
+                    window.render(); // Redesenha a tela instantaneamente quando algo muda
+                }, (error) => {
+                    console.error("Erro no Sync Firestore:", error);
+                });
+
             } else {
-                // Usuário deslogado: mostra login e oculta app
                 loginOverlay.classList.remove('hidden');
                 appContent.classList.add('hidden');
+                if (unsubscribeSnapshot) unsubscribeSnapshot();
+                window.db = [];
+                window.render();
             }
         });
 
@@ -791,10 +391,8 @@
 
             try {
                 await signInWithEmailAndPassword(auth, email, password);
-                // Se der certo, o onAuthStateChanged fará a transição de tela
             } catch (error) {
                 console.error("Erro no login:", error);
-                // MOSTRA O ERRO EXATO DO FIREBASE NA TELA
                 loginError.innerHTML = `Falha no login:<br><span class="text-[9px] font-normal text-red-600">${error.message}</span>`;
                 loginError.classList.remove('hidden');
             } finally {
@@ -804,7 +402,6 @@
             }
         });
 
-        // Ação de Logout (Atrelado ao window para ser chamado pelo HTML)
         window.realizarLogout = async () => {
             if(confirm("Deseja realmente sair do sistema?")) {
                 try {
@@ -814,6 +411,482 @@
                 }
             }
         };
+
+        // --- FUNCIONALIDADES DO APLICATIVO AGORA CONECTADAS AO FIREBASE ---
+
+        window.processarFoto = (input) => {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const max_w = 600;
+                        let w = img.width, h = img.height;
+                        if (w > max_w) { h *= max_w / w; w = max_w; }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+                        window.currentPhoto = canvas.toDataURL("image/jpeg", 0.6);
+                        document.getElementById('preview-img').src = window.currentPhoto;
+                        document.getElementById('photo-container').classList.remove('hidden');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        window.addPhotoToRecord = (id, input) => {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = async function() {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 500; canvas.height = (img.height / img.width) * 500;
+                        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const compressed = canvas.toDataURL("image/jpeg", 0.5);
+                        
+                        const it = window.db.find(d => String(d.id) === String(id));
+                        if (it) { 
+                            it.foto = compressed; 
+                            await setDoc(doc(encomendasRef, String(it.id)), it); // Salva na Nuvem
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        window.obterFicheiroFoto = async (base64, nome) => {
+            if (!base64) return null;
+            try {
+                const response = await fetch(base64);
+                const blob = await response.blob();
+                return new File([blob], nome, { type: 'image/jpeg' });
+            } catch (e) { return null; }
+        }
+
+        window.enviarGrupoCondominio = async (id) => {
+            const it = window.db.find(d => String(d.id) === String(id));
+            if (!it) return;
+            const msg = `📢 *CONTROLE DE ENCOMENDA - PORTARIA* \n\n` +
+                   `👤 *Morador:* ${it.morador}\n` +
+                   `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
+                   `📦 *Produto:* ${it.descricao}\n` +
+                   `🚚 *Empresa:* ${it.empresa}\n` +
+                   `🏷️ *Remetente:* ${it.remetente}\n` +
+                   `🔢 *NF/Doc:* ${it.nf}\n` +
+                   `👮 *Recebido por:* ${it.recebedor}\n` +
+                   `⏰ *Chegada:* ${it.data} às ${it.hora}\n` +
+                   `⏳ *Portaria até:* ${it.permanencia || 'N/A'}`;
+            
+            const file = await window.obterFicheiroFoto(it.foto, `encomenda.jpg`);
+            if (navigator.share && file) {
+                try {
+                    await navigator.share({ files: [file], title: 'Controle Portaria', text: msg });
+                    return;
+                } catch (err) {}
+            }
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        window.enviarAvisoMorador = async (id) => {
+            const it = window.db.find(d => String(d.id) === String(id));
+            if (!it) return;
+            let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*. Após este horário, ela será encaminhada para a Mensageria.` : '';
+            const msg = `Olá! 👋 Temos uma ótima notícia: uma encomenda sua acaba de chegar à nossa portaria!\n\n` +
+                   `👤 *Para:* ${it.morador}\n` +
+                   `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
+                   `📦 *Item:* ${it.descricao}\n` +
+                   `🏷️ *Remetente:* ${it.remetente}\n` +
+                   `🚚 *Empresa:* ${it.empresa}\n` +
+                   `🔢 *Doc/NF:* ${it.nf}\n` +
+                   `👮 *Recebido por:* ${it.recebedor}\n` +
+                   `⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\n` +
+                   `A portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
+            
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+            it.notificadoPortariaMorador = true; 
+            await setDoc(doc(encomendasRef, String(it.id)), it); // Salva status de envio
+        }
+
+        window.enviarAvisoMensageria = async (id) => {
+            const it = window.db.find(d => String(d.id) === String(id));
+            if (!it) return;
+            const agora = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
+            
+            const msg = `Olá! 👋 Informamos que sua encomenda saiu da portaria e chegou à nossa *MENSAGERIA* e já está pronta para retirada.\n\n` +
+                   `🏢 *Local:* Unidade ${it.apto} - Bloco ${it.bloco}\n` +
+                   `📦 *Item:* ${it.descricao}\n` +
+                   `⏰ *Aviso enviado às:* ${agora}\n\n` +
+                   `Aguardamos sua visita para a retirada. Tenha um excelente dia! 📦✨`;
+            
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+            it.notificadoMensageria = true;
+            await setDoc(doc(encomendasRef, String(it.id)), it);
+        }
+
+        window.openEditModal = (id) => {
+            const it = window.db.find(d => String(d.id) === String(id));
+            if (!it) return;
+            document.getElementById('edit-id').value = it.id;
+            document.getElementById('edit-unidade').value = it.apto + it.bloco;
+            document.getElementById('edit-morador').value = it.morador;
+            document.getElementById('edit-remetente').value = it.remetente;
+            document.getElementById('edit-empresa').value = it.empresa;
+            document.getElementById('edit-descricao').value = it.descricao;
+            document.getElementById('edit-nf').value = it.nf;
+            document.getElementById('edit-recebedor').value = it.recebedor;
+            document.getElementById('edit-permanencia').value = it.permanencia || '';
+            document.getElementById('edit-tokens').value = (it.tokens || []).join(', ');
+            document.getElementById('modal-edit').classList.remove('hidden');
+        }
+
+        window.closeEditModal = () => document.getElementById('modal-edit').classList.add('hidden');
+
+        window.saveEdit = async () => {
+            const id = document.getElementById('edit-id').value;
+            const res = window.validarUnidade(document.getElementById('edit-unidade').value);
+            if (!res.ok) { alert(res.msg); return; }
+            const idx = window.db.findIndex(d => String(d.id) === String(id));
+            
+            if (idx !== -1) {
+                const item = window.db[idx];
+                item.apto = res.apto.toString(); item.bloco = res.bloco;
+                item.morador = document.getElementById('edit-morador').value;
+                item.remetente = document.getElementById('edit-remetente').value;
+                item.empresa = document.getElementById('edit-empresa').value;
+                item.descricao = document.getElementById('edit-descricao').value;
+                item.nf = document.getElementById('edit-nf').value;
+                item.recebedor = document.getElementById('edit-recebedor').value;
+                item.permanencia = document.getElementById('edit-permanencia').value;
+                const tv = document.getElementById('edit-tokens').value;
+                item.tokens = tv ? tv.split(',').map(s => s.trim()).filter(s => s !== '') : [];
+                
+                await setDoc(doc(encomendasRef, String(item.id)), item);
+                window.closeEditModal();
+            }
+        }
+
+        window.openBaixaModal = (id, origem) => {
+            const it = window.db.find(d => String(d.id) === String(id));
+            if (!it) return;
+            window.baixaTargetId = id;
+            window.baixaTargetOrigem = origem;
+            
+            document.getElementById('baixa-info-morador').innerText = `Bloco ${it.bloco} - Apto ${it.apto} (${it.morador})`;
+            document.getElementById('baixa-entregador').value = "";
+            document.getElementById('baixa-retirado').value = "";
+            document.getElementById('modal-baixa').classList.remove('hidden');
+        }
+
+        window.closeBaixaModal = () => document.getElementById('modal-baixa').classList.add('hidden');
+
+        window.confirmarBaixaReal = async () => {
+            if (!window.baixaTargetId) return;
+            const idx = window.db.findIndex(d => String(d.id) === String(window.baixaTargetId));
+            
+            if (idx !== -1) {
+                const item = window.db[idx];
+                const entregador = document.getElementById('baixa-entregador').value || "Não informado";
+                const retiradoPor = document.getElementById('baixa-retirado').value || "O Próprio";
+                
+                item.status = 'entregue';
+                item.saida = new Date().toISOString();
+                item.entreguePor = entregador;
+                item.retiradoPor = retiradoPor;
+                
+                if (window.baixaTargetOrigem === 'mensageria') {
+                    item.destino = 'entregue_mensageria';
+                } else {
+                    item.destino = 'morador';
+                }
+                
+                await setDoc(doc(encomendasRef, String(item.id)), item);
+                window.closeBaixaModal();
+            }
+        }
+
+        window.validarUnidade = (txt) => {
+            const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
+            const num = clean.match(/\d+/); const blk = clean.match(/[JP]/);
+            if (!num || !blk) return { ok: false, msg: "Bloco?" };
+            const n = parseInt(num[0]); const b = blk[0];
+            if (n < 11 || n > 181 || n % 10 !== 1) return { ok: false, msg: "Inválida" };
+            return { ok: true, apto: n, bloco: b, msg: `✓ ${b}-${n}` };
+        }
+
+        window.validarInput = (el) => {
+            const res = window.validarUnidade(el.value);
+            const fb = document.getElementById('feedback-val');
+            fb.innerText = res.msg;
+            fb.className = `text-[10px] mt-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
+            document.getElementById('btn-gravar').disabled = !res.ok;
+        }
+
+        window.handleRegistrar = async (e) => {
+            e.preventDefault();
+            const res = window.validarUnidade(document.getElementById('input-unidade').value);
+            if (!res.ok) return;
+            
+            const btn = document.getElementById('btn-gravar');
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Salvando na Nuvem...`;
+
+            const now = new Date();
+            const nid = String(Date.now() + Math.floor(Math.random()*1000));
+            
+            const novoItem = {
+                id: nid, apto: res.apto.toString(), bloco: res.bloco,
+                morador: document.getElementById('input-morador').value || "Morador",
+                empresa: document.getElementById('input-empresa').value || "Empresa",
+                remetente: document.getElementById('input-remetente').value || "Remetente",
+                descricao: document.getElementById('input-descricao').value || "Volume",
+                nf: document.getElementById('input-nf').value || "S/N",
+                recebedor: document.getElementById('input-recebedor').value || "Porteiro",
+                permanencia: document.getElementById('input-permanencia').value || "",
+                qtd: parseInt(document.getElementById('input-qtd').value) || 1,
+                foto: window.currentPhoto, data: now.toLocaleDateString('pt-PT'),
+                hora: now.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}),
+                status: 'pendente', tokens: [],
+                notificadoPortariaMorador: false, notificadoMensageria: false
+            };
+            
+            try {
+                await setDoc(doc(encomendasRef, nid), novoItem);
+                
+                document.getElementById('form-main').reset();
+                document.getElementById('photo-container').classList.add('hidden');
+                window.currentPhoto = null;
+                
+                // Força a inserção local temporária para o envio pro grupo funcionar logo em seguida
+                window.db.push(novoItem); 
+                window.enviarGrupoCondominio(nid);
+            } catch(err) {
+                console.error("Erro", err);
+                alert("Falha ao salvar na nuvem.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `Gravar Registro`;
+                lucide.createIcons();
+            }
+        }
+
+        window.switchTab = (t) => {
+            window.abaAtiva = t; window.expandidoKey = null; window.blocoFiltro = '';
+            
+            const ativo = "bg-white text-blue-600 shadow-sm";
+            const inativo = "text-slate-500 hover:bg-slate-200";
+            
+            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='pendentes'?ativo:inativo}`;
+            document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='mensageria'?ativo:inativo}`;
+            document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='entregues'?ativo:inativo}`;
+
+            document.getElementById('area-registro').style.display = t==='pendentes'?'block':'none';
+            document.getElementById('controles-historico').style.display = t==='pendentes'?'none':'flex';
+            
+            window.render();
+        }
+
+        window.filtrar = (v) => { window.termoBusca = v.toLowerCase().trim(); window.render(); }
+        window.setFastFilter = (f) => { window.blocoFiltro = f; window.render(); }
+        window.toggleExpand = (key) => { window.expandidoKey = window.expandidoKey === key ? null : key; window.render(); }
+
+        window.darBaixaDiretaMensageria = async (id) => {
+            const idx = window.db.findIndex(d => String(d.id) === String(id));
+            if (idx !== -1) {
+                const item = window.db[idx];
+                item.status = 'entregue';
+                item.saida = new Date().toISOString();
+                item.destino = 'mensageria';
+                await setDoc(doc(encomendasRef, String(item.id)), item);
+            }
+        }
+
+        window.excluirUm = async (id) => { 
+            if(confirm("Apagar da nuvem permanentemente?")) { 
+                await deleteDoc(doc(encomendasRef, String(id)));
+            } 
+        }
+
+        window.limparHistorico = async () => { 
+            if(confirm("Deseja realmente apagar o histórico de entregues na nuvem?")) { 
+                const paraExcluir = window.db.filter(d => d.status !== 'pendente');
+                const batch = writeBatch(dbFS);
+                paraExcluir.forEach(item => {
+                    const ref = doc(encomendasRef, String(item.id));
+                    batch.delete(ref);
+                });
+                await batch.commit();
+            } 
+        }
+
+        window.exportarDados = () => { 
+            const b = new Blob([JSON.stringify(window.db,null,2)],{type:'application/json'}); 
+            const u=URL.createObjectURL(b); 
+            const a=document.createElement('a'); 
+            a.href=u; a.download=`backup-nuvem.json`; a.click(); 
+        }
+
+        window.importarDados = async (input) => {
+            if(input.files && input.files[0]) {
+                const r = new FileReader();
+                r.onload = async (e) => { 
+                    try { 
+                        const jsonData = JSON.parse(e.target.result); 
+                        const batch = writeBatch(dbFS);
+                        
+                        // Garante limite do batch se o arquivo for muito grande (Firebase permite 500 ops por vez)
+                        let count = 0;
+                        for(let i = 0; i < jsonData.length; i++) {
+                            const ref = doc(encomendasRef, String(jsonData[i].id));
+                            batch.set(ref, jsonData[i]);
+                            count++;
+                            // Se bater 490, enviar e iniciar um novo batch se houver lógica estendida, mas assumindo volume normal para um condomínio funciona
+                        }
+                        await batch.commit();
+                        alert(`${count} encomendas importadas para a Nuvem com Sucesso!`);
+                    } catch(err){
+                        alert("Erro ao importar dados para a nuvem!");
+                        console.error(err);
+                    } 
+                };
+                r.readAsText(input.files[0]);
+            }
+        }
+
+        window.render = () => {
+            const activeClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-blue-600 text-white border-blue-600 shadow-md";
+            const inactiveClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-white border-slate-200 text-slate-500 hover:bg-slate-50";
+            
+            document.getElementById('ff-all').className = window.blocoFiltro === '' ? activeClasses : inactiveClasses;
+            document.getElementById('ff-j').className = window.blocoFiltro === 'J' ? activeClasses : inactiveClasses;
+            document.getElementById('ff-p').className = window.blocoFiltro === 'P' ? activeClasses : inactiveClasses;
+            
+            let listaBase = [];
+            if (window.abaAtiva === 'pendentes') {
+                listaBase = window.db.filter(d => d.status === 'pendente');
+            } else if (window.abaAtiva === 'mensageria') {
+                listaBase = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria');
+            } else {
+                listaBase = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria');
+            }
+
+            const grupos = {};
+            listaBase.forEach(d => {
+                const k = `${d.bloco}-${d.apto}`;
+                const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao}`.toLowerCase();
+                if(window.termoBusca && !t.includes(window.termoBusca)) return;
+                if(window.blocoFiltro && d.bloco !== window.blocoFiltro) return;
+                
+                if(!grupos[k]) grupos[k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, statusNotificado: false };
+                grupos[k].itens.push(d); grupos[k].total += d.qtd;
+                
+                if(window.abaAtiva === 'pendentes' && d.notificadoPortariaMorador) grupos[k].statusNotificado = true;
+                if((window.abaAtiva === 'entregues' || window.abaAtiva === 'mensageria') && d.notificadoMensageria) grupos[k].statusNotificado = true;
+            });
+
+            const filtrados = Object.values(grupos).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
+            
+            document.getElementById('count-p').innerText = window.db.filter(d => d.status === 'pendente').reduce((a,b)=>a+b.qtd,0);
+            document.getElementById('count-m').innerText = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria').length;
+            document.getElementById('count-e').innerText = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria').length;
+
+            const container = document.getElementById('render-container');
+            container.innerHTML = filtrados.length === 0 ? `<div class="p-10 text-center text-slate-400 font-bold text-xs uppercase">Nenhum Registro Encontrado</div>` : '';
+
+            filtrados.forEach(g => {
+                const key = `${g.b}-${g.a}`;
+                const isExp = window.expandidoKey === key;
+                const card = document.createElement('div');
+                card.className = `card-unidade bg-white rounded-2xl border ${window.abaAtiva==='pendentes'&&g.total>1?'border-orange-200 ring-2 ring-orange-50':'border-slate-100'} shadow-sm overflow-hidden mb-3 animate-fade-in`;
+                
+                let badgesHist = '';
+                if(window.abaAtiva !== 'pendentes'){
+                    let label = 'ENTREGUE (PORTARIA)';
+                    let color = 'bg-emerald-100 text-emerald-600';
+                    if(g.itens[0].destino === 'mensageria') { label = 'NA MENSAGERIA'; color = 'bg-orange-100 text-orange-600'; }
+                    else if (g.itens[0].destino === 'entregue_mensageria') { label = 'ENTREGUE (MENSAGERIA)'; color = 'bg-indigo-100 text-indigo-600'; }
+                    badgesHist = `<span class="text-[8px] ${color} font-black px-1.5 py-0.5 rounded uppercase mr-1">${label}</span>`;
+                }
+
+                card.innerHTML = `
+                    <div onclick="toggleExpand('${key}')" class="p-4 flex items-center gap-3 cursor-pointer active:bg-slate-50">
+                        <div class="w-12 h-12 flex items-center justify-center rounded-xl font-bold text-lg ${window.abaAtiva!=='pendentes'?'bg-slate-100 text-slate-400 border border-dashed':'bg-blue-600 text-white shadow-md'}">${g.b}</div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                                Apto ${g.a} - ${g.morador}
+                                ${g.statusNotificado ? '<i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>' : ''}
+                            </h3>
+                            <div class="flex gap-1 items-center">
+                                ${window.abaAtiva==='pendentes' ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${g.total>1?'bg-orange-500 text-white':'bg-slate-100 text-slate-400'} uppercase">${g.total} VOLS</span>` : badgesHist}
+                            </div>
+                        </div>
+                        <i data-lucide="${isExp?'chevron-up':'chevron-down'}" class="text-slate-300"></i>
+                    </div>
+                    ${isExp ? `<div class="bg-slate-50 border-t border-slate-100 p-4 space-y-4">
+                        ${g.itens.map(it => `
+                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm animate-fade-in relative overflow-hidden">
+                                ${((window.abaAtiva==='pendentes'&&it.notificadoPortariaMorador)||(window.abaAtiva!=='pendentes'&&it.notificadoMensageria)) ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-2 h-2"></i> Mensagem Enviada</div>` : ''}
+                                
+                                <div class="flex gap-4 mb-4">
+                                    <div class="relative">
+                                        ${it.foto ? `<img src="${it.foto}" class="w-20 h-20 rounded-lg object-cover border border-slate-200" onclick="window.open(this.src)">` : `
+                                            <label class="w-20 h-20 bg-slate-100 rounded-lg flex flex-col items-center justify-center text-blue-500 cursor-pointer no-print">
+                                                <i data-lucide="camera" class="w-5 h-5"></i><span class="text-[7px] font-black text-center">FOTO</span>
+                                                <input type="file" accept="image/*" capture="environment" class="hidden" onchange="addPhotoToRecord('${it.id}', this)">
+                                            </label>`}
+                                    </div>
+                                    <div class="flex-1 space-y-1">
+                                        <div class="flex justify-between items-start">
+                                            <div><p class="text-[8px] font-black text-slate-400 uppercase">Remetente</p><p class="text-[11px] font-black text-blue-700 uppercase">${it.remetente}</p></div>
+                                            <div class="flex gap-2 no-print">
+                                                ${window.abaAtiva === 'pendentes' ? `
+                                                    <button onclick="enviarGrupoCondominio('${it.id}')" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Grupo Administrativo"><i data-lucide="send" class="w-4 h-4"></i></button>
+                                                    <button onclick="enviarAvisoMorador('${it.id}')" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador"><i data-lucide="bell" class="w-4 h-4"></i></button>
+                                                ` : `
+                                                    ${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria('${it.id}')" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Aviso Mensageria"><i data-lucide="send" class="w-4 h-4"></i></button>` : ''}
+                                                `}
+                                                <button onclick="openEditModal('${it.id}')" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                                <button onclick="excluirUm('${it.id}')" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                            </div>
+                                        </div>
+                                        <p class="text-[10px] font-bold text-slate-700 uppercase">${it.empresa}</p>
+                                        <p class="text-[10px] italic text-slate-600 mt-1">${it.descricao}</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-x-2 gap-y-3 border-t pt-2 text-[9px] font-black uppercase text-slate-400">
+                                    <div><p class="text-[7px]">Doc / NF</p><p class="text-slate-700">${it.nf}</p></div>
+                                    <div><p class="text-[7px]">Recebedor</p><p class="text-slate-700">${it.recebedor}</p></div>
+                                    <div><p class="text-[7px]">Entrada</p><p class="text-slate-700">${it.data} às ${it.hora}</p></div>
+                                    <div><p class="text-[7px] text-blue-500">Portaria até:</p><p class="text-blue-600 font-bold">${it.permanencia || 'N/A'}</p></div>
+                                    ${it.saida ? `<div class="col-span-2 border-t pt-1"><p class="text-[7px] text-emerald-500 font-black uppercase">Saída: ${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p>
+                                    ${it.entreguePor ? `<p class="text-[7px] text-slate-500 mt-0.5 font-medium">Entregue por: ${it.entreguePor} | Retirado por: ${it.retiradoPor}</p>` : ''}
+                                    </div>` : ''}
+                                </div>
+                                ${window.abaAtiva === 'pendentes' ? `
+                                    <div class="mt-4 pt-3 border-t space-y-2 no-print">
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button onclick="openBaixaModal('${it.id}', 'portaria')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Entrega Morador</button>
+                                            <button onclick="darBaixaDiretaMensageria('${it.id}')" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Encaminhar Mensageria</button>
+                                        </div>
+                                    </div>` : ''}
+                                
+                                ${window.abaAtiva === 'mensageria' ? `
+                                    <div class="mt-4 pt-3 border-t space-y-2 no-print">
+                                        <button onclick="openBaixaModal('${it.id}', 'mensageria')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm active:scale-95 transition-all">Confirmar Entrega ao Morador</button>
+                                    </div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>` : ''}
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+        window.onload = () => window.render();
     </script>
 </body>
 </html>
