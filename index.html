@@ -178,22 +178,22 @@
         <main class="max-w-4xl mx-auto px-4 py-6 space-y-6">
             
             <div class="grid grid-cols-3 gap-2 no-print">
-                <div onclick="switchTab('pendentes')" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center cursor-pointer hover:bg-slate-50 active:scale-95 transition-all">
-                    <p class="text-[9px] font-bold uppercase text-slate-400 mb-1">Portaria</p>
+                <div id="big-btn-p" onclick="switchTab('pendentes')" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center cursor-pointer hover:bg-slate-50 active:scale-95 transition-all duration-300">
+                    <p class="text-[9px] font-bold uppercase text-slate-500 mb-1">Portaria</p>
                     <div class="flex items-end justify-center gap-1">
                         <span id="count-p" class="text-2xl font-black text-blue-600">0</span>
                         <span class="text-[8px] text-slate-400 mb-1 font-bold">VOLS</span>
                     </div>
                 </div>
-                <div onclick="switchTab('mensageria')" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center cursor-pointer hover:bg-slate-50 active:scale-95 transition-all">
-                    <p class="text-[9px] font-bold uppercase text-slate-400 mb-1">Mensageria</p>
+                <div id="big-btn-m" onclick="switchTab('mensageria')" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center cursor-pointer hover:bg-slate-50 active:scale-95 transition-all duration-300">
+                    <p class="text-[9px] font-bold uppercase text-slate-500 mb-1">Mensageria</p>
                     <div class="flex items-end justify-center gap-1">
                         <span id="count-m" class="text-2xl font-black text-orange-500">0</span>
                         <span class="text-[8px] text-slate-400 mb-1 font-bold">UNIDS</span>
                     </div>
                 </div>
-                <div onclick="switchTab('entregues')" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center cursor-pointer hover:bg-slate-50 active:scale-95 transition-all">
-                    <p class="text-[9px] font-bold uppercase text-slate-400 mb-1">Histórico</p>
+                <div id="big-btn-h" onclick="switchTab('entregues')" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center cursor-pointer hover:bg-slate-50 active:scale-95 transition-all duration-300">
+                    <p class="text-[9px] font-bold uppercase text-slate-500 mb-1">Histórico</p>
                     <div class="flex items-end justify-center gap-1">
                         <span id="count-e" class="text-2xl font-black text-emerald-600">0</span>
                         <span class="text-[8px] text-slate-400 mb-1 font-bold">UNIDS</span>
@@ -287,6 +287,11 @@
                     <button onclick="setFastFilter('J')" id="ff-j" class="whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border">Bloco J</button>
                     <button onclick="setFastFilter('P')" id="ff-p" class="whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border">Bloco P</button>
                 </div>
+
+                <!-- BOTÃO DE ENVIO EM LOTE PARA MENSAGERIA -->
+                <button id="btn-bulk-transfer" onclick="transferirTodosParaMensageria()" class="hidden w-full py-3 bg-blue-600 text-white font-black rounded-xl text-[10px] uppercase shadow-md flex items-center justify-center gap-2 hover:bg-blue-700 active:scale-95 transition-all">
+                    <i data-lucide="package-check" class="w-4 h-4"></i> Encaminhar <span id="bulk-count">0</span> para Mensageria
+                </button>
                 
                 <div id="controles-historico" class="hidden flex flex-col gap-2">
                     <div class="grid grid-cols-2 gap-2">
@@ -334,11 +339,9 @@
         const auth = getAuth(app);
         const dbFS = getFirestore(app);
         
-        // Regra de segurança/estrutura exigida na nuvem
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'portaria-trackeasy';
         const encomendasRef = collection(dbFS, 'artifacts', appId, 'public', 'data', 'encomendas');
         
-        // Elementos da Interface
         const loginOverlay = document.getElementById('login-overlay');
         const appContent = document.getElementById('app-content');
         const loginForm = document.getElementById('login-form');
@@ -347,6 +350,7 @@
 
         // Estado da Aplicação Global
         window.db = [];
+        window.listaVisivel = []; // Adicionamos isso para o Envio em Lote saber exatamente o que está na tela
         window.abaAtiva = 'pendentes';
         window.termoBusca = '';
         window.blocoFiltro = '';
@@ -357,13 +361,11 @@
 
         let unsubscribeSnapshot = null;
 
-        // Monitorar Status de Login e Sincronizar Firebase Real-Time
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 loginOverlay.classList.add('hidden');
                 appContent.classList.remove('hidden');
                 
-                // Inicia sincronização com o Firebase em tempo real
                 unsubscribeSnapshot = onSnapshot(encomendasRef, (snapshot) => {
                     window.db = snapshot.docs.map(doc => doc.data());
                     window.render(); 
@@ -380,7 +382,6 @@
             }
         });
 
-        // Ação de Login
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
@@ -412,8 +413,6 @@
                 }
             }
         };
-
-        // --- FUNCIONALIDADES DO APLICATIVO AGORA CONECTADAS AO FIREBASE ---
 
         window.processarFoto = (input) => {
             if (input.files && input.files[0]) {
@@ -451,7 +450,7 @@
                         const it = window.db.find(d => String(d.id) === String(id));
                         if (it) { 
                             it.foto = compressed; 
-                            await setDoc(doc(encomendasRef, String(it.id)), it); // Salva na Nuvem
+                            await setDoc(doc(encomendasRef, String(it.id)), it); 
                         }
                     };
                     img.src = e.target.result;
@@ -629,6 +628,32 @@
             }
         }
 
+        // Função de envio em lote (NOVIDADE)
+        window.transferirTodosParaMensageria = async () => {
+            if(!window.listaVisivel || window.listaVisivel.length === 0) return;
+            
+            if(confirm(`ATENÇÃO: Deseja encaminhar TODAS as ${window.listaVisivel.length} encomendas exibidas na tela para a Mensageria de uma só vez?`)) {
+                try {
+                    const batch = writeBatch(dbFS);
+                    const now = new Date().toISOString();
+                    
+                    window.listaVisivel.forEach(item => {
+                        item.status = 'entregue';
+                        item.saida = now;
+                        item.destino = 'mensageria';
+                        
+                        const ref = doc(encomendasRef, String(item.id));
+                        batch.set(ref, item);
+                    });
+                    
+                    await batch.commit();
+                } catch (e) {
+                    console.error("Erro no envio em lote:", e);
+                    alert("Falha ao encaminhar lote para mensageria.");
+                }
+            }
+        };
+
         window.validarUnidade = (txt) => {
             const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
             const num = clean.match(/\d+/); const blk = clean.match(/[JP]/);
@@ -658,7 +683,6 @@
             const now = new Date();
             const nid = String(Date.now() + Math.floor(Math.random()*1000));
             
-            // Lógica inteligente para saber se o registro foi feito pela Mensageria
             const isMensageria = window.abaAtiva === 'mensageria';
 
             const novoItem = {
@@ -673,7 +697,6 @@
                 qtd: parseInt(document.getElementById('input-qtd').value) || 1,
                 foto: window.currentPhoto, data: now.toLocaleDateString('pt-PT'),
                 hora: now.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}),
-                // Se foi feito na mensageria, já cai entregue na mensageria
                 status: isMensageria ? 'entregue' : 'pendente', 
                 destino: isMensageria ? 'mensageria' : null,
                 saida: isMensageria ? now.toISOString() : null,
@@ -688,7 +711,6 @@
                 document.getElementById('photo-container').classList.add('hidden');
                 window.currentPhoto = null;
                 
-                // Força a inserção local temporária para o envio pro grupo funcionar logo em seguida
                 window.db.push(novoItem); 
                 window.enviarGrupoCondominio(nid);
             } catch(err) {
@@ -711,11 +733,9 @@
             document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='mensageria'?ativo:inativo}`;
             document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='entregues'?ativo:inativo}`;
 
-            // Mostra o formulário de registro nas abas de portaria E mensageria
             document.getElementById('area-registro').style.display = (t==='pendentes' || t==='mensageria') ? 'block' : 'none';
             document.getElementById('controles-historico').style.display = t==='pendentes' ? 'none' : 'flex';
             
-            // Muda o título do registro dependendo da aba
             const tituloReg = document.getElementById('titulo-registro');
             if (t === 'pendentes') {
                 tituloReg.innerHTML = `<i data-lucide="camera" class="w-4 h-4 text-blue-600"></i> Registro de Encomenda`;
@@ -792,6 +812,14 @@
         }
 
         window.render = () => {
+            // Estilização dinâmica dos botões grandes (Quadros)
+            const inactiveBigBtn = "bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center cursor-pointer hover:bg-slate-50 active:scale-95 transition-all duration-300";
+            const activeBigBtn = "bg-blue-50 p-3 rounded-2xl border border-blue-500 ring-2 ring-blue-200 shadow-md text-center cursor-pointer transition-all duration-300";
+
+            document.getElementById('big-btn-p').className = window.abaAtiva === 'pendentes' ? activeBigBtn : inactiveBigBtn;
+            document.getElementById('big-btn-m').className = window.abaAtiva === 'mensageria' ? activeBigBtn : inactiveBigBtn;
+            document.getElementById('big-btn-h').className = window.abaAtiva === 'entregues' ? activeBigBtn : inactiveBigBtn;
+
             const activeClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-blue-600 text-white border-blue-600 shadow-md";
             const inactiveClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-white border-slate-200 text-slate-500 hover:bg-slate-50";
             
@@ -808,13 +836,26 @@
                 listaBase = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria');
             }
 
-            const grupos = {};
-            listaBase.forEach(d => {
-                const k = `${d.bloco}-${d.apto}`;
+            // Filtra os itens que realmente vão aparecer na tela e salva em window.listaVisivel para o Envio em Lote
+            window.listaVisivel = listaBase.filter(d => {
                 const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao}`.toLowerCase();
-                if(window.termoBusca && !t.includes(window.termoBusca)) return;
-                if(window.blocoFiltro && d.bloco !== window.blocoFiltro) return;
-                
+                if(window.termoBusca && !t.includes(window.termoBusca)) return false;
+                if(window.blocoFiltro && d.bloco !== window.blocoFiltro) return false;
+                return true;
+            });
+
+            // Gerencia visibilidade do botão de Envio em Lote (Só aparece na Portaria se houver itens)
+            const btnBulk = document.getElementById('btn-bulk-transfer');
+            if (window.abaAtiva === 'pendentes' && window.listaVisivel.length > 0) {
+                btnBulk.classList.remove('hidden');
+                document.getElementById('bulk-count').innerText = window.listaVisivel.length;
+            } else {
+                btnBulk.classList.add('hidden');
+            }
+
+            const grupos = {};
+            window.listaVisivel.forEach(d => {
+                const k = `${d.bloco}-${d.apto}`;
                 if(!grupos[k]) grupos[k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, statusNotificado: false };
                 grupos[k].itens.push(d); grupos[k].total += d.qtd;
                 
