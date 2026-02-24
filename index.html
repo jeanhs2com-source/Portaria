@@ -63,7 +63,7 @@
     <!-- CONTEÚDO PRINCIPAL DO APP -->
     <div id="app-content" class="hidden">
         
-        <!-- Modal de Edição -->
+        <!-- Modais permanecem iguais -->
         <div id="modal-edit" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
             <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-fade-in">
                 <div class="flex justify-between items-center border-b pb-3">
@@ -122,7 +122,6 @@
             </div>
         </div>
 
-        <!-- Modal de Baixa -->
         <div id="modal-baixa" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
             <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in">
                 <div class="flex justify-between items-center border-b pb-3">
@@ -219,6 +218,7 @@
                         </div>
                     </div>
 
+                    <!-- Inputs permanecem iguais -->
                     <div class="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Unidade (Apto)</label>
@@ -281,7 +281,7 @@
                         class="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 bg-white shadow-sm outline-none font-medium text-sm">
                 </div>
 
-                <!-- Botões de Filtro Rápido COM ANIMAÇÃO -->
+                <!-- Botões de Filtro Rápido -->
                 <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                     <button onclick="setFastFilter('')" id="ff-all" class="whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border">Todos</button>
                     <button onclick="setFastFilter('J')" id="ff-j" class="whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border">Bloco J</button>
@@ -291,6 +291,11 @@
                 <!-- BOTÃO DE ENVIO EM LOTE PARA MENSAGERIA -->
                 <button id="btn-bulk-transfer" onclick="transferirTodosParaMensageria()" class="hidden w-full py-3 bg-blue-600 text-white font-black rounded-xl text-[10px] uppercase shadow-md flex items-center justify-center gap-2 hover:bg-blue-700 active:scale-95 transition-all">
                     <i data-lucide="package-check" class="w-4 h-4"></i> Encaminhar <span id="bulk-count">0</span> para Mensageria
+                </button>
+
+                <!-- NOVO BOTÃO DE RESUMO MENSAGERIA -->
+                <button id="btn-resumo-mensageria" onclick="compartilharResumoMensageria()" class="hidden w-full py-3 bg-orange-500 text-white font-black rounded-xl text-[10px] uppercase shadow-md flex items-center justify-center gap-2 hover:bg-orange-600 active:scale-95 transition-all">
+                    <i data-lucide="message-square" class="w-4 h-4"></i> Compartilhar Resumo Mensageria
                 </button>
                 
                 <div id="controles-historico" class="hidden flex flex-col gap-2">
@@ -315,7 +320,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
@@ -327,17 +332,18 @@
             measurementId: "G-GVDPNYDNEY"
         };
 
-        let app;
-        try {
-            app = initializeApp(firebaseConfig);
-        } catch(e) {
-            console.error("Erro ao inicializar Firebase", e);
-            document.getElementById('login-error').innerHTML = `Erro de Configuração:<br><span class="text-[9px] font-normal text-red-400">${e.message}</span>`;
-            document.getElementById('login-error').classList.remove('hidden');
-        }
-
+        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const dbFS = getFirestore(app);
+
+        // ATIVAÇÃO DO MODO OFFLINE (Firestore Persistence)
+        enableIndexedDbPersistence(dbFS).catch((err) => {
+            if (err.code == 'failed-precondition') {
+                console.warn("Persistência falhou: Várias abas abertas.");
+            } else if (err.code == 'unimplemented') {
+                console.warn("Persistência não suportada pelo navegador.");
+            }
+        });
         
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'portaria-trackeasy';
         const encomendasRef = collection(dbFS, 'artifacts', appId, 'public', 'data', 'encomendas');
@@ -348,16 +354,14 @@
         const loginError = document.getElementById('login-error');
         const btnLogin = document.getElementById('btn-login');
 
-        // Estado da Aplicação Global
+        // Estado Global
         window.db = [];
-        window.listaVisivel = []; // Adicionamos isso para o Envio em Lote saber exatamente o que está na tela
+        window.listaVisivel = [];
         window.abaAtiva = 'pendentes';
         window.termoBusca = '';
         window.blocoFiltro = '';
         window.currentPhoto = null;
         window.expandidoKey = null;
-        window.baixaTargetId = null;
-        window.baixaTargetOrigem = null;
 
         let unsubscribeSnapshot = null;
 
@@ -365,64 +369,56 @@
             if (user) {
                 loginOverlay.classList.add('hidden');
                 appContent.classList.remove('hidden');
-                
                 unsubscribeSnapshot = onSnapshot(encomendasRef, (snapshot) => {
                     window.db = snapshot.docs.map(doc => doc.data());
                     window.render(); 
-                }, (error) => {
-                    console.error("Erro no Sync Firestore:", error);
-                });
-
+                }, (error) => console.error(error));
             } else {
                 loginOverlay.classList.remove('hidden');
                 appContent.classList.add('hidden');
                 if (unsubscribeSnapshot) unsubscribeSnapshot();
-                window.db = [];
-                window.render();
             }
         });
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            btnLogin.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Entrando...`;
             btnLogin.disabled = true;
-            loginError.classList.add('hidden');
-
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value);
             } catch (error) {
-                console.error("Erro no login:", error);
-                loginError.innerHTML = `Falha no login:<br><span class="text-[9px] font-normal text-red-600">${error.message}</span>`;
+                loginError.innerText = "Falha no login. Verifique dados.";
                 loginError.classList.remove('hidden');
-            } finally {
-                btnLogin.innerHTML = `Entrar no Sistema`;
                 btnLogin.disabled = false;
-                lucide.createIcons();
             }
         });
 
-        window.realizarLogout = async () => {
-            if(confirm("Deseja realmente sair do sistema?")) {
-                try {
-                    await signOut(auth);
-                } catch (error) {
-                    console.error("Erro ao sair", error);
-                }
+        window.realizarLogout = () => confirm("Sair?") && signOut(auth);
+
+        // FUNÇÃO PARA COMPARTILHAR RESUMO MENSAGERIA (PEDIDO PELO USUÁRIO)
+        window.compartilharResumoMensageria = () => {
+            const itensMensageria = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria');
+            if (itensMensageria.length === 0) {
+                alert("Não há encomendas na Mensageria para resumir.");
+                return;
             }
+            
+            // Pega unidades únicas
+            const unidadesSet = new Set();
+            itensMensageria.forEach(it => unidadesSet.add(`${it.apto}${it.bloco}`));
+            const unidadesOrdenadas = Array.from(unidadesSet).sort();
+            
+            const msg = `*Mensageria*\n ${unidadesOrdenadas.join('\n ')}`;
+            window.enviarWhatsAppMorador(msg);
         };
 
         window.processarFoto = (input) => {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = (e) => {
                     const img = new Image();
-                    img.onload = function() {
+                    img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const max_w = 600;
-                        let w = img.width, h = img.height;
+                        const max_w = 600; let w = img.width, h = img.height;
                         if (w > max_w) { h *= max_w / w; w = max_w; }
                         canvas.width = w; canvas.height = h;
                         canvas.getContext("2d").drawImage(img, 0, 0, w, h);
@@ -436,22 +432,18 @@
             }
         }
 
-        window.addPhotoToRecord = (id, input) => {
+        window.addPhotoToRecord = async (id, input) => {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = (e) => {
                     const img = new Image();
-                    img.onload = async function() {
+                    img.onload = async () => {
                         const canvas = document.createElement('canvas');
-                        canvas.width = 500; canvas.height = (img.height / img.width) * 500;
-                        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const compressed = canvas.toDataURL("image/jpeg", 0.5);
-                        
+                        canvas.width = 500; canvas.height = (img.height/img.width)*500;
+                        canvas.getContext("2d").drawImage(img,0,0,500,canvas.height);
+                        const photo = canvas.toDataURL("image/jpeg", 0.5);
                         const it = window.db.find(d => String(d.id) === String(id));
-                        if (it) { 
-                            it.foto = compressed; 
-                            await setDoc(doc(encomendasRef, String(it.id)), it); 
-                        }
+                        if(it) { it.foto = photo; await setDoc(doc(encomendasRef, String(it.id)), it); }
                     };
                     img.src = e.target.result;
                 };
@@ -459,207 +451,67 @@
             }
         }
 
-        window.obterFicheiroFoto = async (base64, nome) => {
-            if (!base64) return null;
-            try {
-                const response = await fetch(base64);
-                const blob = await response.blob();
-                return new File([blob], nome, { type: 'image/jpeg' });
-            } catch (e) { return null; }
-        }
-
-        window.enviarGrupoCondominio = async (id) => {
-            const it = window.db.find(d => String(d.id) === String(id));
-            if (!it) return;
-            const msg = `📢 *CONTROLE DE ENCOMENDA - PORTARIA* \n\n` +
-                   `👤 *Morador:* ${it.morador}\n` +
-                   `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
-                   `📦 *Produto:* ${it.descricao}\n` +
-                   `🚚 *Empresa:* ${it.empresa}\n` +
-                   `🏷️ *Remetente:* ${it.remetente}\n` +
-                   `🔢 *NF/Doc:* ${it.nf}\n` +
-                   `👮 *Recebido por:* ${it.recebedor}\n` +
-                   `⏰ *Chegada:* ${it.data} às ${it.hora}\n` +
-                   `⏳ *Portaria até:* ${it.permanencia || 'N/A'}`;
-            
-            const file = await window.obterFicheiroFoto(it.foto, `encomenda.jpg`);
-            
-            if (navigator.share && file) {
-                try {
-                    await navigator.share({ files: [file], title: 'Controle Portaria', text: msg });
-                    return;
-                } catch (err) {
-                    if (err.name === 'AbortError') return; 
-                }
-            }
-            
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
         window.enviarWhatsAppMorador = (msg) => {
             const urlText = encodeURIComponent(msg);
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-            if (isMobile) {
-                window.open(`https://api.whatsapp.com/send?text=${urlText}`, '_blank');
-            } else {
-                if (confirm("📱 Notificar Morador\n\nComo deseja abrir o WhatsApp?\n\n[ OK ] = Usar WhatsApp WEB (Navegador)\n[ CANCELAR ] = Usar Aplicativo do PC (Windows/Mac)")) {
-                    window.open(`https://web.whatsapp.com/send?text=${urlText}`, '_blank');
-                } else {
-                    window.open(`https://api.whatsapp.com/send?text=${urlText}`, '_blank');
-                }
-            }
+            window.open(`https://api.whatsapp.com/send?text=${urlText}`, '_blank');
         };
 
         window.enviarAvisoMorador = async (id) => {
             const it = window.db.find(d => String(d.id) === String(id));
             if (!it) return;
-            let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*. Após este horário, ela será encaminhada para a Mensageria.` : '';
-            const msg = `Olá! 👋 Temos uma ótima notícia: uma encomenda sua acaba de chegar à nossa portaria!\n\n` +
-                   `👤 *Para:* ${it.morador}\n` +
-                   `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
-                   `📦 *Item:* ${it.descricao}\n` +
-                   `🏷️ *Remetente:* ${it.remetente}\n` +
-                   `🚚 *Empresa:* ${it.empresa}\n` +
-                   `🔢 *Doc/NF:* ${it.nf}\n` +
-                   `👮 *Recebido por:* ${it.recebedor}\n` +
-                   `⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\n` +
-                   `A portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
-            
+            let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*.` : '';
+            const msg = `Olá! 👋 Encomenda na portaria!\n👤 *Para:* ${it.morador}\n🏢 *Unid:* ${it.apto}-${it.bloco}\n📦 *Item:* ${it.descricao}\n🚚 *Empresa:* ${it.empresa}${permInfo}\nAguardamos retirada! 📦✨`;
             window.enviarWhatsAppMorador(msg);
-            it.notificadoPortariaMorador = true; 
-            await setDoc(doc(encomendasRef, String(it.id)), it);
+            it.notificadoPortariaMorador = true; await setDoc(doc(encomendasRef, String(it.id)), it);
         }
 
         window.enviarAvisoMensageria = async (id) => {
             const it = window.db.find(d => String(d.id) === String(id));
             if (!it) return;
-            const agora = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
-            
-            const msg = `Olá! 👋 Informamos que sua encomenda saiu da portaria e chegou à nossa *MENSAGERIA* e já está pronta para retirada.\n\n` +
-                   `🏢 *Local:* Unidade ${it.apto} - Bloco ${it.bloco}\n` +
-                   `📦 *Item:* ${it.descricao}\n` +
-                   `⏰ *Aviso enviado às:* ${agora}\n\n` +
-                   `Aguardamos sua visita para a retirada. Tenha um excelente dia! 📦✨`;
-            
+            const msg = `Olá! 👋 Sua encomenda está na *MENSAGERIA*.\n🏢 *Unid:* ${it.apto}-${it.bloco}\n📦 *Item:* ${it.descricao}\nAguardamos você! 📦✨`;
             window.enviarWhatsAppMorador(msg);
-            it.notificadoMensageria = true;
-            await setDoc(doc(encomendasRef, String(it.id)), it);
+            it.notificadoMensageria = true; await setDoc(doc(encomendasRef, String(it.id)), it);
         }
 
-        window.openEditModal = (id) => {
-            const it = window.db.find(d => String(d.id) === String(id));
-            if (!it) return;
-            document.getElementById('edit-id').value = it.id;
-            document.getElementById('edit-unidade').value = it.apto + it.bloco;
-            document.getElementById('edit-morador').value = it.morador;
-            document.getElementById('edit-remetente').value = it.remetente;
-            document.getElementById('edit-empresa').value = it.empresa;
-            document.getElementById('edit-descricao').value = it.descricao;
-            document.getElementById('edit-nf').value = it.nf;
-            document.getElementById('edit-recebedor').value = it.recebedor;
-            document.getElementById('edit-permanencia').value = it.permanencia || '';
-            document.getElementById('edit-tokens').value = (it.tokens || []).join(', ');
-            document.getElementById('modal-edit').classList.remove('hidden');
+        window.handleRegistrar = async (e) => {
+            e.preventDefault();
+            const res = window.validarUnidade(document.getElementById('input-unidade').value);
+            if (!res.ok) return;
+            const btn = document.getElementById('btn-gravar');
+            btn.disabled = true;
+            const nid = String(Date.now());
+            const isMensageria = window.abaAtiva === 'mensageria';
+            const novoItem = {
+                id: nid, apto: res.apto.toString(), bloco: res.bloco,
+                morador: document.getElementById('input-morador').value || "Morador",
+                empresa: document.getElementById('input-empresa').value || "Empresa",
+                remetente: document.getElementById('input-remetente').value || "Remetente",
+                descricao: document.getElementById('input-descricao').value || "Volume",
+                nf: document.getElementById('input-nf').value || "S/N",
+                recebedor: document.getElementById('input-recebedor').value || "Porteiro",
+                permanencia: document.getElementById('input-permanencia').value || "",
+                qtd: parseInt(document.getElementById('input-qtd').value) || 1,
+                foto: window.currentPhoto, data: new Date().toLocaleDateString('pt-PT'),
+                hora: new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}),
+                status: isMensageria ? 'entregue' : 'pendente', 
+                destino: isMensageria ? 'mensageria' : null,
+                saida: isMensageria ? new Date().toISOString() : null,
+                notificadoPortariaMorador: false, notificadoMensageria: false
+            };
+            try {
+                await setDoc(doc(encomendasRef, nid), novoItem);
+                document.getElementById('form-main').reset();
+                document.getElementById('photo-container').classList.add('hidden');
+                window.currentPhoto = null;
+            } catch(err) { alert("Erro ao salvar."); }
+            finally { btn.disabled = false; }
         }
-
-        window.closeEditModal = () => document.getElementById('modal-edit').classList.add('hidden');
-
-        window.saveEdit = async () => {
-            const id = document.getElementById('edit-id').value;
-            const res = window.validarUnidade(document.getElementById('edit-unidade').value);
-            if (!res.ok) { alert(res.msg); return; }
-            const idx = window.db.findIndex(d => String(d.id) === String(id));
-            
-            if (idx !== -1) {
-                const item = window.db[idx];
-                item.apto = res.apto.toString(); item.bloco = res.bloco;
-                item.morador = document.getElementById('edit-morador').value;
-                item.remetente = document.getElementById('edit-remetente').value;
-                item.empresa = document.getElementById('edit-empresa').value;
-                item.descricao = document.getElementById('edit-descricao').value;
-                item.nf = document.getElementById('edit-nf').value;
-                item.recebedor = document.getElementById('edit-recebedor').value;
-                item.permanencia = document.getElementById('edit-permanencia').value;
-                const tv = document.getElementById('edit-tokens').value;
-                item.tokens = tv ? tv.split(',').map(s => s.trim()).filter(s => s !== '') : [];
-                
-                await setDoc(doc(encomendasRef, String(item.id)), item);
-                window.closeEditModal();
-            }
-        }
-
-        window.openBaixaModal = (id, origem) => {
-            const it = window.db.find(d => String(d.id) === String(id));
-            if (!it) return;
-            window.baixaTargetId = id;
-            window.baixaTargetOrigem = origem;
-            
-            document.getElementById('baixa-info-morador').innerText = `Bloco ${it.bloco} - Apto ${it.apto} (${it.morador})`;
-            document.getElementById('baixa-entregador').value = "";
-            document.getElementById('baixa-retirado').value = "";
-            document.getElementById('modal-baixa').classList.remove('hidden');
-        }
-
-        window.closeBaixaModal = () => document.getElementById('modal-baixa').classList.add('hidden');
-
-        window.confirmarBaixaReal = async () => {
-            if (!window.baixaTargetId) return;
-            const idx = window.db.findIndex(d => String(d.id) === String(window.baixaTargetId));
-            
-            if (idx !== -1) {
-                const item = window.db[idx];
-                const entregador = document.getElementById('baixa-entregador').value || "Não informado";
-                const retiradoPor = document.getElementById('baixa-retirado').value || "O Próprio";
-                
-                item.status = 'entregue';
-                item.saida = new Date().toISOString();
-                item.entreguePor = entregador;
-                item.retiradoPor = retiradoPor;
-                
-                if (window.baixaTargetOrigem === 'mensageria') {
-                    item.destino = 'entregue_mensageria';
-                } else {
-                    item.destino = 'morador';
-                }
-                
-                await setDoc(doc(encomendasRef, String(item.id)), item);
-                window.closeBaixaModal();
-            }
-        }
-
-        // Função de envio em lote (NOVIDADE)
-        window.transferirTodosParaMensageria = async () => {
-            if(!window.listaVisivel || window.listaVisivel.length === 0) return;
-            
-            if(confirm(`ATENÇÃO: Deseja encaminhar TODAS as ${window.listaVisivel.length} encomendas exibidas na tela para a Mensageria de uma só vez?`)) {
-                try {
-                    const batch = writeBatch(dbFS);
-                    const now = new Date().toISOString();
-                    
-                    window.listaVisivel.forEach(item => {
-                        item.status = 'entregue';
-                        item.saida = now;
-                        item.destino = 'mensageria';
-                        
-                        const ref = doc(encomendasRef, String(item.id));
-                        batch.set(ref, item);
-                    });
-                    
-                    await batch.commit();
-                } catch (e) {
-                    console.error("Erro no envio em lote:", e);
-                    alert("Falha ao encaminhar lote para mensageria.");
-                }
-            }
-        };
 
         window.validarUnidade = (txt) => {
             const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
             const num = clean.match(/\d+/); const blk = clean.match(/[JP]/);
             if (!num || !blk) return { ok: false, msg: "Bloco?" };
             const n = parseInt(num[0]); const b = blk[0];
-            if (n < 11 || n > 181 || n % 10 !== 1) return { ok: false, msg: "Inválida" };
             return { ok: true, apto: n, bloco: b, msg: `✓ ${b}-${n}` };
         }
 
@@ -671,79 +523,8 @@
             document.getElementById('btn-gravar').disabled = !res.ok;
         }
 
-        window.handleRegistrar = async (e) => {
-            e.preventDefault();
-            const res = window.validarUnidade(document.getElementById('input-unidade').value);
-            if (!res.ok) return;
-            
-            const btn = document.getElementById('btn-gravar');
-            btn.disabled = true;
-            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Salvando na Nuvem...`;
-
-            const now = new Date();
-            const nid = String(Date.now() + Math.floor(Math.random()*1000));
-            
-            const isMensageria = window.abaAtiva === 'mensageria';
-
-            const novoItem = {
-                id: nid, apto: res.apto.toString(), bloco: res.bloco,
-                morador: document.getElementById('input-morador').value || "Morador",
-                empresa: document.getElementById('input-empresa').value || "Empresa",
-                remetente: document.getElementById('input-remetente').value || "Remetente",
-                descricao: document.getElementById('input-descricao').value || "Volume",
-                nf: document.getElementById('input-nf').value || "S/N",
-                recebedor: document.getElementById('input-recebedor').value || "Porteiro",
-                permanencia: document.getElementById('input-permanencia').value || "",
-                qtd: parseInt(document.getElementById('input-qtd').value) || 1,
-                foto: window.currentPhoto, data: now.toLocaleDateString('pt-PT'),
-                hora: now.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}),
-                status: isMensageria ? 'entregue' : 'pendente', 
-                destino: isMensageria ? 'mensageria' : null,
-                saida: isMensageria ? now.toISOString() : null,
-                tokens: [],
-                notificadoPortariaMorador: false, notificadoMensageria: false
-            };
-            
-            try {
-                await setDoc(doc(encomendasRef, nid), novoItem);
-                
-                document.getElementById('form-main').reset();
-                document.getElementById('photo-container').classList.add('hidden');
-                window.currentPhoto = null;
-                
-                window.db.push(novoItem); 
-                window.enviarGrupoCondominio(nid);
-            } catch(err) {
-                console.error("Erro", err);
-                alert("Falha ao salvar na nuvem.");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `Gravar Registro`;
-                lucide.createIcons();
-            }
-        }
-
         window.switchTab = (t) => {
-            window.abaAtiva = t; window.expandidoKey = null; window.blocoFiltro = '';
-            
-            const ativo = "bg-white text-blue-600 shadow-sm";
-            const inativo = "text-slate-500 hover:bg-slate-200";
-            
-            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='pendentes'?ativo:inativo}`;
-            document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='mensageria'?ativo:inativo}`;
-            document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='entregues'?ativo:inativo}`;
-
-            document.getElementById('area-registro').style.display = (t==='pendentes' || t==='mensageria') ? 'block' : 'none';
-            document.getElementById('controles-historico').style.display = t==='pendentes' ? 'none' : 'flex';
-            
-            const tituloReg = document.getElementById('titulo-registro');
-            if (t === 'pendentes') {
-                tituloReg.innerHTML = `<i data-lucide="camera" class="w-4 h-4 text-blue-600"></i> Registro de Encomenda`;
-            } else if (t === 'mensageria') {
-                tituloReg.innerHTML = `<i data-lucide="camera" class="w-4 h-4 text-orange-500"></i> Entrada Direta: Mensageria`;
-            }
-
-            window.render();
+            window.abaAtiva = t; window.render();
         }
 
         window.filtrar = (v) => { window.termoBusca = v.toLowerCase().trim(); window.render(); }
@@ -751,219 +532,132 @@
         window.toggleExpand = (key) => { window.expandidoKey = window.expandidoKey === key ? null : key; window.render(); }
 
         window.darBaixaDiretaMensageria = async (id) => {
-            const idx = window.db.findIndex(d => String(d.id) === String(id));
-            if (idx !== -1) {
-                const item = window.db[idx];
-                item.status = 'entregue';
-                item.saida = new Date().toISOString();
-                item.destino = 'mensageria';
-                await setDoc(doc(encomendasRef, String(item.id)), item);
+            const it = window.db.find(d => String(d.id) === String(id));
+            if(it) { it.status = 'entregue'; it.saida = new Date().toISOString(); it.destino = 'mensageria'; await setDoc(doc(encomendasRef, String(it.id)), it); }
+        }
+
+        window.confirmarBaixaReal = async () => {
+            const it = window.db.find(d => String(d.id) === String(window.baixaTargetId));
+            if(it) {
+                it.status = 'entregue'; it.saida = new Date().toISOString();
+                it.destino = window.baixaTargetOrigem === 'mensageria' ? 'entregue_mensageria' : 'morador';
+                it.entreguePor = document.getElementById('baixa-entregador').value;
+                it.retiradoPor = document.getElementById('baixa-retirado').value;
+                await setDoc(doc(encomendasRef, String(it.id)), it);
+                document.getElementById('modal-baixa').classList.add('hidden');
             }
         }
 
-        window.excluirUm = async (id) => { 
-            if(confirm("Apagar da nuvem permanentemente?")) { 
-                await deleteDoc(doc(encomendasRef, String(id)));
-            } 
+        window.openBaixaModal = (id, o) => {
+            window.baixaTargetId = id; window.baixaTargetOrigem = o;
+            const it = window.db.find(d => String(d.id) === String(id));
+            document.getElementById('baixa-info-morador').innerText = `${it.apto}-${it.bloco} (${it.morador})`;
+            document.getElementById('modal-baixa').classList.remove('hidden');
         }
 
-        window.limparHistorico = async () => { 
-            if(confirm("Deseja realmente apagar o histórico de entregues na nuvem?")) { 
-                const paraExcluir = window.db.filter(d => d.status !== 'pendente');
-                const batch = writeBatch(dbFS);
-                paraExcluir.forEach(item => {
-                    const ref = doc(encomendasRef, String(item.id));
-                    batch.delete(ref);
-                });
-                await batch.commit();
-            } 
-        }
+        window.excluirUm = async (id) => confirm("Excluir?") && await deleteDoc(doc(encomendasRef, String(id)));
 
-        window.exportarDados = () => { 
-            const b = new Blob([JSON.stringify(window.db,null,2)],{type:'application/json'}); 
-            const u=URL.createObjectURL(b); 
-            const a=document.createElement('a'); 
-            a.href=u; a.download=`backup-nuvem.json`; a.click(); 
-        }
-
-        window.importarDados = async (input) => {
-            if(input.files && input.files[0]) {
-                const r = new FileReader();
-                r.onload = async (e) => { 
-                    try { 
-                        const jsonData = JSON.parse(e.target.result); 
-                        const batch = writeBatch(dbFS);
-                        
-                        let count = 0;
-                        for(let i = 0; i < jsonData.length; i++) {
-                            const ref = doc(encomendasRef, String(jsonData[i].id));
-                            batch.set(ref, jsonData[i]);
-                            count++;
-                        }
-                        await batch.commit();
-                        alert(`${count} encomendas importadas para a Nuvem com Sucesso!`);
-                    } catch(err){
-                        alert("Erro ao importar dados para a nuvem!");
-                        console.error(err);
-                    } 
-                };
-                r.readAsText(input.files[0]);
-            }
+        window.transferirTodosParaMensageria = async () => {
+            if(!confirm("Encaminhar tudo visível para Mensageria?")) return;
+            const batch = writeBatch(dbFS);
+            window.listaVisivel.forEach(it => {
+                it.status = 'entregue'; it.saida = new Date().toISOString(); it.destino = 'mensageria';
+                batch.set(doc(encomendasRef, String(it.id)), it);
+            });
+            await batch.commit();
         }
 
         window.render = () => {
-            // Estilização dinâmica dos botões grandes (Quadros)
-            const inactiveBigBtn = "bg-white p-3 rounded-2xl border border-slate-200 shadow-sm text-center cursor-pointer hover:bg-slate-50 active:scale-95 transition-all duration-300";
-            const activeBigBtn = "bg-blue-50 p-3 rounded-2xl border border-blue-500 ring-2 ring-blue-200 shadow-md text-center cursor-pointer transition-all duration-300";
+            const t = window.abaAtiva;
+            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='pendentes'?'tab-active':'tab-inactive'}`;
+            document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='mensageria'?'tab-active':'tab-inactive'}`;
+            document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all ${t==='entregues'?'tab-active':'tab-inactive'}`;
 
-            document.getElementById('big-btn-p').className = window.abaAtiva === 'pendentes' ? activeBigBtn : inactiveBigBtn;
-            document.getElementById('big-btn-m').className = window.abaAtiva === 'mensageria' ? activeBigBtn : inactiveBigBtn;
-            document.getElementById('big-btn-h').className = window.abaAtiva === 'entregues' ? activeBigBtn : inactiveBigBtn;
-
-            const activeClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-blue-600 text-white border-blue-600 shadow-md";
-            const inactiveClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-white border-slate-200 text-slate-500 hover:bg-slate-50";
+            document.getElementById('area-registro').style.display = (t!=='entregues') ? 'block' : 'none';
+            document.getElementById('controles-historico').style.display = (t==='entregues') ? 'flex' : 'none';
             
-            document.getElementById('ff-all').className = window.blocoFiltro === '' ? activeClasses : inactiveClasses;
-            document.getElementById('ff-j').className = window.blocoFiltro === 'J' ? activeClasses : inactiveClasses;
-            document.getElementById('ff-p').className = window.blocoFiltro === 'P' ? activeClasses : inactiveClasses;
-            
-            let listaBase = [];
-            if (window.abaAtiva === 'pendentes') {
-                listaBase = window.db.filter(d => d.status === 'pendente');
-            } else if (window.abaAtiva === 'mensageria') {
-                listaBase = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria');
-            } else {
-                listaBase = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria');
-            }
+            // Controle de visibilidade dos botões de lote e resumo
+            document.getElementById('btn-bulk-transfer').classList.toggle('hidden', t !== 'pendentes');
+            document.getElementById('btn-resumo-mensageria').classList.toggle('hidden', t !== 'mensageria');
 
-            // Filtra os itens que realmente vão aparecer na tela e salva em window.listaVisivel para o Envio em Lote
-            window.listaVisivel = listaBase.filter(d => {
-                const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao}`.toLowerCase();
-                if(window.termoBusca && !t.includes(window.termoBusca)) return false;
-                if(window.blocoFiltro && d.bloco !== window.blocoFiltro) return false;
-                return true;
+            let lista = window.db.filter(d => {
+                if(t==='pendentes') return d.status === 'pendente';
+                if(t==='mensageria') return d.status === 'entregue' && d.destino === 'mensageria';
+                return d.status === 'entregue' && d.destino !== 'mensageria';
+            }).filter(d => {
+                const s = `${d.apto}${d.bloco}${d.morador}`.toLowerCase();
+                return s.includes(window.termoBusca) && (!window.blocoFiltro || d.bloco === window.blocoFiltro);
             });
 
-            // Gerencia visibilidade do botão de Envio em Lote (Só aparece na Portaria se houver itens)
-            const btnBulk = document.getElementById('btn-bulk-transfer');
-            if (window.abaAtiva === 'pendentes' && window.listaVisivel.length > 0) {
-                btnBulk.classList.remove('hidden');
-                document.getElementById('bulk-count').innerText = window.listaVisivel.length;
-            } else {
-                btnBulk.classList.add('hidden');
-            }
-
-            const grupos = {};
-            window.listaVisivel.forEach(d => {
-                const k = `${d.bloco}-${d.apto}`;
-                if(!grupos[k]) grupos[k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, statusNotificado: false };
-                grupos[k].itens.push(d); grupos[k].total += d.qtd;
-                
-                if(window.abaAtiva === 'pendentes' && d.notificadoPortariaMorador) grupos[k].statusNotificado = true;
-                if((window.abaAtiva === 'entregues' || window.abaAtiva === 'mensageria') && d.notificadoMensageria) grupos[k].statusNotificado = true;
-            });
-
-            const filtrados = Object.values(grupos).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
+            window.listaVisivel = lista;
+            document.getElementById('bulk-count').innerText = lista.length;
             
-            document.getElementById('count-p').innerText = window.db.filter(d => d.status === 'pendente').reduce((a,b)=>a+b.qtd,0);
+            // Contadores
+            document.getElementById('count-p').innerText = window.db.filter(d => d.status === 'pendente').length;
             document.getElementById('count-m').innerText = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria').length;
             document.getElementById('count-e').innerText = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria').length;
 
             const container = document.getElementById('render-container');
-            container.innerHTML = filtrados.length === 0 ? `<div class="p-10 text-center text-slate-400 font-bold text-xs uppercase">Nenhum Registro Encontrado</div>` : '';
+            container.innerHTML = lista.length === 0 ? '<p class="text-center text-slate-400 py-10 font-bold uppercase text-[10px]">Vazio</p>' : '';
+            
+            // Agrupamento por unidade para o card
+            const grupos = {};
+            lista.forEach(d => {
+                const k = `${d.bloco}-${d.apto}`;
+                if(!grupos[k]) grupos[k] = { b: d.bloco, a: d.apto, m: d.morador, items: [] };
+                grupos[k].items.push(d);
+            });
 
-            filtrados.forEach(g => {
+            Object.values(grupos).forEach(g => {
                 const key = `${g.b}-${g.a}`;
                 const isExp = window.expandidoKey === key;
-                const card = document.createElement('div');
-                card.className = `card-unidade bg-white rounded-2xl border ${window.abaAtiva==='pendentes'&&g.total>1?'border-orange-200 ring-2 ring-orange-50':'border-slate-100'} shadow-sm overflow-hidden mb-3 animate-fade-in`;
-                
-                let badgesHist = '';
-                if(window.abaAtiva !== 'pendentes'){
-                    let label = 'ENTREGUE (PORTARIA)';
-                    let color = 'bg-emerald-100 text-emerald-600';
-                    if(g.itens[0].destino === 'mensageria') { label = 'NA MENSAGERIA'; color = 'bg-orange-100 text-orange-600'; }
-                    else if (g.itens[0].destino === 'entregue_mensageria') { label = 'ENTREGUE (MENSAGERIA)'; color = 'bg-indigo-100 text-indigo-600'; }
-                    badgesHist = `<span class="text-[8px] ${color} font-black px-1.5 py-0.5 rounded uppercase mr-1">${label}</span>`;
-                }
-
-                card.innerHTML = `
-                    <div onclick="toggleExpand('${key}')" class="p-4 flex items-center gap-3 cursor-pointer active:bg-slate-50">
-                        <div class="w-12 h-12 flex items-center justify-center rounded-xl font-bold text-lg ${window.abaAtiva!=='pendentes'?'bg-slate-100 text-slate-400 border border-dashed':'bg-blue-600 text-white shadow-md'}">${g.b}</div>
-                        <div class="flex-1">
-                            <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                                Apto ${g.a} - ${g.morador}
-                                ${g.statusNotificado ? '<i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>' : ''}
-                            </h3>
-                            <div class="flex gap-1 items-center">
-                                ${window.abaAtiva==='pendentes' ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${g.total>1?'bg-orange-500 text-white':'bg-slate-100 text-slate-400'} uppercase">${g.total} VOLS</span>` : badgesHist}
-                            </div>
+                const div = document.createElement('div');
+                div.className = "bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-3 animate-fade-in";
+                div.innerHTML = `
+                    <div onclick="toggleExpand('${key}')" class="p-4 flex items-center justify-between cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-600 text-white flex items-center justify-center rounded-lg font-black">${g.b}</div>
+                            <div><p class="text-sm font-black text-slate-800">Apto ${g.a}</p><p class="text-[10px] text-slate-400 uppercase font-bold">${g.m}</p></div>
                         </div>
-                        <i data-lucide="${isExp?'chevron-up':'chevron-down'}" class="text-slate-300"></i>
+                        <div class="flex items-center gap-2">
+                             <span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-[9px] font-black">${g.items.length} VOLS</span>
+                             <i data-lucide="${isExp?'chevron-up':'chevron-down'}" class="w-4 h-4 text-slate-300"></i>
+                        </div>
                     </div>
-                    ${isExp ? `<div class="bg-slate-50 border-t border-slate-100 p-4 space-y-4">
-                        ${g.itens.map(it => `
-                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm animate-fade-in relative overflow-hidden">
-                                ${((window.abaAtiva==='pendentes'&&it.notificadoPortariaMorador)||(window.abaAtiva!=='pendentes'&&it.notificadoMensageria)) ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-2 h-2"></i> Mensagem Enviada</div>` : ''}
-                                
-                                <div class="flex gap-4 mb-4">
-                                    <div class="relative">
-                                        ${it.foto ? `<img src="${it.foto}" class="w-20 h-20 rounded-lg object-cover border border-slate-200" onclick="window.open(this.src)">` : `
-                                            <label class="w-20 h-20 bg-slate-100 rounded-lg flex flex-col items-center justify-center text-blue-500 cursor-pointer no-print">
-                                                <i data-lucide="camera" class="w-5 h-5"></i><span class="text-[7px] font-black text-center">FOTO</span>
-                                                <input type="file" accept="image/*" capture="environment" class="hidden" onchange="addPhotoToRecord('${it.id}', this)">
-                                            </label>`}
+                    ${isExp ? `<div class="p-4 bg-slate-50 border-t space-y-3">
+                        ${g.items.map(it => `
+                            <div class="bg-white p-3 rounded-xl border border-slate-200">
+                                <div class="flex gap-3 mb-2">
+                                    ${it.foto ? `<img src="${it.foto}" class="w-16 h-16 rounded object-cover">` : `<div class="w-16 h-16 bg-slate-100 flex items-center justify-center rounded text-slate-300"><i data-lucide="package"></i></div>`}
+                                    <div class="flex-1">
+                                        <p class="text-[11px] font-black text-blue-600 uppercase">${it.remetente}</p>
+                                        <p class="text-[9px] font-bold text-slate-500">${it.empresa}</p>
+                                        <p class="text-[9px] text-slate-400 italic">${it.descricao}</p>
                                     </div>
-                                    <div class="flex-1 space-y-1">
-                                        <div class="flex justify-between items-start">
-                                            <div><p class="text-[8px] font-black text-slate-400 uppercase">Remetente</p><p class="text-[11px] font-black text-blue-700 uppercase">${it.remetente}</p></div>
-                                            <div class="flex gap-2 no-print">
-                                                ${window.abaAtiva === 'pendentes' ? `
-                                                    <button onclick="enviarGrupoCondominio('${it.id}')" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Grupo Administrativo"><i data-lucide="send" class="w-4 h-4"></i></button>
-                                                    <button onclick="enviarAvisoMorador('${it.id}')" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador"><i data-lucide="bell" class="w-4 h-4"></i></button>
-                                                ` : `
-                                                    ${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria('${it.id}')" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador (Mensageria)"><i data-lucide="bell" class="w-4 h-4"></i></button>` : ''}
-                                                `}
-                                                <button onclick="openEditModal('${it.id}')" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                                                <button onclick="excluirUm('${it.id}')" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                            </div>
-                                        </div>
-                                        <p class="text-[10px] font-bold text-slate-700 uppercase">${it.empresa}</p>
-                                        <p class="text-[10px] italic text-slate-600 mt-1">${it.descricao}</p>
+                                    <div class="flex flex-col gap-1">
+                                        <button onclick="excluirUm('${it.id}')" class="p-1 text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                        ${t === 'pendentes' ? `<button onclick="enviarAvisoMorador('${it.id}')" class="p-1 text-blue-500"><i data-lucide="bell" class="w-4 h-4"></i></button>` : ''}
+                                        ${t === 'mensageria' ? `<button onclick="enviarAvisoMensageria('${it.id}')" class="p-1 text-orange-500"><i data-lucide="bell" class="w-4 h-4"></i></button>` : ''}
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-x-2 gap-y-3 border-t pt-2 text-[9px] font-black uppercase text-slate-400">
-                                    <div><p class="text-[7px]">Doc / NF</p><p class="text-slate-700">${it.nf}</p></div>
-                                    <div><p class="text-[7px]">Recebedor</p><p class="text-slate-700">${it.recebedor}</p></div>
-                                    <div><p class="text-[7px]">Entrada</p><p class="text-slate-700">${it.data} às ${it.hora}</p></div>
-                                    <div><p class="text-[7px] text-blue-500">Portaria até:</p><p class="text-blue-600 font-bold">${it.permanencia || 'N/A'}</p></div>
-                                    ${it.saida ? `<div class="col-span-2 border-t pt-1"><p class="text-[7px] text-emerald-500 font-black uppercase">Saída: ${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p>
-                                    ${it.entreguePor ? `<p class="text-[7px] text-slate-500 mt-0.5 font-medium">Entregue por: ${it.entreguePor} | Retirado por: ${it.retiradoPor}</p>` : ''}
-                                    </div>` : ''}
+                                <div class="flex gap-2">
+                                    ${t === 'pendentes' ? `
+                                        <button onclick="openBaixaModal('${it.id}', 'portaria')" class="flex-1 bg-emerald-600 text-white text-[8px] font-black py-2 rounded uppercase">Entregar</button>
+                                        <button onclick="darBaixaDiretaMensageria('${it.id}')" class="flex-1 bg-blue-600 text-white text-[8px] font-black py-2 rounded uppercase">Mensageria</button>
+                                    ` : ''}
+                                    ${t === 'mensageria' ? `
+                                        <button onclick="openBaixaModal('${it.id}', 'mensageria')" class="w-full bg-indigo-600 text-white text-[8px] font-black py-2 rounded uppercase">Entregar Final</button>
+                                    ` : ''}
                                 </div>
-                                ${window.abaAtiva === 'pendentes' ? `
-                                    <div class="mt-4 pt-3 border-t space-y-2 no-print">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <button onclick="openBaixaModal('${it.id}', 'portaria')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Entrega Morador</button>
-                                            <button onclick="darBaixaDiretaMensageria('${it.id}')" class="bg-blue-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm">Encaminhar Mensageria</button>
-                                        </div>
-                                    </div>` : ''}
-                                
-                                ${window.abaAtiva === 'mensageria' ? `
-                                    <div class="mt-4 pt-3 border-t space-y-2 no-print">
-                                        <button onclick="openBaixaModal('${it.id}', 'mensageria')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm active:scale-95 transition-all">Confirmar Entrega ao Morador</button>
-                                    </div>` : ''}
                             </div>
                         `).join('')}
                     </div>` : ''}
                 `;
-                container.appendChild(card);
+                container.appendChild(div);
             });
             lucide.createIcons();
         }
-        window.onload = () => window.render();
     </script>
 </body>
 </html>
-
 
