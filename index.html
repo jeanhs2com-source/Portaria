@@ -440,16 +440,17 @@
                 <div id="render-container" class="space-y-4 pb-10"></div>
             </div>
 
-            <!-- ÁREA DE GESTÃO ADMIN (Restrita) -->
+            <!-- ÁREA DE GESTÃO ADMIN (Restrita e Aprimorada) -->
             <div id="area-admin" class="hidden space-y-6">
+                <!-- Dashboard Global -->
                 <div class="bg-purple-600 p-6 rounded-3xl shadow-lg text-white text-center animate-fade-in relative overflow-hidden">
                     <i data-lucide="pie-chart" class="absolute -right-4 -top-4 w-32 h-32 opacity-10"></i>
                     <h2 class="text-xl font-black uppercase tracking-tight mb-1 relative z-10">Painel de Gestão</h2>
                     <p class="text-xs text-purple-200 font-medium relative z-10 mb-6">Visão Geral da Operação</p>
 
-                    <div class="grid grid-cols-2 gap-3 relative z-10">
+                    <div class="grid grid-cols-2 gap-3 relative z-10 mb-3">
                         <div class="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/20">
-                            <p class="text-[10px] uppercase font-bold text-purple-200 mb-1">Total Recebido (Mês)</p>
+                            <p class="text-[10px] uppercase font-bold text-purple-200 mb-1">Total Mês (Entradas)</p>
                             <span id="adm-total-mes" class="text-3xl font-black">0</span>
                         </div>
                         <div class="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/20">
@@ -457,8 +458,49 @@
                             <span id="adm-tempo-medio" class="text-xl font-black block mt-2">-- h</span>
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-3 relative z-10">
+                        <div class="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/20 flex flex-col items-center justify-center">
+                            <p class="text-[9px] uppercase font-bold text-purple-200 mb-1">Aguardando Portaria</p>
+                            <span id="adm-pendentes-portaria" class="text-lg font-black text-blue-200">0</span>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/20 flex flex-col items-center justify-center">
+                            <p class="text-[9px] uppercase font-bold text-purple-200 mb-1">Aguardando Mensageria</p>
+                            <span id="adm-pendentes-mensageria" class="text-lg font-black text-orange-200">0</span>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Relatório por Colaborador -->
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                        <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i data-lucide="users" class="w-4 h-4"></i></div>
+                        <h3 class="font-black text-slate-800 uppercase text-xs">Auditoria de Equipe</h3>
+                    </div>
+                    
+                    <p class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Selecione o Colaborador</p>
+                    <select id="adm-colaborador-select" onchange="window.renderEmployeeStats()" class="input-field mb-4 bg-slate-50 cursor-pointer">
+                        <option value="">Carregando...</option>
+                    </select>
+                    
+                    <div id="adm-colaborador-stats" class="hidden">
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 text-center">
+                                <p class="text-[10px] uppercase font-black text-blue-400 mb-1">Recebidas</p>
+                                <span id="adm-colab-recebidas" class="text-2xl font-black text-blue-600">0</span>
+                            </div>
+                            <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center">
+                                <p class="text-[10px] uppercase font-black text-emerald-400 mb-1">Entregues</p>
+                                <span id="adm-colab-entregues" class="text-2xl font-black text-emerald-600">0</span>
+                            </div>
+                        </div>
+                        
+                        <div id="adm-colaborador-history" class="bg-slate-50 p-3 rounded-2xl border border-slate-100 max-h-64 overflow-y-auto no-scrollbar space-y-2">
+                            <!-- Ações dinâmicas injetadas aqui -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Controle -->
                 <div class="grid grid-cols-2 gap-4">
                     <button onclick="exportarDados()" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all text-slate-700">
                         <div class="bg-blue-100 p-3 rounded-full text-blue-600"><i data-lucide="download-cloud"></i></div>
@@ -1229,31 +1271,146 @@
             if(!isMensageria) window.enviarGrupoCondominio(nid);
         }
 
+        // --- NOVA LÓGICA DE AUDITORIA DE EQUIPE ---
         window.renderAdminStats = () => {
             if(!window.isAdmin) return;
             
             const mesAtual = new Date().toLocaleDateString('pt-PT', {month:'2-digit', year:'numeric'});
             let recebidosMes = 0;
-            
-            // Lógica de cálculo de média de tempo simplificada
             let somaHoras = 0;
             let countEntregues = 0;
+            let pendentesPortaria = 0;
+            let pendentesMensageria = 0;
+            
+            // Coletar nomes únicos de funcionários para o Dropdown
+            const colaboradores = new Set();
 
             window.db.forEach(it => {
+                // Cálculo mês
                 if(it.data && it.data.includes(mesAtual)) recebidosMes += it.qtd;
                 
-                // Média entre portaria -> saída final (morador)
+                // Média de tempo
                 if(it.saida && it.destino === 'entregue_mensageria' && it.dataMensageria) {
                     const hSaida = new Date(it.saida).getTime();
                     const hEntrada = new Date(it.dataMensageria).getTime();
                     somaHoras += (hSaida - hEntrada) / (1000 * 60 * 60);
                     countEntregues++;
                 }
+
+                // Cálculo Pendentes Exatos
+                if (it.status === 'pendente') pendentesPortaria++;
+                if (it.status === 'entregue' && it.destino === 'mensageria') pendentesMensageria++;
+
+                // Adiciona ao Set de colaboradores
+                if (it.recebedor) colaboradores.add(it.recebedor);
+                if (it.entreguePor) colaboradores.add(it.entreguePor);
             });
 
+            // Atualiza Dashboard Global
             document.getElementById('adm-total-mes').innerText = recebidosMes;
             const media = countEntregues > 0 ? (somaHoras / countEntregues).toFixed(1) : '--';
             document.getElementById('adm-tempo-medio').innerText = `${media} h`;
+            document.getElementById('adm-pendentes-portaria').innerText = pendentesPortaria;
+            document.getElementById('adm-pendentes-mensageria').innerText = pendentesMensageria;
+
+            // Atualiza Dropdown de Colaboradores de forma inteligente
+            const selectColab = document.getElementById('adm-colaborador-select');
+            const selecaoAtual = selectColab.value;
+            selectColab.innerHTML = '<option value="">Selecione um colaborador...</option>';
+            
+            Array.from(colaboradores).sort().forEach(nome => {
+                if (nome && nome.toLowerCase() !== "não informado" && nome.toLowerCase() !== "porteiro") {
+                    selectColab.innerHTML += `<option value="${nome}">${nome}</option>`;
+                }
+            });
+
+            // Mantém a seleção anterior se ainda existir
+            if (selecaoAtual && colaboradores.has(selecaoAtual)) {
+                selectColab.value = selecaoAtual;
+            }
+
+            // Atualiza a vista específica se alguém já estiver selecionado
+            window.renderEmployeeStats();
+        };
+
+        window.renderEmployeeStats = () => {
+            const empName = document.getElementById('adm-colaborador-select').value;
+            const statsContainer = document.getElementById('adm-colaborador-stats');
+            const historyContainer = document.getElementById('adm-colaborador-history');
+            
+            if (!empName) {
+                statsContainer.classList.add('hidden');
+                historyContainer.innerHTML = '';
+                return;
+            }
+
+            statsContainer.classList.remove('hidden');
+
+            let recebidasCount = 0;
+            let entreguesCount = 0;
+            let histItems = [];
+
+            window.db.forEach(it => {
+                // Checa recebimentos
+                if (it.recebedor === empName) {
+                    recebidasCount += it.qtd;
+                    
+                    // Converte a data para timestamp para ordenação
+                    let timestamp = 0;
+                    if (it.data) {
+                        const p = it.data.split('/');
+                        if (p.length === 3) {
+                            timestamp = new Date(`${p[2]}-${p[1]}-${p[0]}T${it.hora || '00:00'}`).getTime();
+                        }
+                    }
+
+                    histItems.push({
+                        time: timestamp,
+                        displayTime: `${it.data} às ${it.hora}`,
+                        action: 'Recebeu',
+                        color: 'text-blue-600 bg-blue-100',
+                        desc: `Apto ${it.apto}${it.bloco} - ${it.remetente} (${it.qtd} vols)`
+                    });
+                }
+
+                // Checa Entregas finais ao morador
+                if (it.entreguePor === empName && (it.destino === 'morador' || it.destino === 'entregue_mensageria')) {
+                    entreguesCount++;
+                    const timestamp = it.saida ? new Date(it.saida).getTime() : 0;
+                    const timeStr = it.saida ? new Date(it.saida).toLocaleString('pt-PT') : 'Sem data';
+
+                    histItems.push({
+                        time: timestamp,
+                        displayTime: timeStr,
+                        action: 'Entregou',
+                        color: 'text-emerald-600 bg-emerald-100',
+                        desc: `Apto ${it.apto}${it.bloco} para ${it.retiradoPor || 'Morador'}`
+                    });
+                }
+            });
+
+            // Atualiza os contadores em tela
+            document.getElementById('adm-colab-recebidas').innerText = recebidasCount;
+            document.getElementById('adm-colab-entregues').innerText = entreguesCount;
+
+            // Ordena o histórico do mais recente para o mais antigo (Mostra os 15 mais recentes)
+            histItems.sort((a, b) => b.time - a.time);
+            const topHistory = histItems.slice(0, 15);
+
+            if (topHistory.length > 0) {
+                historyContainer.innerHTML = `<h4 class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 sticky top-0 bg-slate-50 pt-1 pb-2">Últimas 15 Ações</h4>` + 
+                    topHistory.map(h => `
+                        <div class="flex items-center gap-3 mb-2 pb-2 border-b border-slate-200 last:border-0">
+                            <span class="px-2 py-1 rounded text-[8px] font-black uppercase ${h.color} w-[60px] text-center shrink-0 shadow-sm">${h.action}</span>
+                            <div class="flex-1">
+                                <p class="text-[10px] font-bold text-slate-700 leading-tight">${h.desc}</p>
+                                <p class="text-[8px] font-semibold text-slate-400 mt-0.5">${h.displayTime}</p>
+                            </div>
+                        </div>
+                    `).join('');
+            } else {
+                historyContainer.innerHTML = '<p class="text-[10px] text-slate-400 text-center mt-4 font-bold uppercase">Nenhuma ação registrada para este colaborador.</p>';
+            }
         };
 
         window.switchTab = (t) => {
