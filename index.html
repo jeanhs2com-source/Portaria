@@ -48,10 +48,11 @@
             <h2 class="text-xl font-black text-slate-800 text-center uppercase tracking-tight">Portaria Control</h2>
             <p class="text-[10px] font-bold text-slate-400 text-center uppercase mb-8 mt-1">Acesso ao Sistema</p>
             
-            <form id="login-form" class="space-y-4" autocomplete="off">
+            <!-- Transformado de <form> para <div> para burlar o gestor de senhas do Google Chrome -->
+            <div id="login-form" class="space-y-4">
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">E-mail de Acesso</label>
-                    <input id="login-email" type="email" autocomplete="username" required class="input-field" placeholder="portaria@condominio.com">
+                    <input id="login-email" type="email" autocomplete="off" required class="input-field" placeholder="portaria@condominio.com">
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Senha</label>
@@ -60,10 +61,10 @@
                 
                 <div id="login-error" class="hidden text-[10px] font-bold text-red-500 text-center bg-red-50 p-2 rounded-lg border border-red-100"></div>
 
-                <button type="submit" id="btn-login" class="w-full bg-blue-600 h-[50px] mt-2 text-white font-black rounded-2xl active:scale-95 transition-all uppercase text-xs shadow-lg flex items-center justify-center gap-2">
+                <button type="button" id="btn-login" class="w-full bg-blue-600 h-[50px] mt-2 text-white font-black rounded-2xl active:scale-95 transition-all uppercase text-xs shadow-lg flex items-center justify-center gap-2">
                     <span>Entrar no Sistema</span>
                 </button>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -813,13 +814,20 @@
             }
         });
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
+        // Nova Lógica de Login Desvinculada de Formulários para burlar o navegador
+        const executarLogin = async () => {
+            const emailInput = document.getElementById('login-email');
             const passwordInput = document.getElementById('login-password');
+            const email = emailInput.value;
             const password = passwordInput.value;
             
-            // Limpa o campo de senha imediatamente para evitar que o navegador pergunte para salvar
+            if (!email || !password) {
+                loginError.innerHTML = `Falha no login:<br><span class="text-[9px] font-normal text-red-600">Preencha o e-mail e a senha.</span>`;
+                loginError.classList.remove('hidden');
+                return;
+            }
+            
+            // Limpa o campo de senha instantaneamente
             passwordInput.value = '';
             
             btnLogin.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Entrando...`;
@@ -837,7 +845,17 @@
                 btnLogin.disabled = false;
                 lucide.createIcons();
             }
-        });
+        };
+
+        // Escuta o clique no botão de entrar
+        btnLogin.addEventListener('click', executarLogin);
+
+        // Permite entrar apertando a tecla "Enter"
+        const handleEnterKey = (e) => {
+            if (e.key === 'Enter') executarLogin();
+        };
+        document.getElementById('login-email').addEventListener('keypress', handleEnterKey);
+        document.getElementById('login-password').addEventListener('keypress', handleEnterKey);
 
         window.realizarLogout = async () => {
             if(confirm("Deseja realmente sair do sistema?")) {
