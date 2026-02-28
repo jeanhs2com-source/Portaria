@@ -184,7 +184,7 @@
                     </div>
                     <h1 class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight hidden sm:block">Portaria Control</h1>
                     
-                    <!-- NOVO INDICADOR DE STATUS ONLINE/OFFLINE/SYNC -->
+                    <!-- INDICADOR DE STATUS ONLINE/OFFLINE/SYNC -->
                     <div id="sync-status" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 transition-colors">
                         <span id="status-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
                         <span id="status-text" class="text-[9px] font-black uppercase tracking-wider text-emerald-600">Online</span>
@@ -307,7 +307,7 @@
             <div id="area-acoes" class="flex flex-col gap-3 no-print">
                 <div class="relative">
                     <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5"></i>
-                    <input id="input-busca" type="text" placeholder="Busca por Apto, Morador ou Remetente..." oninput="filtrar(this.value)"
+                    <input id="input-busca" type="text" placeholder="Busca por Apto, Morador, Remetente ou Data (ex: 28/02)..." oninput="filtrar(this.value)"
                         class="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 bg-white shadow-sm outline-none font-medium text-sm">
                 </div>
 
@@ -932,7 +932,23 @@
                         <i data-lucide="${isExp?'chevron-up':'chevron-down'}" class="text-slate-300"></i>
                     </div>
                     ${isExp ? `<div class="bg-slate-50 border-t border-slate-100 p-4 space-y-4">
-                        ${g.itens.map(it => `
+                        ${g.itens.map(it => {
+                            
+                            // Lógica de tempo parado na mensageria e alertas
+                            let itemAlerta = '';
+                            if (window.abaAtiva === 'mensageria' && it.saida) {
+                                const msDiff = Date.now() - new Date(it.saida).getTime();
+                                const daysDiff = Math.floor(msDiff / (1000 * 60 * 60 * 24));
+                                if (daysDiff >= 4) {
+                                    itemAlerta = `<div class="mt-2 inline-block px-2 py-1.5 rounded-lg text-[10px] font-black uppercase bg-red-500 text-white animate-pulse shadow-sm border border-red-600 w-full text-center"><i data-lucide="alert-triangle" class="w-3 h-3 inline mr-1 pb-0.5"></i> Atrasado: ${daysDiff} dias na Mensageria</div>`;
+                                } else if (daysDiff > 0) {
+                                    itemAlerta = `<div class="mt-2 inline-block px-2 py-1 rounded-lg text-[9px] font-black uppercase bg-orange-100 text-orange-600 border border-orange-200"><i data-lucide="clock" class="w-3 h-3 inline mr-1 pb-0.5"></i> ${daysDiff} dia(s) aguardando</div>`;
+                                } else {
+                                    itemAlerta = `<div class="mt-2 inline-block px-2 py-1 rounded-lg text-[9px] font-black uppercase bg-emerald-100 text-emerald-600 border border-emerald-200"><i data-lucide="sparkles" class="w-3 h-3 inline mr-1 pb-0.5"></i> Chegou hoje</div>`;
+                                }
+                            }
+
+                            return `
                             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm animate-fade-in relative overflow-hidden">
                                 ${((window.abaAtiva==='pendentes'&&it.notificadoPortariaMorador)||(window.abaAtiva!=='pendentes'&&it.notificadoMensageria)) ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-2 h-2"></i> Mensagem Enviada</div>` : ''}
                                 
@@ -960,6 +976,7 @@
                                         </div>
                                         <p class="text-[10px] font-bold text-slate-700 uppercase">${it.empresa}</p>
                                         <p class="text-[10px] italic text-slate-600 mt-1">${it.descricao}</p>
+                                        ${itemAlerta}
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-x-2 gap-y-3 border-t pt-2 text-[9px] font-black uppercase text-slate-400">
@@ -967,8 +984,10 @@
                                     <div><p class="text-[7px]">Recebedor</p><p class="text-slate-700">${it.recebedor}</p></div>
                                     <div><p class="text-[7px]">Entrada</p><p class="text-slate-700">${it.data} às ${it.hora}</p></div>
                                     <div><p class="text-[7px] text-blue-500">Portaria até:</p><p class="text-blue-600 font-bold">${it.permanencia || 'N/A'}</p></div>
-                                    ${it.saida ? `<div class="col-span-2 border-t pt-1"><p class="text-[7px] text-emerald-500 font-black uppercase">Saída: ${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p>
-                                    ${it.entreguePor ? `<p class="text-[7px] text-slate-500 mt-0.5 font-medium">Entregue por: ${it.entreguePor} | Retirado por: ${it.retiradoPor}</p>` : ''}
+                                    
+                                    ${it.saida ? `<div class="col-span-2 border-t pt-2 mt-1">
+                                        <p class="text-[10px] text-emerald-600 font-black uppercase tracking-wide">Saída: ${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p>
+                                        ${it.entreguePor ? `<p class="text-[10px] text-slate-700 mt-1 font-bold">Entregue por: <span class="text-slate-900">${it.entreguePor}</span> | Retirado por: <span class="text-slate-900">${it.retiradoPor}</span></p>` : ''}
                                     </div>` : ''}
                                 </div>
                                 ${window.abaAtiva === 'pendentes' ? `
@@ -984,7 +1003,8 @@
                                         <button onclick="openBaixaModal('${it.id}', 'mensageria')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm active:scale-95 transition-all">Confirmar Entrega ao Morador</button>
                                     </div>` : ''}
                             </div>
-                        `).join('')}
+                        `;
+                        }).join('')}
                     </div>` : ''}
                 </div>
             `;
@@ -1014,8 +1034,11 @@
                 listaBase = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria');
             }
 
+            // BUSCA AVANÇADA COM INCLUSÃO DE BUSCA POR DATAS (Entrada e Saída)
             window.listaVisivel = listaBase.filter(d => {
-                const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao}`.toLowerCase();
+                const dataEntrada = d.data || '';
+                const dataSaida = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : '';
+                const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao} ${dataEntrada} ${dataSaida}`.toLowerCase();
                 if(window.termoBusca && !t.includes(window.termoBusca)) return false;
                 if(window.blocoFiltro && d.bloco !== window.blocoFiltro) return false;
                 return true;
@@ -1048,104 +1071,120 @@
                 return;
             }
 
-            // NOVA LÓGICA DE ORGANIZAÇÃO INTELIGENTE PARA A ABA DE HISTÓRICO
-            if (window.abaAtiva === 'entregues') {
-                const historyData = {};
+            // NOVA LÓGICA UNIVERSAL DE ORGANIZAÇÃO INTELIGENTE POR DATA (Para TODAS as abas)
+            const historyData = {};
+            
+            window.listaVisivel.forEach(d => {
+                let dateStr, timestamp, typeStr;
+
+                if (window.abaAtiva === 'entregues') {
+                    dateStr = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : 'Sem Data';
+                    timestamp = d.saida ? new Date(d.saida).setHours(0,0,0,0) : 0;
+                    typeStr = d.destino === 'entregue_mensageria' ? 'Mensageria' : 'Portaria';
+                } else if (window.abaAtiva === 'mensageria') {
+                    dateStr = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : 'Sem Data';
+                    timestamp = d.saida ? new Date(d.saida).setHours(0,0,0,0) : 0;
+                    typeStr = 'Mensageria';
+                } else {
+                    dateStr = d.data || 'Sem Data';
+                    if (d.data) {
+                        const parts = d.data.split('/');
+                        if (parts.length === 3) {
+                            timestamp = new Date(parts[2], parts[1]-1, parts[0]).getTime();
+                        } else { timestamp = 0; }
+                    } else { timestamp = 0; }
+                    typeStr = 'Portaria';
+                }
+
+                if (!historyData[dateStr]) historyData[dateStr] = { timestamp, Portaria: {}, Mensageria: {} };
                 
-                window.listaVisivel.forEach(d => {
-                    // Extrai e formata a Data de Saída
-                    const dateStr = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : 'Sem Data';
-                    const timestamp = d.saida ? new Date(d.saida).setHours(0,0,0,0) : 0;
+                const k = `${d.bloco}-${d.apto}`;
+                if (!historyData[dateStr][typeStr][k]) {
+                    historyData[dateStr][typeStr][k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, statusNotificado: (window.abaAtiva === 'pendentes' ? d.notificadoPortariaMorador : d.notificadoMensageria) };
+                }
+                historyData[dateStr][typeStr][k].itens.push(d);
+                historyData[dateStr][typeStr][k].total += d.qtd;
+            });
+
+            const sortedDates = Object.keys(historyData).sort((a, b) => historyData[b].timestamp - historyData[a].timestamp);
+
+            sortedDates.forEach(date => {
+                const dateSection = document.createElement('div');
+                dateSection.className = "mb-8";
+                dateSection.innerHTML = `
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="bg-slate-200 h-px flex-1"></div>
+                        <span class="text-[10px] font-black uppercase text-slate-500 tracking-widest bg-slate-100 px-3 py-1.5 rounded-full shadow-sm"><i data-lucide="calendar" class="w-3 h-3 inline pb-0.5"></i> ${date}</span>
+                        <div class="bg-slate-200 h-px flex-1"></div>
+                    </div>
+                `;
+                container.appendChild(dateSection);
+
+                ['Portaria', 'Mensageria'].forEach(type => {
+                    const typeGroups = historyData[date][type];
+                    if (!typeGroups) return;
+                    const typeKeys = Object.keys(typeGroups);
                     
-                    // Separa entre Mensageria e Portaria (direta)
-                    const typeStr = d.destino === 'entregue_mensageria' ? 'Mensageria' : 'Portaria';
-
-                    if (!historyData[dateStr]) historyData[dateStr] = { timestamp, Portaria: {}, Mensageria: {} };
-                    
-                    const k = `${d.bloco}-${d.apto}`;
-                    if (!historyData[dateStr][typeStr][k]) {
-                        historyData[dateStr][typeStr][k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, statusNotificado: d.notificadoMensageria };
-                    }
-                    historyData[dateStr][typeStr][k].itens.push(d);
-                    historyData[dateStr][typeStr][k].total += d.qtd;
-                });
-
-                // Ordenar as datas (Mais recentes primeiro)
-                const sortedDates = Object.keys(historyData).sort((a, b) => historyData[b].timestamp - historyData[a].timestamp);
-
-                sortedDates.forEach(date => {
-                    const dateSection = document.createElement('div');
-                    dateSection.className = "mb-8";
-                    dateSection.innerHTML = `
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="bg-slate-200 h-px flex-1"></div>
-                            <span class="text-[10px] font-black uppercase text-slate-500 tracking-widest bg-slate-100 px-3 py-1.5 rounded-full shadow-sm"><i data-lucide="calendar" class="w-3 h-3 inline pb-0.5"></i> ${date}</span>
-                            <div class="bg-slate-200 h-px flex-1"></div>
-                        </div>
-                    `;
-                    container.appendChild(dateSection);
-
-                    ['Portaria', 'Mensageria'].forEach(type => {
-                        const typeGroups = historyData[date][type];
-                        const typeKeys = Object.keys(typeGroups);
+                    if (typeKeys.length > 0) {
+                        const typeContainer = document.createElement('div');
+                        typeContainer.className = "mb-4";
                         
-                        if (typeKeys.length > 0) {
-                            const typeContainer = document.createElement('div');
-                            typeContainer.className = "mb-4";
-                            
-                            const color = type === 'Portaria' ? 'text-emerald-600 bg-emerald-50' : 'text-indigo-600 bg-indigo-50';
-                            const icon = type === 'Portaria' ? 'building' : 'package-check';
-                            
-                            const typeHeader = document.createElement('h4');
-                            typeHeader.className = `text-[10px] font-black uppercase mb-3 px-3 py-2 rounded-xl flex items-center gap-2 ${color} inline-block`;
-                            typeHeader.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> Entregues via ${type}`;
-                            typeContainer.appendChild(typeHeader);
+                        let typeHeaderTitle = '';
+                        let color = '';
+                        let icon = '';
 
-                            const filtrados = Object.values(typeGroups).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
-                            
-                            filtrados.forEach(g => {
-                                const key = `${date}-${type}-${g.b}-${g.a}`;
-                                const badgeColor = type === 'Portaria' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600';
-                                const badgesHist = `<span class="text-[8px] ${badgeColor} font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE (${type.toUpperCase()})</span>`;
-                                
-                                const htmlStr = window.createCardHTML(g, key, badgesHist);
-                                const div = document.createElement('div');
-                                div.innerHTML = htmlStr;
-                                typeContainer.appendChild(div.firstElementChild);
-                            });
-                            
-                            dateSection.appendChild(typeContainer);
+                        if (window.abaAtiva === 'entregues') {
+                            color = type === 'Portaria' ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-indigo-600 bg-indigo-50 border-indigo-100';
+                            icon = type === 'Portaria' ? 'building' : 'package-check';
+                            typeHeaderTitle = `Entregues via ${type}`;
+                        } else if (window.abaAtiva === 'pendentes') {
+                            color = 'text-blue-600 bg-blue-50 border-blue-100';
+                            icon = 'log-in';
+                            typeHeaderTitle = `Recebidas na Portaria`;
+                        } else if (window.abaAtiva === 'mensageria') {
+                            color = 'text-orange-600 bg-orange-50 border-orange-100';
+                            icon = 'package';
+                            typeHeaderTitle = `Aguardando na Mensageria`;
                         }
-                    });
-                });
+                        
+                        const typeHeader = document.createElement('h4');
+                        typeHeader.className = `text-[10px] font-black uppercase mb-3 px-3 py-2 rounded-xl flex items-center gap-2 ${color} inline-block shadow-sm border`;
+                        typeHeader.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${typeHeaderTitle}`;
+                        typeContainer.appendChild(typeHeader);
 
-            } else {
-                // LÓGICA NORMAL (Agrupada por Apto) PARA PORTARIA E MENSAGERIA
-                const grupos = {};
-                window.listaVisivel.forEach(d => {
-                    const k = `${d.bloco}-${d.apto}`;
-                    if(!grupos[k]) grupos[k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, statusNotificado: false };
-                    grupos[k].itens.push(d); grupos[k].total += d.qtd;
-                    
-                    if(window.abaAtiva === 'pendentes' && d.notificadoPortariaMorador) grupos[k].statusNotificado = true;
-                    if(window.abaAtiva === 'mensageria' && d.notificadoMensageria) grupos[k].statusNotificado = true;
-                });
+                        const filtrados = Object.values(typeGroups).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
+                        
+                        filtrados.forEach(g => {
+                            const key = `${date}-${type}-${g.b}-${g.a}`;
+                            let badgesHist = '';
+                            
+                            if (window.abaAtiva === 'entregues') {
+                                const badgeColor = type === 'Portaria' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600';
+                                badgesHist = `<span class="text-[8px] ${badgeColor} font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE (${type.toUpperCase()})</span>`;
+                            } else if (window.abaAtiva === 'mensageria') {
+                                badgesHist = `<span class="text-[8px] bg-orange-100 text-orange-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">NA MENSAGERIA</span>`;
+                                // Calcula se tem item atrasado e insere badge geral no header do apartamento
+                                const itensAtrasados = g.itens.filter(it => {
+                                    if (!it.saida) return false;
+                                    const msDiff = Date.now() - new Date(it.saida).getTime();
+                                    return Math.floor(msDiff / (1000 * 60 * 60 * 24)) >= 4;
+                                });
+                                if (itensAtrasados.length > 0) {
+                                    const maxDays = Math.max(...itensAtrasados.map(it => Math.floor((Date.now() - new Date(it.saida).getTime()) / (1000 * 60 * 60 * 24))));
+                                    badgesHist += `<span class="text-[8px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-600 uppercase animate-pulse border border-red-200 shadow-sm ml-1">⚠️ ${maxDays} DIAS</span>`;
+                                }
+                            }
 
-                const filtrados = Object.values(grupos).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
-                
-                filtrados.forEach(g => {
-                    const key = `${g.b}-${g.a}`;
-                    let badgesHist = '';
-                    if(window.abaAtiva === 'mensageria'){
-                        badgesHist = `<span class="text-[8px] bg-orange-100 text-orange-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">NA MENSAGERIA</span>`;
+                            const htmlStr = window.createCardHTML(g, key, badgesHist);
+                            const div = document.createElement('div');
+                            div.innerHTML = htmlStr;
+                            typeContainer.appendChild(div.firstElementChild);
+                        });
+                        
+                        dateSection.appendChild(typeContainer);
                     }
-
-                    const htmlStr = window.createCardHTML(g, key, badgesHist);
-                    const div = document.createElement('div');
-                    div.innerHTML = htmlStr;
-                    container.appendChild(div.firstElementChild);
                 });
-            }
+            });
 
             lucide.createIcons();
         }
