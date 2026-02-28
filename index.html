@@ -421,19 +421,6 @@
                     <button id="btn-relatorio-mensageria" onclick="compartilharRelatorioMensageria()" class="hidden w-full py-3 bg-green-600 text-white font-black rounded-xl text-[10px] uppercase shadow-md flex items-center justify-center gap-2 hover:bg-green-700 active:scale-95 transition-all">
                         <i data-lucide="share-2" class="w-4 h-4"></i> Compartilhar Relatório Mensageria
                     </button>
-                    
-                    <!-- Lógica de Backups movida para ficar mais limpa, disponível no histórico ou painel adm -->
-                    <div id="controles-historico" class="hidden flex flex-col gap-2">
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="exportarDados()" class="py-3 bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-xl flex items-center justify-center gap-2 transition-colors hover:bg-slate-50">
-                                <i data-lucide="download" class="w-3 h-3 text-blue-500"></i> Backup JSON
-                            </button>
-                            <label class="py-3 bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors hover:bg-slate-50">
-                                <i data-lucide="upload" class="w-3 h-3 text-emerald-500"></i> Importar
-                                <input type="file" class="hidden" accept=".json" onchange="importarDados(this)">
-                            </label>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Container Principal onde as listas são renderizadas -->
@@ -500,16 +487,30 @@
                     </div>
                 </div>
 
-                <!-- Botões de Controle -->
+                <!-- Botões de Controle e Backups -->
                 <div class="grid grid-cols-2 gap-4">
+                    <button onclick="exportarExcel()" class="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-emerald-50 active:scale-95 transition-all text-slate-700">
+                        <div class="bg-emerald-100 p-3 rounded-full text-emerald-600"><i data-lucide="file-spreadsheet"></i></div>
+                        <span class="text-[10px] font-black uppercase text-center mt-1">Baixar Excel (CSV)</span>
+                    </button>
                     <button onclick="exportarDados()" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all text-slate-700">
                         <div class="bg-blue-100 p-3 rounded-full text-blue-600"><i data-lucide="download-cloud"></i></div>
-                        <span class="text-[10px] font-black uppercase text-center mt-1">Exportar Base (JSON)</span>
+                        <span class="text-[10px] font-black uppercase text-center mt-1">Backup do Sistema (JSON)</span>
                     </button>
-                    <button onclick="limparHistorico()" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all text-slate-700">
+                    
+                    <!-- Importação e Exclusão ficam mais discretas por segurança -->
+                    <label class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all text-slate-700 cursor-pointer">
+                        <div class="bg-slate-100 p-3 rounded-full text-slate-600"><i data-lucide="upload-cloud"></i></div>
+                        <span class="text-[10px] font-black uppercase text-center mt-1">Restaurar JSON</span>
+                        <input type="file" class="hidden" accept=".json" onchange="importarDados(this)">
+                    </label>
+                    <button onclick="limparHistorico()" class="bg-white p-4 rounded-2xl border border-red-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-red-50 active:scale-95 transition-all text-slate-700">
                         <div class="bg-red-100 p-3 rounded-full text-red-600"><i data-lucide="trash-2"></i></div>
-                        <span class="text-[10px] font-black uppercase text-center mt-1">Limpar Histórico Antigo</span>
+                        <span class="text-[10px] font-black uppercase text-center mt-1 text-red-600">Limpar Mês Passado</span>
                     </button>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-xl border border-orange-200">
+                    <p class="text-[10px] text-orange-700 font-medium text-center uppercase leading-relaxed"><i data-lucide="info" class="w-3 h-3 inline pb-0.5"></i> <b>Nota:</b> Limpar o histórico apaga apenas encomendas <b>entregues</b>. O que estiver pendente na portaria será protegido para o próximo mês.</p>
                 </div>
             </div>
 
@@ -757,8 +758,8 @@
         window.pendingConfirmationId = null;
         window.pendingConfirmationType = null;
         window.isAdmin = false; // Controle de acesso do Painel Admin
-        window.isMensageria = false; // NOVO: Controle de acesso para registrar na Mensageria
-        window.nomeUsuarioLogado = "Colaborador"; // NOVO: Armazena o nome extraído do email
+        window.isMensageria = false; // Controle de acesso para registrar na Mensageria
+        window.nomeUsuarioLogado = "Colaborador"; // Armazena o nome extraído do email
 
         let unsubscribeSnapshot = null;
 
@@ -1262,7 +1263,7 @@
             document.getElementById('feedback-val').innerText = 'Pendente';
             document.getElementById('feedback-val').className = 'text-[9px] mt-1 ml-1 font-bold text-slate-400';
             
-            // NOVO: Devolve o nome do porteiro para o campo automaticamente para o próximo registro
+            // Devolve o nome do porteiro para o campo automaticamente para o próximo registro
             document.getElementById('input-recebedor').value = window.nomeUsuarioLogado;
             
             document.getElementById('btn-gravar').disabled = true;
@@ -1271,7 +1272,7 @@
             if(!isMensageria) window.enviarGrupoCondominio(nid);
         }
 
-        // --- NOVA LÓGICA DE AUDITORIA DE EQUIPE ---
+        // --- NOVA LÓGICA DE AUDITORIA DE EQUIPE E EXPORTAÇÃO ---
         window.renderAdminStats = () => {
             if(!window.isAdmin) return;
             
@@ -1441,7 +1442,6 @@
                 if (t === 'mensageria' && window.isMensageria) showRegistro = true; // Só mostra na mensageria se for o usuário mensageria ou admin
                 
                 document.getElementById('area-registro').style.display = showRegistro ? 'block' : 'none';
-                document.getElementById('controles-historico').style.display = t==='pendentes' ? 'none' : 'flex';
                 
                 const tituloReg = document.getElementById('titulo-registro');
                 if (t === 'pendentes') {
@@ -1477,8 +1477,8 @@
         }
 
         window.limparHistorico = async () => { 
-            if(confirm("Deseja realmente apagar APENAS o histórico de encomendas JÁ ENTREGUES AOS MORADORES?\n\n(Tudo que estiver aguardando na Portaria ou Mensageria SERÁ PRESERVADO)")) { 
-                // NOVO: Regra de segurança. Só exclui se a encomenda chegou ao destino final (morador).
+            if(confirm("Deseja realmente apagar APENAS o histórico de encomendas JÁ ENTREGUES AOS MORADORES?\n\n(Tudo que estiver aguardando na Portaria ou Mensageria SERÁ PRESERVADO para o próximo mês)")) { 
+                // Regra de segurança: Só exclui se a encomenda chegou ao destino final (morador).
                 const paraExcluir = window.db.filter(d => d.status === 'entregue' && (d.destino === 'morador' || d.destino === 'entregue_mensageria'));
                 
                 if (paraExcluir.length === 0) {
@@ -1498,15 +1498,61 @@
             } 
         }
 
+        // Função de Exportação em Excel (CSV)
+        window.exportarExcel = () => {
+            // Cabeçalhos das colunas
+            let csv = 'Data Entrada;Hora Entrada;Bloco;Apartamento;Morador;Empresa;Remetente;Descricao;Qtd;NF/Doc;Recebedor (Portaria);Status;Data Saida/Mensageria;Quem Entregou;Quem Retirou\n';
+            
+            window.db.forEach(it => {
+                // Formatação das variáveis para limpar textos que possam ter ponto e vírgula e bugar o Excel
+                const safeStr = (str) => {
+                    if (!str) return '';
+                    return `"${String(str).replace(/"/g, '""').replace(/;/g, ',').replace(/\n/g, ' ')}"`;
+                };
+
+                const dataSaida = it.saida ? new Date(it.saida).toLocaleString('pt-PT') : '';
+                let statusStr = 'Pendente';
+                if (it.status === 'entregue') {
+                    statusStr = it.destino === 'mensageria' ? 'Aguardando na Mensageria' : 'Entregue ao Morador';
+                }
+
+                csv += `${safeStr(it.data)};${safeStr(it.hora)};${safeStr(it.bloco)};${safeStr(it.apto)};${safeStr(it.morador)};${safeStr(it.empresa)};${safeStr(it.remetente)};${safeStr(it.descricao)};${safeStr(it.qtd)};${safeStr(it.nf)};${safeStr(it.recebedor)};${safeStr(statusStr)};${safeStr(dataSaida)};${safeStr(it.entreguePor)};${safeStr(it.retiradoPor)}\n`;
+            });
+
+            // Adiciona o BOM para garantir que o Excel abra os acentos em português corretamente
+            const blob = new Blob(["\ufeff", csv], {type: 'text/csv;charset=utf-8;'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const d = new Date();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            
+            a.href = url;
+            a.download = `Relatorio-Portaria-${month}-${year}.csv`;
+            a.click();
+        };
+
+        // Função de Backup JSON com data no nome
         window.exportarDados = () => { 
+            const d = new Date();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+
             const b = new Blob([JSON.stringify(window.db,null,2)],{type:'application/json'}); 
-            const u=URL.createObjectURL(b); 
-            const a=document.createElement('a'); 
-            a.href=u; a.download=`backup-nuvem.json`; a.click(); 
+            const u = URL.createObjectURL(b); 
+            const a = document.createElement('a'); 
+            a.href = u; 
+            a.download = `backup-sistema-${month}-${year}.json`; 
+            a.click(); 
         }
 
         window.importarDados = async (input) => {
             if(input.files && input.files[0]) {
+                if(!confirm("⚠️ AVISO DE SEGURANÇA ⚠️\n\nImportar um arquivo JSON vai MESCLAR os dados antigos com os dados ATUAIS da portaria.\n\nSe você quer apenas LER os dados antigos, cancele esta ação e abra o arquivo CSV no Excel.\n\nDeseja mesmo importar no sistema?")) {
+                    input.value = ""; // Limpa a seleção
+                    return;
+                }
+
                 const r = new FileReader();
                 r.onload = async (e) => { 
                     try { 
