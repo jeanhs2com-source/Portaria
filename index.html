@@ -48,14 +48,14 @@
             <h2 class="text-xl font-black text-slate-800 text-center uppercase tracking-tight">Portaria Control</h2>
             <p class="text-[10px] font-bold text-slate-400 text-center uppercase mb-8 mt-1">Acesso ao Sistema</p>
             
-            <form id="login-form" class="space-y-4">
+            <form id="login-form" class="space-y-4" autocomplete="off">
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">E-mail de Acesso</label>
-                    <input id="login-email" type="email" required class="input-field" placeholder="portaria@condominio.com">
+                    <input id="login-email" type="email" autocomplete="username" required class="input-field" placeholder="portaria@condominio.com">
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Senha</label>
-                    <input id="login-password" type="password" required class="input-field" placeholder="••••••••">
+                    <input id="login-password" type="password" autocomplete="new-password" required class="input-field" placeholder="••••••••">
                 </div>
                 
                 <div id="login-error" class="hidden text-[10px] font-bold text-red-500 text-center bg-red-50 p-2 rounded-lg border border-red-100"></div>
@@ -179,7 +179,7 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Recebedor</label>
-                            <input id="edit-recebedor" type="text" list="lista-recebedores" class="input-field">
+                            <input id="edit-recebedor" type="text" class="input-field bg-slate-100 text-slate-500 cursor-not-allowed" readonly>
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Portaria até</label>
@@ -384,7 +384,7 @@
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Recebedor</label>
-                                <input id="input-recebedor" type="text" list="lista-recebedores" placeholder="Porteiro" class="input-field">
+                                <input id="input-recebedor" type="text" placeholder="Porteiro" class="input-field bg-slate-100 text-slate-500 cursor-not-allowed" readonly>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Portaria até...</label>
@@ -773,7 +773,11 @@
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
+            const passwordInput = document.getElementById('login-password');
+            const password = passwordInput.value;
+            
+            // Limpa o campo de senha imediatamente para evitar que o navegador pergunte para salvar
+            passwordInput.value = '';
             
             btnLogin.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Entrando...`;
             btnLogin.disabled = true;
@@ -1404,6 +1408,19 @@
                                 }
                             }
 
+                            // NOVO: Controle estrito de acesso para os botões de edição e exclusão
+                            let canEditDelete = false;
+                            if (window.isAdmin) {
+                                canEditDelete = true;
+                            } else if (window.abaAtiva === 'entregues') {
+                                canEditDelete = false; // Apenas Admins podem apagar/editar no Histórico
+                            } else if (window.abaAtiva === 'mensageria') {
+                                canEditDelete = window.isMensageria; // Apenas Mensageria e Admin mexem aqui
+                            } else if (window.abaAtiva === 'pendentes') {
+                                // Porteiro só edita o que ele mesmo registrou, Mensageria/Admin editam tudo
+                                canEditDelete = window.isMensageria || (it.recebedor === window.nomeUsuarioLogado);
+                            }
+
                             return `
                             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm animate-fade-in relative overflow-hidden">
                                 ${((window.abaAtiva==='pendentes'&&it.notificadoPortariaMorador)||(window.abaAtiva!=='pendentes'&&it.notificadoMensageria)) ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-2 h-2"></i> Mensagem Enviada</div>` : ''}
@@ -1426,8 +1443,10 @@
                                                 ` : `
                                                     ${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria('${it.id}')" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador (Mensageria)"><i data-lucide="bell" class="w-4 h-4"></i></button>` : ''}
                                                 `}
-                                                <button onclick="openEditModal('${it.id}')" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                                                <button onclick="excluirUm('${it.id}')" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                                ${canEditDelete ? `
+                                                    <button onclick="openEditModal('${it.id}')" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                                    <button onclick="excluirUm('${it.id}')" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                                ` : ''}
                                             </div>
                                         </div>
                                         <p class="text-[10px] font-bold text-slate-700 uppercase">${it.empresa}</p>
