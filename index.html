@@ -715,6 +715,8 @@
         window.pendingConfirmationId = null;
         window.pendingConfirmationType = null;
         window.isAdmin = false; // Controle de acesso do Painel Admin
+        window.isMensageria = false; // NOVO: Controle de acesso para registrar na Mensageria
+        window.nomeUsuarioLogado = "Colaborador"; // NOVO: Armazena o nome extraído do email
 
         let unsubscribeSnapshot = null;
 
@@ -723,9 +725,18 @@
                 loginOverlay.classList.add('hidden');
                 appContent.classList.remove('hidden');
                 
-                // CHECAGEM DE ADMIN (Regra: se o email contiver 'adm' ou 'gerencia')
+                // CHECAGEM DE ADMIN E EXTRAÇÃO INTELIGENTE DE NOME
                 const emailStr = user.email ? user.email.toLowerCase() : '';
                 window.isAdmin = emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin');
+                window.isMensageria = window.isAdmin || emailStr.includes('mensageria'); // Admins ou emails com 'mensageria' têm acesso duplo
+                
+                // Extrai o nome antes do @ e formata (ex: joao.silva@ -> Joao Silva)
+                const prefix = emailStr.split('@')[0];
+                window.nomeUsuarioLogado = prefix.split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                
+                // Preenche automaticamente o campo recebedor no formulário
+                const recInput = document.getElementById('input-recebedor');
+                if (recInput) recInput.value = window.nomeUsuarioLogado;
                 
                 if (window.isAdmin) {
                     document.getElementById('tab-a').classList.remove('hidden');
@@ -1057,7 +1068,8 @@
             window.baixaTargetOrigem = origem;
             
             document.getElementById('baixa-info-morador').innerText = `Bloco ${it.bloco} - Apto ${it.apto} (${it.morador})`;
-            document.getElementById('baixa-entregador').value = "";
+            // NOVO: Preenche automaticamente quem está entregando com o nome do usuário logado
+            document.getElementById('baixa-entregador').value = window.nomeUsuarioLogado;
             document.getElementById('baixa-retirado').value = "";
             
             // Controle de exibição da assinatura (Apenas na Mensageria)
@@ -1203,6 +1215,10 @@
             window.removerFotoRegistro(); // Usa a função de remover foto para garantir que oculta a div da foto e mostra os botões
             document.getElementById('feedback-val').innerText = 'Pendente';
             document.getElementById('feedback-val').className = 'text-[9px] mt-1 ml-1 font-bold text-slate-400';
+            
+            // NOVO: Devolve o nome do porteiro para o campo automaticamente para o próximo registro
+            document.getElementById('input-recebedor').value = window.nomeUsuarioLogado;
+            
             document.getElementById('btn-gravar').disabled = true;
 
             // Se for mensageria direta, não avisa no grupo condominio, só morador depois
@@ -1258,7 +1274,12 @@
                 document.getElementById('area-operacional').style.display = 'block';
                 document.getElementById('area-admin').style.display = 'none';
                 
-                document.getElementById('area-registro').style.display = (t==='pendentes' || t==='mensageria') ? 'block' : 'none';
+                // NOVO: Lógica restrita para exibir o formulário de registro
+                let showRegistro = false;
+                if (t === 'pendentes') showRegistro = true;
+                if (t === 'mensageria' && window.isMensageria) showRegistro = true; // Só mostra na mensageria se for o usuário mensageria ou admin
+                
+                document.getElementById('area-registro').style.display = showRegistro ? 'block' : 'none';
                 document.getElementById('controles-historico').style.display = t==='pendentes' ? 'none' : 'flex';
                 
                 const tituloReg = document.getElementById('titulo-registro');
@@ -1295,14 +1316,24 @@
         }
 
         window.limparHistorico = async () => { 
-            if(confirm("Deseja realmente apagar o histórico de entregues na nuvem?")) { 
-                const paraExcluir = window.db.filter(d => d.status !== 'pendente');
+            if(confirm("Deseja realmente apagar APENAS o histórico de encomendas JÁ ENTREGUES AOS MORADORES?\n\n(Tudo que estiver aguardando na Portaria ou Mensageria SERÁ PRESERVADO)")) { 
+                // NOVO: Regra de segurança. Só exclui se a encomenda chegou ao destino final (morador).
+                const paraExcluir = window.db.filter(d => d.status === 'entregue' && (d.destino === 'morador' || d.destino === 'entregue_mensageria'));
+                
+                if (paraExcluir.length === 0) {
+                    alert("Não há histórico de entregas finalizadas para limpar no momento.");
+                    return;
+                }
+
                 const batch = writeBatch(dbFS);
                 paraExcluir.forEach(item => {
                     const ref = doc(encomendasRef, String(item.id));
                     batch.delete(ref);
                 });
-                batch.commit().catch(e => console.error(e));
+                
+                batch.commit().then(() => {
+                    alert(`${paraExcluir.length} registros antigos foram apagados com sucesso!`);
+                }).catch(e => console.error(e));
             } 
         }
 
