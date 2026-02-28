@@ -590,27 +590,43 @@
         };
 
         // LÓGICA DO SCANNER DE CÓDIGO DE BARRAS
-        let html5QrcodeScanner = null;
+        let html5QrCode = null;
 
         window.startScanner = () => {
             document.getElementById('modal-scanner').classList.remove('hidden');
             
-            if(!html5QrcodeScanner) {
-                html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 150} }, false);
+            if(!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
             }
             
-            html5QrcodeScanner.render((decodedText, decodedResult) => {
-                // Ao ler com sucesso:
-                document.getElementById('input-nf').value = decodedText;
+            html5QrCode.start(
+                { facingMode: "environment" }, // Força a abertura direta da câmera traseira
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 150 }
+                },
+                (decodedText, decodedResult) => {
+                    // Ao ler com sucesso:
+                    document.getElementById('input-nf').value = decodedText;
+                    window.stopScanner();
+                },
+                (errorMessage) => {
+                    // Falhas de leitura em tempo real (ignorar para não poluir console)
+                }
+            ).catch((err) => {
+                console.error("Erro ao iniciar a câmera para o scanner", err);
+                alert("Não foi possível acessar a câmera. Verifique as permissões do seu navegador.");
                 window.stopScanner();
-            }, (errorMessage) => {
-                // Falhas de leitura em tempo real (ignorar para não poluir console)
             });
         };
 
         window.stopScanner = () => {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(e => console.error("Falha ao parar scanner", e));
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                }).catch(e => console.error("Falha ao parar scanner", e));
+            } else if (html5QrCode) {
+                html5QrCode.clear();
             }
             document.getElementById('modal-scanner').classList.add('hidden');
         };
