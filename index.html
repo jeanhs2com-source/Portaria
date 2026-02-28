@@ -13,7 +13,7 @@
         .animate-fade-in { animation: fadeIn 0.15s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         
-        .input-field { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background-color: #f8fafc; font-weight: 600; font-size: 13px; outline: none; transition: all 0.2s; }
+        .input-field { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background-color: #f8fafc; font-weight: 600; font-size: 13px; outline: none; transition: all 0.2s; cursor: text; }
         .input-field:focus { border-color: #2563eb; ring: 2px; ring-color: #2563eb; background-color: #fff; }
 
         .photo-preview { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 2px solid #2563eb; }
@@ -63,7 +63,7 @@
     <!-- CONTEÚDO PRINCIPAL DO APP -->
     <div id="app-content" class="hidden">
 
-        <!-- MODAL WHATSAPP ESCOLHA -->
+        <!-- MODAL WHATSAPP ESCOLHA (COM NOMES CLAROS) -->
         <div id="modal-whatsapp" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 modal-overlay">
             <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in">
                 <div class="flex justify-center mb-2">
@@ -71,17 +71,17 @@
                         <i data-lucide="message-circle" class="w-8 h-8"></i>
                     </div>
                 </div>
-                <h3 class="font-black text-slate-800 uppercase text-center text-sm">Compartilhar via WhatsApp</h3>
+                <h3 class="font-black text-slate-800 uppercase text-center text-sm">Notificar via WhatsApp</h3>
                 <p class="text-xs text-slate-500 text-center font-medium">Como deseja abrir o WhatsApp no seu computador?</p>
                 <div class="flex flex-col gap-3 pt-2">
-                    <button onclick="openWhatsApp('web')" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-xl text-[10px] uppercase transition-colors flex items-center justify-center gap-2">
+                    <button onclick="openWhatsApp('web')" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-xl text-[10px] uppercase transition-colors flex items-center justify-center gap-2 shadow-sm">
                         <i data-lucide="globe" class="w-4 h-4"></i> WhatsApp Web (Navegador)
                     </button>
                     <button onclick="openWhatsApp('native')" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl text-[10px] uppercase shadow-lg transition-colors flex items-center justify-center gap-2">
                         <i data-lucide="monitor" class="w-4 h-4"></i> WhatsApp Nativo (App)
                     </button>
                     <button onclick="closeWhatsAppModal()" class="w-full py-2 text-slate-400 hover:text-slate-600 font-bold text-[10px] uppercase mt-2">
-                        Cancelar
+                        Cancelar Notificação
                     </button>
                 </div>
             </div>
@@ -350,7 +350,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // AQUI ESTÁ O SEGREDO DO OFFLINE: Usando initializeFirestore com persistentLocalCache
+        // SEGREDO DO OFFLINE: persistentLocalCache
         import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -430,7 +430,7 @@
         window.expandidoKey = null;
         window.baixaTargetId = null;
         window.baixaTargetOrigem = null;
-        window.currentWhatsAppMsg = ""; // Usado para o Modal do WhatsApp
+        window.currentWhatsAppMsg = ""; 
 
         let unsubscribeSnapshot = null;
 
@@ -439,12 +439,16 @@
                 loginOverlay.classList.add('hidden');
                 appContent.classList.remove('hidden');
                 
-                // Monitorando alterações com includeMetadataChanges para saber quando está salvando no banco (hasPendingWrites)
+                // Monitorando alterações identificando o que é OFFLINE (hasPendingWrites)
                 unsubscribeSnapshot = onSnapshot(encomendasRef, { includeMetadataChanges: true }, (snapshot) => {
                     const hasPendingWrites = snapshot.metadata.hasPendingWrites;
                     window.updateStatusUI(navigator.onLine, hasPendingWrites);
 
-                    window.db = snapshot.docs.map(doc => doc.data());
+                    window.db = snapshot.docs.map(doc => {
+                        const data = doc.data();
+                        data.isOffline = doc.metadata.hasPendingWrites; // Identificador crucial para agrupar offline
+                        return data;
+                    });
                     window.render(); 
                 }, (error) => {
                     console.error("Erro no Sync Firestore:", error);
@@ -527,7 +531,7 @@
                         const it = window.db.find(d => String(d.id) === String(id));
                         if (it) { 
                             it.foto = compressed; 
-                            await setDoc(doc(encomendasRef, String(it.id)), it); 
+                            setDoc(doc(encomendasRef, String(it.id)), it).catch(err => console.log(err)); 
                         }
                     };
                     img.src = e.target.result;
@@ -573,7 +577,7 @@
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
-        // NOVA LÓGICA DO WHATSAPP (Modal Customizado)
+        // LÓGICA DO WHATSAPP MODAL
         window.closeWhatsAppModal = () => document.getElementById('modal-whatsapp').classList.add('hidden');
         
         window.openWhatsApp = (type) => {
@@ -613,7 +617,7 @@
             
             window.enviarWhatsAppMorador(msg);
             it.notificadoPortariaMorador = true; 
-            await setDoc(doc(encomendasRef, String(it.id)), it);
+            setDoc(doc(encomendasRef, String(it.id)), it).catch(e => console.error(e));
         }
 
         window.enviarAvisoMensageria = async (id) => {
@@ -629,7 +633,7 @@
             
             window.enviarWhatsAppMorador(msg);
             it.notificadoMensageria = true;
-            await setDoc(doc(encomendasRef, String(it.id)), it);
+            setDoc(doc(encomendasRef, String(it.id)), it).catch(e => console.error(e));
         }
 
         window.compartilharRelatorioMensageria = () => {
@@ -689,7 +693,7 @@
                 const tv = document.getElementById('edit-tokens').value;
                 item.tokens = tv ? tv.split(',').map(s => s.trim()).filter(s => s !== '') : [];
                 
-                await setDoc(doc(encomendasRef, String(item.id)), item);
+                setDoc(doc(encomendasRef, String(item.id)), item).catch(e => console.error(e));
                 window.closeEditModal();
             }
         }
@@ -718,17 +722,18 @@
                 const retiradoPor = document.getElementById('baixa-retirado').value || "O Próprio";
                 
                 item.status = 'entregue';
-                item.saida = new Date().toISOString();
+                item.saida = new Date().toISOString(); // Hora que foi ENTREGUE AO MORADOR
                 item.entreguePor = entregador;
                 item.retiradoPor = retiradoPor;
                 
                 if (window.baixaTargetOrigem === 'mensageria') {
                     item.destino = 'entregue_mensageria';
+                    // Nota: item.dataMensageria já foi guardado quando veio para a mensageria
                 } else {
                     item.destino = 'morador';
                 }
                 
-                await setDoc(doc(encomendasRef, String(item.id)), item);
+                setDoc(doc(encomendasRef, String(item.id)), item).catch(e => console.error(e));
                 window.closeBaixaModal();
             }
         }
@@ -743,7 +748,8 @@
                     
                     window.listaVisivel.forEach(item => {
                         item.status = 'entregue';
-                        item.saida = now;
+                        item.dataMensageria = now; // Guarda a hora que foi pra mensageria
+                        item.saida = now; // Fallback para compatibilidade de ordenação
                         item.destino = 'mensageria';
                         
                         const ref = doc(encomendasRef, String(item.id));
@@ -771,22 +777,18 @@
             const res = window.validarUnidade(el.value);
             const fb = document.getElementById('feedback-val');
             fb.innerText = res.msg;
-            fb.className = `text-[10px] mt-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
+            fb.className = `text-[10px] mt-1 ml-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
             document.getElementById('btn-gravar').disabled = !res.ok;
         }
 
-        window.handleRegistrar = async (e) => {
+        // LÓGICA DE SALVAMENTO IMEDIATO SEM TRAVAR BOTÃO (OFFLINE FRIENDLY)
+        window.handleRegistrar = (e) => {
             e.preventDefault();
             const res = window.validarUnidade(document.getElementById('input-unidade').value);
             if (!res.ok) return;
-            
-            const btn = document.getElementById('btn-gravar');
-            btn.disabled = true;
-            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Salvando...`;
 
             const now = new Date();
             const nid = String(Date.now() + Math.floor(Math.random()*1000));
-            
             const isMensageria = window.abaAtiva === 'mensageria';
 
             const novoItem = {
@@ -808,21 +810,19 @@
                 notificadoPortariaMorador: false, notificadoMensageria: false
             };
             
-            try {
-                await setDoc(doc(encomendasRef, nid), novoItem);
-                document.getElementById('form-main').reset();
-                document.getElementById('photo-container').classList.add('hidden');
-                window.currentPhoto = null;
-                window.db.push(novoItem); 
-                window.enviarGrupoCondominio(nid);
-            } catch(err) {
-                console.error("Erro", err);
-                alert("Falha ao salvar no cache local/nuvem.");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `Gravar Registro`;
-                lucide.createIcons();
-            }
+            // Dispara o salvamento pro firebase (ele gerencia o offline sozinho) SEM AWAIT
+            setDoc(doc(encomendasRef, nid), novoItem).catch(err => console.error("Erro Background Sync", err));
+
+            // Reseta toda a UI instantaneamente permitindo cadastrar o próximo sem travar
+            document.getElementById('form-main').reset();
+            document.getElementById('photo-container').classList.add('hidden');
+            window.currentPhoto = null;
+            document.getElementById('feedback-val').innerText = 'Pendente';
+            document.getElementById('feedback-val').className = 'text-[9px] mt-1 ml-1 font-bold text-slate-400';
+            document.getElementById('btn-gravar').disabled = true;
+
+            // Se for mensageria direta, não avisa no grupo condominio, só morador depois
+            if(!isMensageria) window.enviarGrupoCondominio(nid);
         }
 
         window.switchTab = (t) => {
@@ -857,15 +857,16 @@
             if (idx !== -1) {
                 const item = window.db[idx];
                 item.status = 'entregue';
-                item.saida = new Date().toISOString();
+                item.dataMensageria = new Date().toISOString(); // Hora que foi pra mensageria
+                item.saida = item.dataMensageria; // Fallback de ordenação
                 item.destino = 'mensageria';
-                await setDoc(doc(encomendasRef, String(item.id)), item);
+                setDoc(doc(encomendasRef, String(item.id)), item).catch(e => console.error(e));
             }
         }
 
         window.excluirUm = async (id) => { 
-            if(confirm("Apagar da nuvem permanentemente?")) { 
-                await deleteDoc(doc(encomendasRef, String(id)));
+            if(confirm("Apagar permanentemente?")) { 
+                deleteDoc(doc(encomendasRef, String(id))).catch(e => console.error(e));
             } 
         }
 
@@ -877,7 +878,7 @@
                     const ref = doc(encomendasRef, String(item.id));
                     batch.delete(ref);
                 });
-                await batch.commit();
+                batch.commit().catch(e => console.error(e));
             } 
         }
 
@@ -913,7 +914,6 @@
             }
         }
 
-        // Função auxiliar extraída para criar os cards, mantendo a limpeza do código e facilitando uso nas abas
         window.createCardHTML = (g, key, badgesHist) => {
             const isExp = window.expandidoKey === key;
             return `
@@ -936,8 +936,9 @@
                             
                             // Lógica de tempo parado na mensageria e alertas
                             let itemAlerta = '';
-                            if (window.abaAtiva === 'mensageria' && it.saida) {
-                                const msDiff = Date.now() - new Date(it.saida).getTime();
+                            if (window.abaAtiva === 'mensageria' && (it.dataMensageria || it.saida)) {
+                                const refDate = it.dataMensageria || it.saida;
+                                const msDiff = Date.now() - new Date(refDate).getTime();
                                 const daysDiff = Math.floor(msDiff / (1000 * 60 * 60 * 24));
                                 if (daysDiff >= 4) {
                                     itemAlerta = `<div class="mt-2 inline-block px-2 py-1.5 rounded-lg text-[10px] font-black uppercase bg-red-500 text-white animate-pulse shadow-sm border border-red-600 w-full text-center"><i data-lucide="alert-triangle" class="w-3 h-3 inline mr-1 pb-0.5"></i> Atrasado: ${daysDiff} dias na Mensageria</div>`;
@@ -985,9 +986,20 @@
                                     <div><p class="text-[7px]">Entrada</p><p class="text-slate-700">${it.data} às ${it.hora}</p></div>
                                     <div><p class="text-[7px] text-blue-500">Portaria até:</p><p class="text-blue-600 font-bold">${it.permanencia || 'N/A'}</p></div>
                                     
-                                    ${it.saida ? `<div class="col-span-2 border-t pt-2 mt-1">
-                                        <p class="text-[10px] text-emerald-600 font-black uppercase tracking-wide">Saída: ${new Date(it.saida).toLocaleString('pt-PT')} (${it.destino})</p>
-                                        ${it.entreguePor ? `<p class="text-[10px] text-slate-700 mt-1 font-bold">Entregue por: <span class="text-slate-900">${it.entreguePor}</span> | Retirado por: <span class="text-slate-900">${it.retiradoPor}</span></p>` : ''}
+                                    ${(it.saida || it.dataMensageria) ? `
+                                    <div class="col-span-2 border-t pt-3 mt-2 space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner">
+                                        <p class="text-[9px] text-slate-500 font-black uppercase tracking-wide mb-2"><i data-lucide="route" class="w-3 h-3 inline pb-0.5"></i> Percurso da Encomenda:</p>
+
+                                        ${it.dataMensageria ? `<p class="text-[9px] text-indigo-600 font-bold uppercase border-l-2 border-indigo-400 pl-2">1. Portaria ➔ Mensageria<br><span class="text-slate-700 text-[10px] font-black tracking-normal">${new Date(it.dataMensageria).toLocaleString('pt-PT')}</span></p>` : ''}
+
+                                        ${it.destino === 'entregue_mensageria' ? `<p class="text-[9px] text-emerald-600 font-bold uppercase border-l-2 border-emerald-400 pl-2 mt-2">2. Mensageria ➔ Morador<br><span class="text-slate-700 text-[10px] font-black tracking-normal">${new Date(it.saida).toLocaleString('pt-PT')}</span></p>` : ''}
+
+                                        ${it.destino === 'morador' ? `<p class="text-[9px] text-emerald-600 font-bold uppercase border-l-2 border-emerald-400 pl-2 mt-2">1. Portaria ➔ Morador<br><span class="text-slate-700 text-[10px] font-black tracking-normal">${new Date(it.saida).toLocaleString('pt-PT')}</span></p>` : ''}
+
+                                        ${it.entreguePor ? `<div class="bg-white p-2.5 rounded-lg mt-3 border border-slate-200 shadow-sm space-y-1">
+                                            <p class="text-[10px] text-slate-600 font-bold uppercase">Entregue por: <span class="text-slate-900 text-[11px]">${it.entreguePor}</span></p>
+                                            <p class="text-[10px] text-slate-600 font-bold uppercase">Retirado por: <span class="text-slate-900 text-[11px]">${it.retiradoPor}</span></p>
+                                        </div>` : ''}
                                     </div>` : ''}
                                 </div>
                                 ${window.abaAtiva === 'pendentes' ? `
@@ -1034,11 +1046,13 @@
                 listaBase = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria');
             }
 
-            // BUSCA AVANÇADA COM INCLUSÃO DE BUSCA POR DATAS (Entrada e Saída)
+            // BUSCA AVANÇADA POR DATAS
             window.listaVisivel = listaBase.filter(d => {
                 const dataEntrada = d.data || '';
                 const dataSaida = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : '';
-                const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao} ${dataEntrada} ${dataSaida}`.toLowerCase();
+                const dataMensag = d.dataMensageria ? new Date(d.dataMensageria).toLocaleDateString('pt-PT') : '';
+                const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao} ${dataEntrada} ${dataSaida} ${dataMensag}`.toLowerCase();
+                
                 if(window.termoBusca && !t.includes(window.termoBusca)) return false;
                 if(window.blocoFiltro && d.bloco !== window.blocoFiltro) return false;
                 return true;
@@ -1071,29 +1085,42 @@
                 return;
             }
 
-            // NOVA LÓGICA UNIVERSAL DE ORGANIZAÇÃO INTELIGENTE POR DATA (Para TODAS as abas)
+            // NOVA LÓGICA UNIVERSAL DE ORGANIZAÇÃO INTELIGENTE POR DATA + SEPARAÇÃO OFFLINE
             const historyData = {};
             
             window.listaVisivel.forEach(d => {
                 let dateStr, timestamp, typeStr;
 
-                if (window.abaAtiva === 'entregues') {
-                    dateStr = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : 'Sem Data';
-                    timestamp = d.saida ? new Date(d.saida).setHours(0,0,0,0) : 0;
-                    typeStr = d.destino === 'entregue_mensageria' ? 'Mensageria' : 'Portaria';
-                } else if (window.abaAtiva === 'mensageria') {
-                    dateStr = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : 'Sem Data';
-                    timestamp = d.saida ? new Date(d.saida).setHours(0,0,0,0) : 0;
-                    typeStr = 'Mensageria';
+                if (d.isOffline) {
+                    dateStr = '🔄 OFFLINE - AGUARDANDO SINCRONIZAÇÃO';
+                    timestamp = 9999999999999; // Joga sempre pro topo absoluto
+                    if (window.abaAtiva === 'entregues') {
+                        typeStr = d.destino === 'entregue_mensageria' ? 'Mensageria' : 'Portaria';
+                    } else if (window.abaAtiva === 'mensageria') {
+                        typeStr = 'Mensageria';
+                    } else {
+                        typeStr = 'Portaria';
+                    }
                 } else {
-                    dateStr = d.data || 'Sem Data';
-                    if (d.data) {
-                        const parts = d.data.split('/');
-                        if (parts.length === 3) {
-                            timestamp = new Date(parts[2], parts[1]-1, parts[0]).getTime();
+                    if (window.abaAtiva === 'entregues') {
+                        dateStr = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : 'Sem Data';
+                        timestamp = d.saida ? new Date(d.saida).setHours(0,0,0,0) : 0;
+                        typeStr = d.destino === 'entregue_mensageria' ? 'Mensageria' : 'Portaria';
+                    } else if (window.abaAtiva === 'mensageria') {
+                        const refDate = d.dataMensageria || d.saida;
+                        dateStr = refDate ? new Date(refDate).toLocaleDateString('pt-PT') : 'Sem Data';
+                        timestamp = refDate ? new Date(refDate).setHours(0,0,0,0) : 0;
+                        typeStr = 'Mensageria';
+                    } else {
+                        dateStr = d.data || 'Sem Data';
+                        if (d.data) {
+                            const parts = d.data.split('/');
+                            if (parts.length === 3) {
+                                timestamp = new Date(parts[2], parts[1]-1, parts[0]).getTime();
+                            } else { timestamp = 0; }
                         } else { timestamp = 0; }
-                    } else { timestamp = 0; }
-                    typeStr = 'Portaria';
+                        typeStr = 'Portaria';
+                    }
                 }
 
                 if (!historyData[dateStr]) historyData[dateStr] = { timestamp, Portaria: {}, Mensageria: {} };
@@ -1111,10 +1138,18 @@
             sortedDates.forEach(date => {
                 const dateSection = document.createElement('div');
                 dateSection.className = "mb-8";
+                
+                const isOfflineBucket = date === '🔄 OFFLINE - AGUARDANDO SINCRONIZAÇÃO';
+                const badgeStyle = isOfflineBucket 
+                    ? 'bg-orange-100 text-orange-600 border border-orange-200 animate-pulse' 
+                    : 'bg-slate-100 text-slate-500';
+
                 dateSection.innerHTML = `
                     <div class="flex items-center gap-2 mb-4">
                         <div class="bg-slate-200 h-px flex-1"></div>
-                        <span class="text-[10px] font-black uppercase text-slate-500 tracking-widest bg-slate-100 px-3 py-1.5 rounded-full shadow-sm"><i data-lucide="calendar" class="w-3 h-3 inline pb-0.5"></i> ${date}</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm ${badgeStyle}">
+                            <i data-lucide="${isOfflineBucket ? 'wifi-off' : 'calendar'}" class="w-3 h-3 inline pb-0.5"></i> ${date}
+                        </span>
                         <div class="bg-slate-200 h-px flex-1"></div>
                     </div>
                 `;
@@ -1163,14 +1198,15 @@
                                 badgesHist = `<span class="text-[8px] ${badgeColor} font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE (${type.toUpperCase()})</span>`;
                             } else if (window.abaAtiva === 'mensageria') {
                                 badgesHist = `<span class="text-[8px] bg-orange-100 text-orange-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">NA MENSAGERIA</span>`;
-                                // Calcula se tem item atrasado e insere badge geral no header do apartamento
+                                // Calcula se tem item atrasado para por no cabecalho do apartamento
                                 const itensAtrasados = g.itens.filter(it => {
-                                    if (!it.saida) return false;
-                                    const msDiff = Date.now() - new Date(it.saida).getTime();
+                                    const refDate = it.dataMensageria || it.saida;
+                                    if (!refDate) return false;
+                                    const msDiff = Date.now() - new Date(refDate).getTime();
                                     return Math.floor(msDiff / (1000 * 60 * 60 * 24)) >= 4;
                                 });
                                 if (itensAtrasados.length > 0) {
-                                    const maxDays = Math.max(...itensAtrasados.map(it => Math.floor((Date.now() - new Date(it.saida).getTime()) / (1000 * 60 * 60 * 24))));
+                                    const maxDays = Math.max(...itensAtrasados.map(it => Math.floor((Date.now() - new Date(it.dataMensageria || it.saida).getTime()) / (1000 * 60 * 60 * 24))));
                                     badgesHist += `<span class="text-[8px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-600 uppercase animate-pulse border border-red-200 shadow-sm ml-1">⚠️ ${maxDays} DIAS</span>`;
                                 }
                             }
