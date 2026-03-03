@@ -459,6 +459,7 @@
                         <input id="input-busca" type="text" placeholder="Busca por Apto, Morador, Remetente ou Data (ex: 28/02)..." oninput="filtrar(this.value)" class="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 bg-white shadow-sm outline-none font-medium text-sm">
                     </div>
                     
+                    <!-- Botões de Filtro Rápido (Blocos) -->
                     <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar" id="container-filtros-rapidos"></div>
                     
                     <button id="btn-bulk-transfer" onclick="transferirTodosParaMensageria()" class="hidden w-full py-3 bg-blue-600 text-white font-black rounded-xl text-[10px] uppercase shadow-md flex items-center justify-center gap-2 hover:bg-blue-700 active:scale-95 transition-all">
@@ -522,7 +523,7 @@
 
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Email (Apenas Nome)</label>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Email (Apenas Prefixo)</label>
                                 <div class="flex">
                                     <input id="admin-func-email-prefix" type="text" oninput="this.value = this.value.split('@')[0]" required class="input-field py-2 text-xs rounded-r-none border-r-0" placeholder="joao">
                                     <span id="admin-func-email-domain" class="bg-slate-200 border border-slate-300 border-l-0 rounded-r-xl px-3 flex items-center text-[10px] text-slate-600 font-black overflow-hidden whitespace-nowrap text-ellipsis max-w-[140px]">@...</span>
@@ -749,6 +750,7 @@
                     <p class="text-xs text-red-200 font-medium relative z-10">Gestão Global da Plataforma</p>
                 </div>
 
+                <!-- Cadastro de Condomínio -->
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
                     <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
                         <div class="bg-red-100 p-2 rounded-lg text-red-600">
@@ -794,6 +796,7 @@
                     </form>
                 </div>
 
+                <!-- Gestão de Condomínio Selecionado -->
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
                     <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
                         <div class="bg-slate-100 p-2 rounded-lg text-slate-600">
@@ -803,10 +806,17 @@
                     </div>
 
                     <p class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Selecione o Condomínio Alvo</p>
-                    <select id="master-select-condo" onchange="window.carregarDadosMaster(this.value)" class="input-field mb-4 bg-slate-50 cursor-pointer text-xs">
-                        <option value="">Selecione para carregar dados...</option>
-                        <!-- Injetado via JS -->
-                    </select>
+                    
+                    <div class="flex items-center gap-2 mb-4">
+                        <select id="master-select-condo" onchange="window.carregarDadosMaster(this.value)" class="input-field bg-slate-50 cursor-pointer text-xs flex-1">
+                            <option value="">Selecione para carregar dados...</option>
+                        </select>
+                        
+                        <!-- BOTÃO NOVO DE EXCLUIR CONDOMÍNIO INTEIRO -->
+                        <button onclick="excluirCondominioSelecionado()" class="bg-red-50 text-red-500 p-3 rounded-xl hover:bg-red-100 transition-colors border border-red-100 shadow-sm" title="Excluir Condomínio Inteiro">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
 
                     <div id="master-data-area" class="hidden space-y-6">
                         
@@ -858,13 +868,34 @@
                                     </select>
         
                                     <div id="master-func-dias-container" class="grid grid-cols-4 sm:grid-cols-7 gap-1 mt-2">
-                                        <div class="relative"><input type="checkbox" id="mst-day-1" value="1" class="day-checkbox hidden peer" checked><label for="mst-day-1" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Seg</label></div>
-                                        <div class="relative"><input type="checkbox" id="mst-day-2" value="2" class="day-checkbox hidden peer" checked><label for="mst-day-2" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Ter</label></div>
-                                        <div class="relative"><input type="checkbox" id="mst-day-3" value="3" class="day-checkbox hidden peer" checked><label for="mst-day-3" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qua</label></div>
-                                        <div class="relative"><input type="checkbox" id="mst-day-4" value="4" class="day-checkbox hidden peer" checked><label for="mst-day-4" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qui</label></div>
-                                        <div class="relative"><input type="checkbox" id="mst-day-5" value="5" class="day-checkbox hidden peer" checked><label for="mst-day-5" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sex</label></div>
-                                        <div class="relative"><input type="checkbox" id="mst-day-6" value="6" class="day-checkbox hidden peer"><label for="mst-day-6" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sab</label></div>
-                                        <div class="relative"><input type="checkbox" id="mst-day-0" value="0" class="day-checkbox hidden peer"><label for="mst-day-0" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Dom</label></div>
+                                        <div class="relative">
+                                            <input type="checkbox" id="mst-day-1" value="1" class="day-checkbox hidden peer" checked>
+                                            <label for="mst-day-1" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Seg</label>
+                                        </div>
+                                        <div class="relative">
+                                            <input type="checkbox" id="mst-day-2" value="2" class="day-checkbox hidden peer" checked>
+                                            <label for="mst-day-2" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Ter</label>
+                                        </div>
+                                        <div class="relative">
+                                            <input type="checkbox" id="mst-day-3" value="3" class="day-checkbox hidden peer" checked>
+                                            <label for="mst-day-3" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qua</label>
+                                        </div>
+                                        <div class="relative">
+                                            <input type="checkbox" id="mst-day-4" value="4" class="day-checkbox hidden peer" checked>
+                                            <label for="mst-day-4" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qui</label>
+                                        </div>
+                                        <div class="relative">
+                                            <input type="checkbox" id="mst-day-5" value="5" class="day-checkbox hidden peer" checked>
+                                            <label for="mst-day-5" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sex</label>
+                                        </div>
+                                        <div class="relative">
+                                            <input type="checkbox" id="mst-day-6" value="6" class="day-checkbox hidden peer">
+                                            <label for="mst-day-6" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sab</label>
+                                        </div>
+                                        <div class="relative">
+                                            <input type="checkbox" id="mst-day-0" value="0" class="day-checkbox hidden peer">
+                                            <label for="mst-day-0" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Dom</label>
+                                        </div>
                                     </div>
         
                                     <div id="master-func-data-base-container" class="hidden mt-2 bg-indigo-100 p-2 rounded-xl border border-indigo-200">
@@ -970,6 +1001,7 @@
         window.togglePassword = (inputId, iconId) => {
             const input = document.getElementById(inputId); 
             const icon = document.getElementById(iconId);
+            
             if (input.type === 'password') { 
                 input.type = 'text'; 
                 icon.setAttribute('data-lucide', 'eye-off'); 
@@ -1040,14 +1072,17 @@
         // ==========================================
         const dropZone = document.getElementById('drop-zone'); 
         const dropOverlay = document.getElementById('drop-overlay');
+        
         dropZone.addEventListener('dragover', (e) => { 
             e.preventDefault(); 
             dropOverlay.classList.remove('hidden'); 
         }); 
+        
         dropZone.addEventListener('dragleave', (e) => { 
             e.preventDefault(); 
             dropOverlay.classList.add('hidden'); 
         }); 
+        
         dropZone.addEventListener('drop', (e) => { 
             e.preventDefault(); 
             dropOverlay.classList.add('hidden'); 
@@ -1081,6 +1116,7 @@
             if (unidadeMatch) {
                 data.unidade = unidadeMatch[1];
             }
+            
             return data;
         };
         
@@ -1089,12 +1125,14 @@
             if(!html5QrCode) {
                 html5QrCode = new Html5Qrcode("reader"); 
             }
+            
             html5QrCode.start(
                 { facingMode: "environment" }, 
                 { fps: 10, qrbox: { width: 250, height: 150 } }, 
                 (decodedText) => { 
                     const extraido = window.parseBarcodeData(decodedText); 
                     document.getElementById('input-nf').value = extraido.nf; 
+                    
                     if (extraido.empresa) {
                         document.getElementById('input-empresa').value = extraido.empresa; 
                     }
@@ -1103,12 +1141,13 @@
                         inputUnidade.value = extraido.unidade; 
                         window.validarInput(inputUnidade); 
                     } 
+                    
                     document.getElementById('input-morador').focus(); 
                     window.stopScanner(); 
                 }, 
                 (errorMessage) => {}
             ).catch((err) => { 
-                alert("Sem permissão de câmera."); 
+                alert("Sem permissão de câmera. Verifique as configurações do navegador."); 
                 window.stopScanner(); 
             }); 
         };
@@ -1189,6 +1228,9 @@
         let unsubscribeMoradores = null; 
         let unsubscribeFuncionarios = null;
 
+        // ==========================================
+        // CARREGAR REGRAS DO SAAS
+        // ==========================================
         window.carregarRegrasSaaS = async (tenantId) => {
             try {
                 const configRef = doc(dbFS, 'artifacts', appId, 'public', 'data', 'condominios', tenantId);
@@ -1472,11 +1514,14 @@
         };
 
         // ==========================================
-        // ACESSO OPERACIONAL DO MASTER
+        // ACESSO OPERACIONAL DO MASTER E EXCLUSÃO
         // ==========================================
         window.acessarPortariaMaster = async () => {
             const tenantIdAlvo = document.getElementById('master-select-condo').value;
-            if(!tenantIdAlvo) return;
+            if(!tenantIdAlvo) {
+                alert("Selecione um condomínio primeiro.");
+                return;
+            }
 
             await window.carregarRegrasSaaS(tenantIdAlvo);
 
@@ -1504,6 +1549,25 @@
             document.getElementById('area-master').style.display = 'none';
             document.getElementById('area-operacional').style.display = 'block';
             window.switchTab('pendentes');
+        };
+
+        window.excluirCondominioSelecionado = async () => {
+            const tenantId = document.getElementById('master-select-condo').value;
+            if(!tenantId) {
+                alert("Selecione um condomínio no menu para excluir.");
+                return;
+            }
+            
+            if(confirm(`⚠️ ATENÇÃO EXTREMA ⚠️\n\nDeseja realmente apagar o condomínio "${tenantId}" da plataforma?\n\nIsso removerá o acesso ao painel para todos os funcionários desse prédio.`)) {
+                try {
+                    await deleteDoc(doc(dbFS, 'artifacts', appId, 'public', 'data', 'condominios', tenantId));
+                    alert("Condomínio excluído com sucesso do sistema.");
+                    document.getElementById('master-select-condo').value = '';
+                    window.carregarDadosMaster('');
+                } catch(e) {
+                    alert("Erro ao excluir condomínio: " + e.message);
+                }
+            }
         };
 
         // ==========================================
@@ -2198,13 +2262,13 @@
         };
 
         // ==========================================
-        // GESTÃO MASTER (Aba Vermelha)
+        // GESTÃO MASTER E EXCLUSÃO DE CONDOMÍNIO
         // ==========================================
         window.cadastrarCondominio = async (e) => {
             e.preventDefault();
             
             let idDomainRaw = document.getElementById('master-condo-id').value.trim().toLowerCase(); 
-            const idDomain = idDomainRaw.replace('@', '').split('.')[0]; // Pega sempre o nome principal (Ex: predioazul.com -> predioazul)
+            const idDomain = idDomainRaw.replace('@', '').split('.')[0]; 
 
             const nome = document.getElementById('master-condo-nome').value.trim(); 
             const blocosStr = document.getElementById('master-condo-blocos').value.toUpperCase(); 
@@ -2290,9 +2354,9 @@
             const tenantIdAlvo = document.getElementById('master-select-condo').value; 
             if(!tenantIdAlvo) return; 
             
-            if(confirm("Revogar acesso?")) { 
+            if(confirm("Revogar acesso deste funcionário?")) { 
                 await setDoc(doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, emailId), { ativo: false }, { merge: true }); 
-                alert("Bloqueado."); 
+                alert("Acesso Bloqueado."); 
             } 
         };
         
@@ -2330,7 +2394,7 @@
             const tenantIdAlvo = document.getElementById('master-select-condo').value; 
             if(!tenantIdAlvo) return; 
             
-            if(confirm("Remover?")) { 
+            if(confirm("Remover o cadastro deste morador?")) { 
                 deleteDoc(doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantIdAlvo}`, idMorador)).catch(e => alert("Erro")); 
             } 
         };
@@ -2717,7 +2781,7 @@
         }
 
         // ==========================================
-        // RENDERIZAÇÃO DA UI (Cards de Encomenda)
+        // RENDERIZAÇÃO DA UI PRINCIPAL
         // ==========================================
         window.createCardHTML = (g, key, badgesHist) => {
             const isExp = window.expandidoKey === key;
@@ -2949,7 +3013,8 @@
                     </button>
                 `;
                 
-                if (window.regrasCondominio && window.regrasCondominio.blocosPermitidos) { 
+                // Correção blindada para o Array de Blocos (evita tela branca)
+                if (window.regrasCondominio && Array.isArray(window.regrasCondominio.blocosPermitidos)) { 
                     window.regrasCondominio.blocosPermitidos.forEach(b => { 
                         htmlFiltros += `
                             <button onclick="setFastFilter('${b}')" class="${window.blocoFiltro === b ? "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase border bg-blue-600 text-white border-blue-600 shadow-md" : "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase border bg-white border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"}">
@@ -2975,11 +3040,12 @@
                 const dataSaida = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : '';
                 const dataMensag = d.dataMensageria ? new Date(d.dataMensageria).toLocaleDateString('pt-PT') : '';
                 
-                // Correção essencial do filtro que estava a encravar a pesquisa por causa de valores nulos
-                const t = `${d.apto||''} ${d.bloco||''} ${d.morador||''} ${d.remetente||''} ${d.empresa||''} ${d.descricao||''} ${dataEntrada} ${dataSaida} ${dataMensag}`.toLowerCase(); 
+                // Correção da pesquisa super blindada
+                const t = `${d.apto||''} ${d.bloco||''} ${d.morador||''} ${d.remetente||''} ${d.empresa||''} ${d.descricao||''} ${d.nf||''} ${d.recebedor||''} ${dataEntrada} ${dataSaida} ${dataMensag}`.toLowerCase(); 
                 
-                if(window.termoBusca && !t.includes(window.termoBusca)) return false; 
-                if(window.blocoFiltro && d.bloco !== window.blocoFiltro) return false; 
+                if (window.termoBusca && !t.includes(window.termoBusca)) return false; 
+                
+                if (window.blocoFiltro && String(d.bloco).toUpperCase() !== String(window.blocoFiltro).toUpperCase()) return false; 
                 
                 return true; 
             });
