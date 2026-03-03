@@ -33,7 +33,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 pb-10">
 
-    <!-- ESTRUTURAS DE AUTOCOMPLETAR FUTURAS (Invisíveis) -->
+    <!-- ESTRUTURAS DE AUTOCOMPLETAR -->
     <datalist id="lista-moradores"></datalist>
     <datalist id="lista-recebedores"></datalist>
 
@@ -267,9 +267,15 @@
                     <button id="tab-p" onclick="switchTab('pendentes')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-active uppercase transition-all whitespace-nowrap">Portaria</button>
                     <button id="tab-m" onclick="switchTab('mensageria')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap">Mensageria</button>
                     <button id="tab-h" onclick="switchTab('entregues')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap">Histórico</button>
+                    
                     <!-- ABA ADMIN (SÓ APARECE SE TIVER PERMISSÃO) -->
                     <button id="tab-a" onclick="switchTab('admin')" class="hidden px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap text-purple-600 hover:bg-purple-100">
                         <i data-lucide="pie-chart" class="w-3 h-3 inline pb-0.5"></i> Gestão
+                    </button>
+
+                    <!-- NOVA ABA MASTER (SÓ APARECE PARA O PERFIL MASTER) -->
+                    <button id="tab-master" onclick="switchTab('master')" class="hidden px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap text-red-600 hover:bg-red-100">
+                        <i data-lucide="crown" class="w-3 h-3 inline pb-0.5"></i> Master
                     </button>
                 </div>
             </div>
@@ -458,6 +464,44 @@
                     </div>
                 </div>
 
+                <!-- NOVA SECÇÃO: CADASTRO DE MORADORES NO PAINEL ADMIN -->
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                        <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i data-lucide="user-plus" class="w-4 h-4"></i></div>
+                        <h3 class="font-black text-slate-800 uppercase text-xs">Gestão de Moradores</h3>
+                    </div>
+                    
+                    <form onsubmit="cadastrarMorador(event, false)" class="space-y-3 mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-[9px] font-black uppercase text-slate-400 mb-2">Adicionar Novo Morador</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Bloco</label>
+                                <input id="add-morador-bloco" type="text" required class="input-field py-2 text-xs uppercase" placeholder="Ex: J">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Apto</label>
+                                <input id="add-morador-apto" type="number" required class="input-field py-2 text-xs" placeholder="Ex: 111">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nome Completo do Responsável</label>
+                            <input id="add-morador-nome" type="text" required class="input-field py-2 text-xs" placeholder="Ex: João Silva">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white font-black uppercase text-[10px] py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+                            <i data-lucide="save" class="w-3 h-3 inline pb-0.5"></i> Salvar na Base de Dados
+                        </button>
+                    </form>
+
+                    <div class="relative mb-3">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                        <input type="text" placeholder="Buscar morador cadastrado..." oninput="filtrarMoradoresAdmin(this.value)" class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs outline-none">
+                    </div>
+
+                    <div id="lista-moradores-admin" class="max-h-60 overflow-y-auto no-scrollbar space-y-2 border border-slate-100 rounded-xl bg-white p-2">
+                        <!-- Renderizado via JS -->
+                    </div>
+                </div>
+
                 <!-- Relatório por Colaborador -->
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
                     <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
@@ -511,7 +555,7 @@
                     </button>
                 </div>
 
-                <!-- Visualizador isolado de Backup JSON (não persiste no Firebase) -->
+                <!-- Visualizador isolado de Backup JSON -->
                 <div class="mt-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                     <div class="flex items-center gap-2 mb-1">
                         <div class="bg-slate-100 p-2 rounded-lg text-slate-600">
@@ -521,7 +565,7 @@
                     </div>
                     <p class="text-[10px] text-slate-500 font-medium leading-relaxed">
                         Faça upload de um arquivo <b>.json</b> de backup mensal para apenas <b>visualizar</b> os dados. 
-                        Nada será importado para a base em produção; ao fechar ou recarregar a página, tudo some automaticamente.
+                        Nada será importado para a base em produção.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
                         <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-[10px] font-black uppercase text-slate-700 hover:bg-slate-200 active:scale-95 transition-all">
@@ -534,7 +578,7 @@
                         </button>
                     </div>
                     
-                    <!-- NOVO: Campo de busca isolado para o backup -->
+                    <!-- Campo de busca isolado para o backup -->
                     <div id="backup-search-container" class="mt-3 hidden relative transition-all">
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
                         <input id="input-busca-backup" type="text" placeholder="Buscar no backup (apto, bloco, morador, nf)..." oninput="filtrarBackupLocal(this.value)" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white shadow-sm outline-none font-medium text-xs focus:border-blue-500">
@@ -549,6 +593,114 @@
                 </div>
             </div>
 
+            <!-- NOVA ÁREA: PAINEL MASTER (SÓ APARECE PARA MASTER) -->
+            <div id="area-master" class="hidden space-y-6">
+                
+                <div class="bg-red-600 p-6 rounded-3xl shadow-lg text-white text-center animate-fade-in relative overflow-hidden">
+                    <i data-lucide="crown" class="absolute -right-4 -top-4 w-32 h-32 opacity-10"></i>
+                    <h2 class="text-xl font-black uppercase tracking-tight mb-1 relative z-10">Painel Master SaaS</h2>
+                    <p class="text-xs text-red-200 font-medium relative z-10">Gestão Global da Plataforma</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                        <div class="bg-red-100 p-2 rounded-lg text-red-600"><i data-lucide="building" class="w-4 h-4"></i></div>
+                        <h3 class="font-black text-slate-800 uppercase text-xs">Cadastrar Novo Condomínio</h3>
+                    </div>
+                    
+                    <form onsubmit="cadastrarCondominio(event)" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">ID (Domínio do Email)</label>
+                                <input id="master-condo-id" type="text" required class="input-field py-2 text-xs" placeholder="Ex: predioazul (para @predioazul.com)">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nome de Exibição</label>
+                                <input id="master-condo-nome" type="text" required class="input-field py-2 text-xs" placeholder="Ex: Residencial Azul">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Blocos Permitidos (Separados por vírgula)</label>
+                            <input id="master-condo-blocos" type="text" required class="input-field py-2 text-xs uppercase" placeholder="Ex: A, B, C, J">
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Apto Mínimo</label>
+                                <input id="master-condo-min" type="number" class="input-field py-2 text-xs" placeholder="11">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Apto Máximo</label>
+                                <input id="master-condo-max" type="number" class="input-field py-2 text-xs" placeholder="200">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Terminação (Opcional)</label>
+                                <input id="master-condo-term" type="number" class="input-field py-2 text-xs" placeholder="Ex: 1 (Para finais 1)">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-red-600 text-white font-black uppercase text-[10px] py-3 rounded-xl hover:bg-red-700 transition-colors shadow-sm">
+                            <i data-lucide="database" class="w-3 h-3 inline pb-0.5"></i> Gravar Regras do Condomínio
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                        <div class="bg-slate-100 p-2 rounded-lg text-slate-600"><i data-lucide="settings" class="w-4 h-4"></i></div>
+                        <h3 class="font-black text-slate-800 uppercase text-xs">Gestão de Dados por Condomínio</h3>
+                    </div>
+
+                    <p class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Selecione o Condomínio Alvo</p>
+                    <select id="master-select-condo" onchange="window.carregarDadosMaster(this.value)" class="input-field mb-4 bg-slate-50 cursor-pointer text-xs">
+                        <option value="">Selecione para carregar moradores...</option>
+                        <!-- Injetado via JS -->
+                    </select>
+
+                    <div id="master-data-area" class="hidden space-y-6">
+                        
+                        <!-- Cadastro de Moradores Master -->
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                            <h4 class="text-[10px] font-black text-slate-700 uppercase mb-3"><i data-lucide="users" class="w-3 h-3 inline pb-0.5"></i> Inserir Morador no Condomínio</h4>
+                            <form onsubmit="cadastrarMorador(event, true)" class="space-y-3">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input id="master-morador-bloco" type="text" required class="input-field py-2 text-xs uppercase" placeholder="Bloco">
+                                    <input id="master-morador-apto" type="number" required class="input-field py-2 text-xs" placeholder="Apto">
+                                </div>
+                                <input id="master-morador-nome" type="text" required class="input-field py-2 text-xs" placeholder="Nome Completo">
+                                <button type="submit" class="w-full bg-slate-800 text-white font-black uppercase text-[10px] py-2.5 rounded-xl hover:bg-slate-900 transition-colors">
+                                    Salvar Morador
+                                </button>
+                            </form>
+
+                            <div class="mt-4 pt-4 border-t border-slate-200">
+                                <h4 class="text-[9px] font-black text-slate-500 uppercase mb-2">Moradores Cadastrados (<span id="master-count-moradores">0</span>)</h4>
+                                <div class="relative mb-2">
+                                    <i data-lucide="search" class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3"></i>
+                                    <input type="text" placeholder="Buscar..." oninput="filtrarMoradoresMaster(this.value)" class="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-200 text-[10px] outline-none">
+                                </div>
+                                <div id="lista-moradores-master" class="max-h-40 overflow-y-auto no-scrollbar space-y-1 bg-white border border-slate-100 rounded-lg p-1.5">
+                                    <!-- Renderizado via JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cadastro de Funcionários (Aviso) -->
+                        <div class="bg-orange-50 p-4 rounded-2xl border border-orange-200 text-center">
+                            <i data-lucide="shield-alert" class="w-6 h-6 text-orange-500 mx-auto mb-2"></i>
+                            <h4 class="text-[10px] font-black text-orange-800 uppercase mb-1">Acessos de Funcionários</h4>
+                            <p class="text-[10px] text-orange-700 font-medium leading-tight">
+                                Para que um funcionário ou admin local entre no sistema, você deve criar o e-mail dele diretamente no <b>Console de Autenticação do Firebase</b>.
+                                <br><br>
+                                <b>Regras de E-mail:</b><br>
+                                • Portaria: <code>qualquer_nome@<b>dominio</b>.com</code><br>
+                                • Admin Local: <code>admin_nome@<b>dominio</b>.com</code><br>
+                                • Mensageria: <code>mensageria_nome@<b>dominio</b>.com</code>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
         </main>
     </div>
 
@@ -556,8 +708,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // IMPORTADO O getDoc PARA O PILAR 2 (SaaS)
-        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
@@ -587,7 +738,7 @@
         
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'portaria-trackeasy';
         
-        // PILAR 2: A variável global original removida. Vamos usar 'window.encomendasRefAtiva' dinamicamente.
+        // Variável global para apontar para a coleção do condomínio logado
         window.encomendasRefAtiva = null; 
         
         const loginOverlay = document.getElementById('login-overlay');
@@ -595,26 +746,6 @@
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
         const btnLogin = document.getElementById('btn-login');
-
-        // LÓGICA DO DRAG AND DROP (Arrastar Fotos)
-        const dropZone = document.getElementById('drop-zone');
-        const dropOverlay = document.getElementById('drop-overlay');
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropOverlay.classList.remove('hidden');
-        });
-        dropZone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            dropOverlay.classList.add('hidden');
-        });
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropOverlay.classList.add('hidden');
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                window.processarFoto(e.dataTransfer.files[0], true);
-            }
-        });
 
         // LÓGICA DA ASSINATURA (CANVAS)
         const canvas = document.getElementById('canvas-assinatura');
@@ -631,6 +762,7 @@
                 ctx.strokeStyle = '#0f172a'; // Cor escura (slate-900)
             }
         }
+        
         // Listener ajustado no resize da janela
         window.addEventListener('resize', resizeCanvas);
 
@@ -669,10 +801,30 @@
             hasSignature = false;
         };
 
+        // LÓGICA DO DRAG AND DROP (Arrastar Fotos)
+        const dropZone = document.getElementById('drop-zone');
+        const dropOverlay = document.getElementById('drop-overlay');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropOverlay.classList.remove('hidden');
+        });
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropOverlay.classList.add('hidden');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropOverlay.classList.add('hidden');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                window.processarFoto(e.dataTransfer.files[0], true);
+            }
+        });
+
         // LÓGICA DO SCANNER DE CÓDIGO DE BARRAS
         let html5QrCode = null;
 
-        // NOVO: Extração Inteligente de Dados da Etiqueta
+        // Extração Inteligente de Dados da Etiqueta
         window.parseBarcodeData = (text) => {
             // Retorna o texto original como NF, e tenta extrair outras coisas
             let data = { nf: text, empresa: "", unidade: "" };
@@ -707,7 +859,7 @@
                     fps: 10,
                     qrbox: { width: 250, height: 150 }
                 },
-                (decodedText, decodedResult) => {
+                (decodedText) => {
                     // Ao ler com sucesso, aplica a inteligência de extração
                     const extraido = window.parseBarcodeData(decodedText);
                     
@@ -794,17 +946,22 @@
         window.currentWhatsAppMsg = ""; 
         window.pendingConfirmationId = null;
         window.pendingConfirmationType = null;
+        
         window.isAdmin = false; // Controle de acesso do Painel Admin
         window.isMensageria = false; // Controle de acesso para registrar na Mensageria
-        window.nomeUsuarioLogado = "Colaborador"; // Armazena o nome extraído do email
+        window.isMaster = false; // Controle de acesso do Painel Master
+        window.nomeUsuarioLogado = "Colaborador"; 
         
-        // --- PILAR 2: ESTADO SaaS ---
+        // ESTADO SaaS e MORADORES
         window.condominioLogado = { id: 'default', nome: 'Condomínio (Produção)' };
-        window.regrasCondominio = null; // Será carregado do Firestore
+        window.regrasCondominio = null; 
+        window.bancoMoradoresFake = {}; // Será preenchido pelo Firestore
+        window.listaMoradoresBD = []; // Usado para gerenciar na aba admin/master
 
         let unsubscribeSnapshot = null;
+        let unsubscribeMoradores = null;
 
-        // --- PILAR 2: CARREGAR REGRAS DINÂMICAS DO CONDOMÍNIO ---
+        // CARREGAR REGRAS DINÂMICAS DO CONDOMÍNIO
         window.carregarRegrasSaaS = async (tenantId) => {
             try {
                 const configRef = doc(dbFS, 'artifacts', appId, 'public', 'data', 'condominios', tenantId);
@@ -814,93 +971,132 @@
                     window.regrasCondominio = docSnap.data();
                     window.condominioLogado = { id: tenantId, nome: window.regrasCondominio.nome || tenantId };
                 } else {
-                    // FALLBACK PILAR 1: Se não houver configuração para o domínio logado (ex: portaria@condominio.com),
-                    // força o carregamento das regras originais rígidas que já existiam, para não quebrar a produção.
+                    // Fallback para produção atual
                     window.condominioLogado = { id: 'default', nome: 'Condomínio (Produção)' };
                     window.regrasCondominio = {
                         blocosPermitidos: ['J', 'P'],
                         aptoMin: 11,
                         aptoMax: 181,
-                        terminacaoObrigatoria: 1 // n % 10 === 1
+                        terminacaoObrigatoria: 1 
                     };
                 }
             } catch(e) {
                 console.error("Erro ao carregar regras SaaS", e);
-                // Fallback seguro em caso de indisponibilidade
                 window.condominioLogado = { id: 'default', nome: 'Condomínio (Offline)' };
                 window.regrasCondominio = { blocosPermitidos: ['J', 'P'], aptoMin: 11, aptoMax: 181, terminacaoObrigatoria: 1 };
             }
         };
 
+        // Ouvinte de Autenticação Firebase
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 loginOverlay.classList.add('hidden');
                 appContent.classList.remove('hidden');
                 
-                // CHECAGEM DE ADMIN E EXTRAÇÃO INTELIGENTE DE NOME
                 const emailStr = user.email ? user.email.toLowerCase() : '';
-                window.isAdmin = emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin');
-                window.isMensageria = window.isAdmin || emailStr.includes('mensageria'); // Admins ou emails com 'mensageria' têm acesso duplo
+                
+                // DETECÇÃO DE PERFIS
+                window.isMaster = emailStr.includes('master@') || emailStr.includes('trackeasy');
+                window.isAdmin = window.isMaster || emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin');
+                window.isMensageria = window.isAdmin || emailStr.includes('mensageria');
                 
                 // Extrai o nome antes do @ e formata (ex: joao.silva@ -> Joao Silva)
                 const prefix = emailStr.split('@')[0];
                 window.nomeUsuarioLogado = prefix.split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 
-                // Preenche automaticamente o campo recebedor no formulário
+                // Preenche automaticamente o campo recebedor
                 const recInput = document.getElementById('input-recebedor');
                 if (recInput) recInput.value = window.nomeUsuarioLogado;
                 
+                // Controle de Abas
                 if (window.isAdmin) {
                     document.getElementById('tab-a').classList.remove('hidden');
                 } else {
                     document.getElementById('tab-a').classList.add('hidden');
                 }
 
-                // --- INÍCIO PILAR 2 (SaaS) ---
+                if (window.isMaster) {
+                    document.getElementById('tab-master').classList.remove('hidden');
+                } else {
+                    document.getElementById('tab-master').classList.add('hidden');
+                }
+
+                // Identifica o Condomínio pelo domínio do email
                 const domainPart = emailStr.split('@')[1] || '';
                 const tenantId = domainPart.split('.')[0] || 'default';
 
-                // Carrega as regras dinâmicas ou aplica o Fallback do Pilar 1
+                // Carrega as regras e configurações
                 await window.carregarRegrasSaaS(tenantId);
 
-                // Atualiza o Cabeçalho com o nome correto do Condomínio
                 const headerCondName = document.getElementById('nome-condominio-header');
                 if (headerCondName) headerCondName.innerText = window.condominioLogado.nome;
 
-                // Define a coleção correta (para proteger os dados do Pilar 1, se for 'default', mantém o nome clássico)
                 const collectionName = window.condominioLogado.id === 'default' ? 'encomendas' : `encomendas_${window.condominioLogado.id}`;
                 window.encomendasRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', collectionName);
-                // --- FIM PILAR 2 ---
 
+                // OUVINTE PARA A BASE DE DADOS DE MORADORES
+                if (unsubscribeMoradores) unsubscribeMoradores();
+                const moradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${window.condominioLogado.id}`);
+                
+                unsubscribeMoradores = onSnapshot(moradoresRef, (snap) => {
+                    window.bancoMoradoresFake = {};
+                    window.listaMoradoresBD = [];
+                    const datalist = document.getElementById('lista-moradores');
+                    datalist.innerHTML = '';
+                    
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const key = `${data.bloco}-${data.apto}`;
+                        window.bancoMoradoresFake[key] = data.nome;
+                        datalist.innerHTML += `<option value="${data.nome}"></option>`;
+                        window.listaMoradoresBD.push({id: doc.id, ...data});
+                    });
+                    
+                    if(window.abaAtiva === 'admin') window.renderAdminMoradores();
+                });
+
+                // OUVINTE PARA AS ENCOMENDAS
                 if (unsubscribeSnapshot) unsubscribeSnapshot();
-
-                // Monitorando alterações na coleção ATIVA do condomínio logado
                 unsubscribeSnapshot = onSnapshot(window.encomendasRefAtiva, { includeMetadataChanges: true }, (snapshot) => {
                     const hasPendingWrites = snapshot.metadata.hasPendingWrites;
                     window.updateStatusUI(navigator.onLine, hasPendingWrites);
 
                     window.db = snapshot.docs.map(doc => {
                         const data = doc.data();
-                        data.isOffline = doc.metadata.hasPendingWrites; // Identificador crucial para agrupar offline
+                        data.isOffline = doc.metadata.hasPendingWrites; 
                         return data;
                     });
                     
-                    window.renderAdminStats(); // Atualiza stats em background se for admin
+                    window.renderAdminStats(); 
                     window.render(); 
                 }, (error) => {
                     console.error("Erro no Sync Firestore:", error);
                 });
 
+                // Se for Master, carrega todos os condomínios no Select do painel Master
+                if (window.isMaster) {
+                    const condosRef = collection(dbFS, 'artifacts', appId, 'public', 'data', 'condominios');
+                    onSnapshot(condosRef, (snap) => {
+                        const select = document.getElementById('master-select-condo');
+                        select.innerHTML = '<option value="">Selecione um condomínio...</option>';
+                        snap.forEach(doc => {
+                            const data = doc.data();
+                            select.innerHTML += `<option value="${doc.id}">${data.nome || doc.id}</option>`;
+                        });
+                    });
+                }
+
             } else {
                 loginOverlay.classList.remove('hidden');
                 appContent.classList.add('hidden');
                 if (unsubscribeSnapshot) unsubscribeSnapshot();
+                if (unsubscribeMoradores) unsubscribeMoradores();
                 window.db = [];
                 window.render();
             }
         });
 
-        // Nova Lógica de Login Desvinculada de Formulários para burlar o navegador
+        // Lógica de Login
         const executarLogin = async () => {
             const emailInput = document.getElementById('login-email');
             const passwordInput = document.getElementById('login-password');
@@ -913,9 +1109,7 @@
                 return;
             }
             
-            // Limpa o campo de senha instantaneamente
             passwordInput.value = '';
-            
             btnLogin.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Entrando...`;
             btnLogin.disabled = true;
             loginError.classList.add('hidden');
@@ -933,10 +1127,8 @@
             }
         };
 
-        // Escuta o clique no botão de entrar
         btnLogin.addEventListener('click', executarLogin);
 
-        // Permite entrar apertando a tecla "Enter"
         const handleEnterKey = (e) => {
             if (e.key === 'Enter') executarLogin();
         };
@@ -953,7 +1145,7 @@
             }
         };
 
-        // Função Flexível: Aceita Input Element ou File Direto (do Drop)
+        // FUNÇÕES DE FOTO E CAMERA
         window.processarFoto = (inputOrFile, isFile = false) => {
             let file = isFile ? inputOrFile : (inputOrFile.files && inputOrFile.files[0]);
             
@@ -989,7 +1181,6 @@
             document.getElementById('input-foto-gal').value = "";
         };
 
-        // VISUALIZADOR DE FOTOS (Lightbox)
         window.openPhotoViewer = (src) => {
             if (!src) return;
             document.getElementById('viewer-img').src = src;
@@ -998,7 +1189,7 @@
         
         window.closePhotoViewer = () => {
             document.getElementById('modal-photo-viewer').classList.add('hidden');
-            setTimeout(() => document.getElementById('viewer-img').src = "", 200); // Limpa após a transição
+            setTimeout(() => document.getElementById('viewer-img').src = "", 200); 
         };
 
         window.addPhotoToRecord = (id, input) => {
@@ -1033,6 +1224,7 @@
             } catch (e) { return null; }
         }
 
+        // FUNÇÕES DE WHATSAPP E NOTIFICAÇÃO
         window.enviarGrupoCondominio = async (id) => {
             const it = window.db.find(d => String(d.id) === String(id));
             if (!it) return;
@@ -1061,7 +1253,6 @@
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
-        // LÓGICA DO WHATSAPP MODAL
         window.closeWhatsAppModal = () => document.getElementById('modal-whatsapp').classList.add('hidden');
         
         window.openWhatsApp = (type) => {
@@ -1170,6 +1361,7 @@
             window.enviarWhatsAppMorador(msg);
         };
 
+        // FUNÇÕES DE EDIÇÃO E BAIXA
         window.openEditModal = (id) => {
             const it = window.db.find(d => String(d.id) === String(id));
             if (!it) return;
@@ -1186,17 +1378,21 @@
             document.getElementById('modal-edit').classList.remove('hidden');
         }
 
-        window.closeEditModal = () => document.getElementById('modal-edit').classList.add('hidden');
+        window.closeEditModal = () => {
+            document.getElementById('modal-edit').classList.add('hidden');
+        }
 
         window.saveEdit = async () => {
             const id = document.getElementById('edit-id').value;
-            const res = window.validarUnidade(document.getElementById('edit-unidade').value);
+            const res = window.validarUnidade(document.getElementById('edit-unidade').value, window.regrasCondominio);
             if (!res.ok) { alert(res.msg); return; }
+            
             const idx = window.db.findIndex(d => String(d.id) === String(id));
             
             if (idx !== -1) {
                 const item = window.db[idx];
-                item.apto = res.apto.toString(); item.bloco = res.bloco;
+                item.apto = res.apto.toString(); 
+                item.bloco = res.bloco;
                 item.morador = document.getElementById('edit-morador').value;
                 item.remetente = document.getElementById('edit-remetente').value;
                 item.empresa = document.getElementById('edit-empresa').value;
@@ -1219,15 +1415,13 @@
             window.baixaTargetOrigem = origem;
             
             document.getElementById('baixa-info-morador').innerText = `Bloco ${it.bloco} - Apto ${it.apto} (${it.morador})`;
-            // NOVO: Preenche automaticamente quem está entregando com o nome do usuário logado
             document.getElementById('baixa-entregador').value = window.nomeUsuarioLogado;
             document.getElementById('baixa-retirado').value = "";
             
-            // Controle de exibição da assinatura (Apenas na Mensageria)
             if (origem === 'mensageria') {
                 document.getElementById('area-assinatura').classList.remove('hidden');
-                setTimeout(() => window.limparAssinatura(), 50); // Limpa resíduos anteriores
-                setTimeout(() => resizeCanvas(), 100); // Força renderização correta
+                setTimeout(() => window.limparAssinatura(), 50); 
+                setTimeout(() => resizeCanvas(), 100); 
             } else {
                 document.getElementById('area-assinatura').classList.add('hidden');
             }
@@ -1250,13 +1444,12 @@
                 const retiradoPor = document.getElementById('baixa-retirado').value || "O Próprio";
                 
                 item.status = 'entregue';
-                item.saida = new Date().toISOString(); // Hora que foi ENTREGUE AO MORADOR
+                item.saida = new Date().toISOString(); 
                 item.entreguePor = entregador;
                 item.retiradoPor = retiradoPor;
                 
                 if (window.baixaTargetOrigem === 'mensageria') {
                     item.destino = 'entregue_mensageria';
-                    // Salva a assinatura se existir algo desenhado
                     if (hasSignature) {
                         item.assinatura = canvas.toDataURL("image/png", 0.7);
                     }
@@ -1279,8 +1472,8 @@
                     
                     window.listaVisivel.forEach(item => {
                         item.status = 'entregue';
-                        item.dataMensageria = now; // Guarda a hora que foi pra mensageria
-                        item.saida = now; // Fallback para compatibilidade de ordenação
+                        item.dataMensageria = now; 
+                        item.saida = now; 
                         item.destino = 'mensageria';
                         
                         const ref = doc(window.encomendasRefAtiva, String(item.id));
@@ -1295,30 +1488,26 @@
             }
         };
 
-        // --- PILAR 2: VALIDAÇÃO DINÂMICA SAAS ---
-        window.validarUnidade = (txt) => {
-            if(!window.regrasCondominio) return { ok: false, msg: "Aguarde..." };
+        // VALIDAÇÃO E REGISTRO DE ENCOMENDAS
+        window.validarUnidade = (txt, regras) => {
+            if(!regras) return { ok: false, msg: "Aguarde..." };
 
             const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
             const numMatch = clean.match(/\d+/); 
-            const blkMatch = clean.match(/[A-Z]+/); // Flexível para qualquer bloco (A, B, CD, J, etc)
+            const blkMatch = clean.match(/[A-Z]+/); 
             
             if (!numMatch || !blkMatch) return { ok: false, msg: "Bloco?" };
             
             const n = parseInt(numMatch[0]); 
             const b = blkMatch[0];
-            const regras = window.regrasCondominio;
 
-            // Valida Blocos Permitidos
             if (regras.blocosPermitidos && regras.blocosPermitidos.length > 0 && !regras.blocosPermitidos.includes(b)) {
                 return { ok: false, msg: "Inválido" };
             }
 
-            // Valida Range Numérico
             if (regras.aptoMin !== undefined && n < regras.aptoMin) return { ok: false, msg: "Inválida" };
             if (regras.aptoMax !== undefined && n > regras.aptoMax) return { ok: false, msg: "Inválida" };
             
-            // Valida Terminação (Ex: Finais 1)
             if (regras.terminacaoObrigatoria !== undefined && regras.terminacaoObrigatoria !== null) {
                 if (n % 10 !== regras.terminacaoObrigatoria) return { ok: false, msg: "Inválida" };
             }
@@ -1326,24 +1515,17 @@
             return { ok: true, apto: n, bloco: b, msg: `✓ ${b}-${n}` };
         }
 
-        // PREPARAÇÃO PARA O FUTURO BANCO DE DADOS DE MORADORES
-        window.bancoMoradoresFake = {
-            // "P-71": "João Silva", // Exemplo de como funcionará a injeção do banco futuramente
-        };
-
         window.validarInput = (el) => {
-            const res = window.validarUnidade(el.value);
+            const res = window.validarUnidade(el.value, window.regrasCondominio);
             const fb = document.getElementById('feedback-val');
             fb.innerText = res.msg;
             fb.className = `text-[10px] mt-1 ml-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
             document.getElementById('btn-gravar').disabled = !res.ok;
 
-            // Lógica Inteligente: Se unidade válida, checa banco de moradores
             if (res.ok) {
                 const key = `${res.bloco}-${res.apto}`;
                 if (window.bancoMoradoresFake[key]) {
                     const moradorInput = document.getElementById('input-morador');
-                    // Só autocompleta se o porteiro ainda não digitou nada
                     if (!moradorInput.value || moradorInput.value.trim() === "") { 
                         moradorInput.value = window.bancoMoradoresFake[key];
                     }
@@ -1351,10 +1533,9 @@
             }
         }
 
-        // LÓGICA DE SALVAMENTO IMEDIATO SEM TRAVAR BOTÃO (OFFLINE FRIENDLY)
         window.handleRegistrar = (e) => {
             e.preventDefault();
-            const res = window.validarUnidade(document.getElementById('input-unidade').value);
+            const res = window.validarUnidade(document.getElementById('input-unidade').value, window.regrasCondominio);
             if (!res.ok) return;
 
             const now = new Date();
@@ -1380,11 +1561,8 @@
                 notificadoPortariaMorador: false, notificadoMensageria: false
             };
             
-            // Dispara o salvamento pro firebase (ele gerencia o offline sozinho)
-            // Aguarda a confirmação da API antes de seguir para o compartilhamento
             setDoc(doc(window.encomendasRefAtiva, nid), novoItem)
                 .then(() => {
-                    // Após confirmado o salvamento na base local/online, dispara o fluxo de aviso
                     if(!isMensageria) window.enviarGrupoCondominio(nid);
                 })
                 .catch(err => {
@@ -1392,19 +1570,15 @@
                     alert("Não foi possível salvar o registro na nuvem. Tente novamente em alguns instantes.");
                 });
 
-            // Reseta toda a UI instantaneamente permitindo cadastrar o próximo sem travar
             document.getElementById('form-main').reset();
-            window.removerFotoRegistro(); // Usa a função de remover foto para garantir que oculta a div da foto e mostra os botões
+            window.removerFotoRegistro(); 
             document.getElementById('feedback-val').innerText = 'Pendente';
             document.getElementById('feedback-val').className = 'text-[9px] mt-1 ml-1 font-bold text-slate-400';
-
-            // Devolve o nome do porteiro para o campo automaticamente para o próximo registro
             document.getElementById('input-recebedor').value = window.nomeUsuarioLogado;
-            
             document.getElementById('btn-gravar').disabled = true;
         }
 
-        // --- NOVA LÓGICA DE AUDITORIA DE EQUIPE E EXPORTAÇÃO ---
+        // FUNÇÕES DO PAINEL ADMIN (Gestão e Estatísticas)
         window.renderAdminStats = () => {
             if(!window.isAdmin) return;
             
@@ -1415,14 +1589,11 @@
             let pendentesPortaria = 0;
             let pendentesMensageria = 0;
             
-            // Coletar nomes únicos de funcionários para o Dropdown
             const colaboradores = new Set();
 
             window.db.forEach(it => {
-                // Cálculo mês
                 if(it.data && it.data.includes(mesAtual)) recebidosMes += it.qtd;
                 
-                // Média de tempo
                 if(it.saida && it.destino === 'entregue_mensageria' && it.dataMensageria) {
                     const hSaida = new Date(it.saida).getTime();
                     const hEntrada = new Date(it.dataMensageria).getTime();
@@ -1430,23 +1601,19 @@
                     countEntregues++;
                 }
 
-                // Cálculo Pendentes Exatos
                 if (it.status === 'pendente') pendentesPortaria++;
                 if (it.status === 'entregue' && it.destino === 'mensageria') pendentesMensageria++;
 
-                // Adiciona ao Set de colaboradores
                 if (it.recebedor) colaboradores.add(it.recebedor);
                 if (it.entreguePor) colaboradores.add(it.entreguePor);
             });
 
-            // Atualiza Dashboard Global
             document.getElementById('adm-total-mes').innerText = recebidosMes;
             const media = countEntregues > 0 ? (somaHoras / countEntregues).toFixed(1) : '--';
             document.getElementById('adm-tempo-medio').innerText = `${media} h`;
             document.getElementById('adm-pendentes-portaria').innerText = pendentesPortaria;
             document.getElementById('adm-pendentes-mensageria').innerText = pendentesMensageria;
 
-            // Atualiza Dropdown de Colaboradores de forma inteligente
             const selectColab = document.getElementById('adm-colaborador-select');
             const selecaoAtual = selectColab.value;
             selectColab.innerHTML = '<option value="">Selecione um colaborador...</option>';
@@ -1457,12 +1624,10 @@
                 }
             });
 
-            // Mantém a seleção anterior se ainda existir
             if (selecaoAtual && colaboradores.has(selecaoAtual)) {
                 selectColab.value = selecaoAtual;
             }
 
-            // Atualiza a vista específica se alguém já estiver selecionado
             window.renderEmployeeStats();
         };
 
@@ -1484,11 +1649,9 @@
             let histItems = [];
 
             window.db.forEach(it => {
-                // Checa recebimentos
                 if (it.recebedor === empName) {
                     recebidasCount += it.qtd;
                     
-                    // Converte a data para timestamp para ordenação
                     let timestamp = 0;
                     if (it.data) {
                         const p = it.data.split('/');
@@ -1506,7 +1669,6 @@
                     });
                 }
 
-                // Checa Entregas finais ao morador
                 if (it.entreguePor === empName && (it.destino === 'morador' || it.destino === 'entregue_mensageria')) {
                     entreguesCount++;
                     const timestamp = it.saida ? new Date(it.saida).getTime() : 0;
@@ -1522,11 +1684,9 @@
                 }
             });
 
-            // Atualiza os contadores em tela
             document.getElementById('adm-colab-recebidas').innerText = recebidasCount;
             document.getElementById('adm-colab-entregues').innerText = entreguesCount;
 
-            // Ordena o histórico do mais recente para o mais antigo (Mostra os 15 mais recentes)
             histItems.sort((a, b) => b.time - a.time);
             const topHistory = histItems.slice(0, 15);
 
@@ -1546,32 +1706,43 @@
             }
         };
 
+        // CONTROLE DE NAVEGAÇÃO E ABAS
         window.switchTab = (t) => {
-            window.abaAtiva = t; window.expandidoKey = null; window.blocoFiltro = '';
+            window.abaAtiva = t; 
+            window.expandidoKey = null; 
+            window.blocoFiltro = '';
             
             const ativo = "bg-white text-blue-600 shadow-sm";
             const inativo = "text-slate-500 hover:bg-slate-200";
             const admAtivo = "bg-purple-600 text-white shadow-sm";
             const admInativo = "text-purple-600 hover:bg-purple-100";
+            const masterAtivo = "bg-red-600 text-white shadow-sm";
+            const masterInativo = "text-red-600 hover:bg-red-100";
             
             document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='pendentes'?ativo:inativo}`;
             document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='mensageria'?ativo:inativo}`;
             document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='entregues'?ativo:inativo}`;
             document.getElementById('tab-a').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='admin'?admAtivo:admInativo} ${window.isAdmin?'':'hidden'}`;
+            document.getElementById('tab-master').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='master'?masterAtivo:masterInativo} ${window.isMaster?'':'hidden'}`;
 
-            // Controle de Telas (Operacional vs Admin)
             if (t === 'admin') {
                 document.getElementById('area-operacional').style.display = 'none';
+                document.getElementById('area-master').style.display = 'none';
                 document.getElementById('area-admin').style.display = 'block';
                 window.renderAdminStats();
+                window.renderAdminMoradores();
+            } else if (t === 'master') {
+                document.getElementById('area-operacional').style.display = 'none';
+                document.getElementById('area-admin').style.display = 'none';
+                document.getElementById('area-master').style.display = 'block';
             } else {
                 document.getElementById('area-operacional').style.display = 'block';
                 document.getElementById('area-admin').style.display = 'none';
+                document.getElementById('area-master').style.display = 'none';
                 
-                // NOVO: Lógica restrita para exibir o formulário de registro
                 let showRegistro = false;
                 if (t === 'pendentes') showRegistro = true;
-                if (t === 'mensageria' && window.isMensageria) showRegistro = true; // Só mostra na mensageria se for o usuário mensageria ou admin
+                if (t === 'mensageria' && window.isMensageria) showRegistro = true; 
                 
                 document.getElementById('area-registro').style.display = showRegistro ? 'block' : 'none';
                 
@@ -1595,39 +1766,35 @@
             if (idx !== -1) {
                 const item = window.db[idx];
                 item.status = 'entregue';
-                item.dataMensageria = new Date().toISOString(); // Hora que foi pra mensageria
-                item.saida = item.dataMensageria; // Fallback de ordenação
+                item.dataMensageria = new Date().toISOString();
+                item.saida = item.dataMensageria;
                 item.destino = 'mensageria';
                 setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
             }
         }
 
-        // Permite que uma encomenda que está na Mensageria volte para a Portaria,
-        // mantendo o histórico, mas voltando a aparecer na aba de Portaria.
         window.retornarParaPortaria = async (id) => {
             const idx = window.db.findIndex(d => String(d.id) === String(id));
             if (idx !== -1) {
                 const item = window.db[idx];
                 item.status = 'pendente';
                 item.destino = null;
-                // Mantém dataMensageria e saída para preservar o percurso completo
                 setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
             }
         }
 
-        window.excluirUm = async (id) => { 
-            if(confirm("Apagar permanentemente?")) { 
+        window.excluirUm = async (id) => {
+            if(confirm("Apagar permanentemente?")) {
                 deleteDoc(doc(window.encomendasRefAtiva, String(id))).catch(e => console.error(e));
-            } 
+            }
         }
 
         window.limparHistorico = async () => { 
-            if(confirm("Deseja realmente apagar APENAS o histórico de encomendas JÁ ENTREGUES AOS MORADORES?\n\n(Tudo que estiver aguardando na Portaria ou Mensageria SERÁ PRESERVADO para o próximo mês)")) { 
-                // Regra de segurança: Só exclui se a encomenda chegou ao destino final (morador).
+            if(confirm("Deseja realmente apagar o histórico de encomendas JÁ ENTREGUES?")) { 
                 const paraExcluir = window.db.filter(d => d.status === 'entregue' && (d.destino === 'morador' || d.destino === 'entregue_mensageria'));
                 
                 if (paraExcluir.length === 0) {
-                    alert("Não há histórico de entregas finalizadas para limpar no momento.");
+                    alert("Não há entregas finalizadas para limpar.");
                     return;
                 }
 
@@ -1638,18 +1805,16 @@
                 });
                 
                 batch.commit().then(() => {
-                    alert(`${paraExcluir.length} registros antigos foram apagados com sucesso!`);
+                    alert(`${paraExcluir.length} registros apagados com sucesso.`);
                 }).catch(e => console.error(e));
             } 
         }
 
-        // Função de Exportação em Excel (CSV)
+        // FUNÇÕES DE EXPORTAÇÃO E BACKUP
         window.exportarExcel = () => {
-            // Cabeçalhos das colunas
             let csv = 'Data Entrada;Hora Entrada;Bloco;Apartamento;Morador;Empresa;Remetente;Descricao;Qtd;NF/Doc;Recebedor (Portaria);Status;Data Saida/Mensageria;Quem Entregou;Quem Retirou\n';
             
             window.db.forEach(it => {
-                // Formatação das variáveis para limpar textos que possam ter ponto e vírgula e bugar o Excel
                 const safeStr = (str) => {
                     if (!str) return '';
                     return `"${String(str).replace(/"/g, '""').replace(/;/g, ',').replace(/\n/g, ' ')}"`;
@@ -1658,13 +1823,12 @@
                 const dataSaida = it.saida ? new Date(it.saida).toLocaleString('pt-PT') : '';
                 let statusStr = 'Pendente';
                 if (it.status === 'entregue') {
-                    statusStr = it.destino === 'mensageria' ? 'Aguardando na Mensageria' : 'Entregue ao Morador';
+                    statusStr = it.destino === 'mensageria' ? 'Aguardando Mensageria' : 'Entregue ao Morador';
                 }
 
                 csv += `${safeStr(it.data)};${safeStr(it.hora)};${safeStr(it.bloco)};${safeStr(it.apto)};${safeStr(it.morador)};${safeStr(it.empresa)};${safeStr(it.remetente)};${safeStr(it.descricao)};${safeStr(it.qtd)};${safeStr(it.nf)};${safeStr(it.recebedor)};${safeStr(statusStr)};${safeStr(dataSaida)};${safeStr(it.entreguePor)};${safeStr(it.retiradoPor)}\n`;
             });
 
-            // Adiciona o BOM para garantir que o Excel abra os acentos em português corretamente
             const blob = new Blob(["\ufeff", csv], {type: 'text/csv;charset=utf-8;'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1677,7 +1841,6 @@
             a.click();
         };
 
-        // Função de Backup JSON com data no nome
         window.exportarDados = () => { 
             const d = new Date();
             const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -1691,10 +1854,9 @@
             a.click(); 
         }
 
-        // Variável de estado local para manter os dados do backup em memória
+        // VISUALIZADOR DE BACKUP (JSON LOCAL)
         window.backupLocalData = [];
-
-        // Função responsável por renderizar o HTML da lista de backup (com ou sem filtro)
+        
         window.renderBackupViewer = (filtro = '') => {
             const viewer = document.getElementById('backup-viewer');
             const termo = filtro.toLowerCase().trim();
@@ -1714,7 +1876,6 @@
                     const data = it.data || 'Sem data';
                     const status = it.status || 'sem-status';
 
-                    // Monta percurso semelhante ao painel principal
                     let percursoHtml = '';
                     const temMensageria = !!it.dataMensageria;
                     const temSaidaFinal = !!it.saida;
@@ -1782,12 +1943,10 @@
             if(window.lucide) lucide.createIcons();
         };
 
-        // Função disparada ao digitar na busca do backup
         window.filtrarBackupLocal = (termo) => {
             window.renderBackupViewer(termo);
         };
 
-        // Visualizador Isolado de Backup JSON (não persiste nada no Firebase)
         window.visualizarBackupLocal = (input) => {
             if(input.files && input.files[0]) {
                 const r = new FileReader();
@@ -1800,10 +1959,9 @@
                             document.getElementById('backup-viewer').classList.remove('hidden');
                             document.getElementById('backup-search-container').classList.add('hidden');
                         } else {
-                            // Salva em memória e renderiza tudo
                             window.backupLocalData = jsonData;
                             document.getElementById('backup-search-container').classList.remove('hidden');
-                            document.getElementById('input-busca-backup').value = ''; // limpa busca anterior se houver
+                            document.getElementById('input-busca-backup').value = ''; 
                             window.renderBackupViewer('');
                         }
                     } catch (err) {
@@ -1816,7 +1974,7 @@
         };
 
         window.limparVisualizacaoBackup = () => {
-            window.backupLocalData = []; // Limpa da memória
+            window.backupLocalData = []; 
             
             const viewer = document.getElementById('backup-viewer');
             if (viewer) {
@@ -1830,15 +1988,14 @@
                 document.getElementById('input-busca-backup').value = '';
             }
 
-            // Reseta o input de arquivo para permitir selecionar o mesmo arquivo novamente
             const fileInput = document.getElementById('input-file-backup');
             if(fileInput) fileInput.value = '';
         };
 
         window.importarDados = async (input) => {
             if(input.files && input.files[0]) {
-                if(!confirm("⚠️ AVISO DE SEGURANÇA ⚠️\n\nImportar um arquivo JSON vai MESCLAR os dados antigos com os dados ATUAIS da portaria.\n\nSe você quer apenas LER os dados antigos, cancele esta ação e abra o arquivo CSV no Excel.\n\nDeseja mesmo importar no sistema?")) {
-                    input.value = ""; // Limpa a seleção
+                if(!confirm("⚠️ AVISO DE SEGURANÇA ⚠️\n\nImportar um arquivo JSON vai MESCLAR os dados antigos com os dados ATUAIS da portaria.\n\nDeseja mesmo importar no sistema?")) {
+                    input.value = "";
                     return;
                 }
 
@@ -1865,6 +2022,174 @@
             }
         }
 
+        // --- GESTÃO DE MORADORES (ADMIN) E CONDOMÍNIOS (MASTER) ---
+        window.renderAdminMoradores = (termo = '') => {
+            const container = document.getElementById('lista-moradores-admin');
+            if(!container) return;
+            
+            const txt = termo.toLowerCase().trim();
+            const filtrados = window.listaMoradoresBD.filter(m => {
+                if(!txt) return true;
+                return `${m.bloco} ${m.apto} ${m.nome}`.toLowerCase().includes(txt);
+            }).sort((a,b) => a.bloco.localeCompare(b.bloco) || a.apto - b.apto);
+
+            if(filtrados.length === 0) {
+                container.innerHTML = '<p class="text-[10px] text-slate-400 text-center font-bold uppercase p-2">Nenhum morador encontrado.</p>';
+                return;
+            }
+
+            container.innerHTML = filtrados.map(m => `
+                <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors">
+                    <div>
+                        <span class="text-[9px] font-black uppercase text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">Apto ${m.apto}${m.bloco}</span>
+                        <p class="text-[11px] font-bold text-slate-700 mt-1">${m.nome}</p>
+                    </div>
+                    <button onclick="excluirMoradorAdmin('${m.id}')" class="p-1.5 text-red-400 hover:bg-red-100 rounded-lg transition-colors" title="Remover Morador">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        };
+
+        window.filtrarMoradoresAdmin = (t) => window.renderAdminMoradores(t);
+
+        window.excluirMoradorAdmin = async (idMorador) => {
+            if(confirm("Remover este morador da base de dados? (Não afeta as encomendas antigas dele)")) {
+                const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${window.condominioLogado.id}`, idMorador);
+                deleteDoc(ref).catch(e => alert("Erro ao deletar"));
+            }
+        };
+
+        window.cadastrarMorador = async (e, isMasterPanel) => {
+            e.preventDefault();
+            const prefix = isMasterPanel ? 'master' : 'add';
+            const bloco = document.getElementById(`${prefix}-morador-bloco`).value.toUpperCase().trim();
+            const apto = parseInt(document.getElementById(`${prefix}-morador-apto`).value);
+            const nome = document.getElementById(`${prefix}-morador-nome`).value.trim();
+            
+            let tenantIdAlvo = window.condominioLogado.id;
+            let regrasAlvo = window.regrasCondominio;
+
+            if (isMasterPanel) {
+                tenantIdAlvo = document.getElementById('master-select-condo').value;
+                if (!tenantIdAlvo) { alert("Selecione um condomínio primeiro."); return; }
+            } else {
+                const res = window.validarUnidade(`${apto}${bloco}`, regrasAlvo);
+                if (!res.ok) { alert(`Apto/Bloco não permitidos nas regras: ${res.msg}`); return; }
+            }
+
+            const idDoc = `${bloco}-${apto}`; 
+            const moradorRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantIdAlvo}`, idDoc);
+
+            try {
+                await setDoc(moradorRef, { bloco, apto, nome });
+                document.getElementById(`${prefix}-morador-bloco`).value = '';
+                document.getElementById(`${prefix}-morador-apto`).value = '';
+                document.getElementById(`${prefix}-morador-nome`).value = '';
+                
+                if (isMasterPanel) {
+                    window.carregarDadosMaster(tenantIdAlvo);
+                }
+                alert("Morador salvo na base!");
+            } catch (err) {
+                alert("Erro ao salvar."); console.error(err);
+            }
+        };
+
+        // EXCLUSIVAS DO MASTER
+        window.cadastrarCondominio = async (e) => {
+            e.preventDefault();
+            const idDomain = document.getElementById('master-condo-id').value.trim().toLowerCase();
+            const nome = document.getElementById('master-condo-nome').value.trim();
+            const blocosStr = document.getElementById('master-condo-blocos').value.toUpperCase();
+            const min = document.getElementById('master-condo-min').value;
+            const max = document.getElementById('master-condo-max').value;
+            const term = document.getElementById('master-condo-term').value;
+
+            if (!idDomain) return;
+
+            const blocosPermitidos = blocosStr.split(',').map(b => b.trim()).filter(b => b);
+            
+            const novoConfig = {
+                nome: nome,
+                blocosPermitidos: blocosPermitidos
+            };
+            if(min) novoConfig.aptoMin = parseInt(min);
+            if(max) novoConfig.aptoMax = parseInt(max);
+            if(term) novoConfig.terminacaoObrigatoria = parseInt(term);
+
+            try {
+                const configRef = doc(dbFS, 'artifacts', appId, 'public', 'data', 'condominios', idDomain);
+                await setDoc(configRef, novoConfig);
+                alert(`Condomínio '${nome}' registrado com sucesso!`);
+                e.target.reset();
+            } catch(err) {
+                alert("Falha ao criar condomínio.");
+                console.error(err);
+            }
+        };
+
+        let unsubMasterMoradores = null;
+        window.listaMoradoresMasterLocal = []; 
+
+        window.carregarDadosMaster = (tenantId) => {
+            const dataArea = document.getElementById('master-data-area');
+            if (!tenantId) { 
+                dataArea.classList.add('hidden'); 
+                if(unsubMasterMoradores) unsubMasterMoradores(); 
+                return; 
+            }
+            
+            dataArea.classList.remove('hidden');
+            
+            if(unsubMasterMoradores) unsubMasterMoradores();
+            const moradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantId}`);
+            
+            unsubMasterMoradores = onSnapshot(moradoresRef, (snap) => {
+                window.listaMoradoresMasterLocal = [];
+                snap.forEach(doc => window.listaMoradoresMasterLocal.push({id: doc.id, ...doc.data()}));
+                document.getElementById('master-count-moradores').innerText = window.listaMoradoresMasterLocal.length;
+                window.renderMasterMoradores('');
+            });
+        };
+
+        window.renderMasterMoradores = (termo = '') => {
+            const container = document.getElementById('lista-moradores-master');
+            if(!container) return;
+            
+            const txt = termo.toLowerCase().trim();
+            const filtrados = window.listaMoradoresMasterLocal.filter(m => {
+                if(!txt) return true; 
+                return `${m.bloco} ${m.apto} ${m.nome}`.toLowerCase().includes(txt);
+            }).sort((a,b) => a.bloco.localeCompare(b.bloco) || a.apto - b.apto);
+
+            if(filtrados.length === 0) { 
+                container.innerHTML = '<p class="text-[9px] text-slate-400 text-center font-bold p-2">Vazio</p>'; 
+                return; 
+            }
+
+            container.innerHTML = filtrados.map(m => `
+                <div class="flex justify-between items-center p-1.5 hover:bg-slate-50 border-b border-slate-100 last:border-0">
+                    <p class="text-[10px] font-bold text-slate-700 uppercase"><span class="text-blue-500 mr-1">${m.apto}${m.bloco}</span> ${m.nome}</p>
+                    <button onclick="excluirMoradorMaster('${m.id}')" class="text-red-400 hover:text-red-600"><i data-lucide="x" class="w-3 h-3"></i></button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        };
+
+        window.filtrarMoradoresMaster = (t) => window.renderMasterMoradores(t);
+        
+        window.excluirMoradorMaster = async (idMorador) => {
+            const tenantIdAlvo = document.getElementById('master-select-condo').value;
+            if(!tenantIdAlvo) return;
+            if(confirm("Remover este morador?")) {
+                const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantIdAlvo}`, idMorador);
+                deleteDoc(ref).catch(e => alert("Erro"));
+            }
+        };
+
+        // --- RENDERIZAÇÃO DA UI PRINCIPAL ---
         window.createCardHTML = (g, key, badgesHist) => {
             const isExp = window.expandidoKey === key;
             return `
@@ -1884,13 +2209,12 @@
                     </div>
                     ${isExp ? `<div class="bg-slate-50 border-t border-slate-100 p-4 space-y-4">
                         ${g.itens.map(it => {
-                            
-                            // Lógica de tempo parado na mensageria e alertas
                             let itemAlerta = '';
                             if (window.abaAtiva === 'mensageria' && (it.dataMensageria || it.saida)) {
-                                const refDate = it.dataMensageria || it.saida;
-                                const msDiff = Date.now() - new Date(refDate).getTime();
+                                const refDate = it.dataMensageria || it.saida; 
+                                const msDiff = Date.now() - new Date(refDate).getTime(); 
                                 const daysDiff = Math.floor(msDiff / (1000 * 60 * 60 * 24));
+                                
                                 if (daysDiff >= 4) {
                                     itemAlerta = `<div class="mt-2 inline-block px-2 py-1.5 rounded-lg text-[10px] font-black uppercase bg-red-500 text-white animate-pulse shadow-sm border border-red-600 w-full text-center"><i data-lucide="alert-triangle" class="w-3 h-3 inline mr-1 pb-0.5"></i> Atrasado: ${daysDiff} dias na Mensageria</div>`;
                                 } else if (daysDiff > 0) {
@@ -1900,18 +2224,11 @@
                                 }
                             }
 
-                            // NOVO: Controle estrito de acesso para os botões de edição e exclusão
                             let canEditDelete = false;
-                            if (window.isAdmin) {
-                                canEditDelete = true;
-                            } else if (window.abaAtiva === 'entregues') {
-                                canEditDelete = false; // Apenas Admins podem apagar/editar no Histórico
-                            } else if (window.abaAtiva === 'mensageria') {
-                                canEditDelete = window.isMensageria; // Apenas Mensageria e Admin mexem aqui
-                            } else if (window.abaAtiva === 'pendentes') {
-                                // Porteiro só edita o que ele mesmo registrou, Mensageria/Admin editam tudo
-                                canEditDelete = window.isMensageria || (it.recebedor === window.nomeUsuarioLogado);
-                            }
+                            if (window.isAdmin) canEditDelete = true;
+                            else if (window.abaAtiva === 'entregues') canEditDelete = false; 
+                            else if (window.abaAtiva === 'mensageria') canEditDelete = window.isMensageria; 
+                            else if (window.abaAtiva === 'pendentes') canEditDelete = window.isMensageria || (it.recebedor === window.nomeUsuarioLogado);
 
                             return `
                             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm animate-fade-in relative overflow-hidden">
@@ -1932,9 +2249,7 @@
                                                 ${window.abaAtiva === 'pendentes' ? `
                                                     <button onclick="enviarGrupoCondominio('${it.id}')" class="p-1.5 text-white bg-emerald-500 rounded-lg shadow-sm" title="Grupo Administrativo"><i data-lucide="send" class="w-4 h-4"></i></button>
                                                     <button onclick="enviarAvisoMorador('${it.id}')" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador"><i data-lucide="bell" class="w-4 h-4"></i></button>
-                                                ` : `
-                                                    ${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria('${it.id}')" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador (Mensageria)"><i data-lucide="bell" class="w-4 h-4"></i></button>` : ''}
-                                                `}
+                                                ` : `${it.destino === 'mensageria' ? `<button onclick="enviarAvisoMensageria('${it.id}')" class="p-1.5 text-white bg-blue-500 rounded-lg shadow-sm" title="Avisar Morador (Mensageria)"><i data-lucide="bell" class="w-4 h-4"></i></button>` : ''}`}
                                                 ${canEditDelete ? `
                                                     <button onclick="openEditModal('${it.id}')" class="p-1.5 text-blue-400 bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                                                     <button onclick="excluirUm('${it.id}')" class="p-1.5 text-red-400 bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -2002,7 +2317,6 @@
             const activeClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-blue-600 text-white border-blue-600 shadow-md";
             const inactiveClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-white border-slate-200 text-slate-500 hover:bg-slate-50";
             
-            // --- PILAR 2: GERAR FILTROS RÁPIDOS DINAMICAMENTE BASEADOS NAS REGRAS ---
             const containerFiltros = document.getElementById('container-filtros-rapidos');
             if (containerFiltros) {
                 let htmlFiltros = `<button onclick="setFastFilter('')" class="${window.blocoFiltro === '' ? activeClasses : inactiveClasses}">Todos</button>`;
@@ -2024,11 +2338,11 @@
                 listaBase = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria');
             }
 
-            // BUSCA AVANÇADA POR DATAS
             window.listaVisivel = listaBase.filter(d => {
-                const dataEntrada = d.data || '';
-                const dataSaida = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : '';
+                const dataEntrada = d.data || ''; 
+                const dataSaida = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : ''; 
                 const dataMensag = d.dataMensageria ? new Date(d.dataMensageria).toLocaleDateString('pt-PT') : '';
+                
                 const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao} ${dataEntrada} ${dataSaida} ${dataMensag}`.toLowerCase();
                 
                 if(window.termoBusca && !t.includes(window.termoBusca)) return false;
@@ -2037,90 +2351,101 @@
             });
 
             const btnBulk = document.getElementById('btn-bulk-transfer');
-            if (window.abaAtiva === 'pendentes' && window.listaVisivel.length > 0) {
-                btnBulk.classList.remove('hidden');
-                document.getElementById('bulk-count').innerText = window.listaVisivel.length;
-            } else {
-                btnBulk.classList.add('hidden');
+            if (window.abaAtiva === 'pendentes' && window.listaVisivel.length > 0) { 
+                btnBulk.classList.remove('hidden'); 
+                document.getElementById('bulk-count').innerText = window.listaVisivel.length; 
+            } else { 
+                btnBulk.classList.add('hidden'); 
             }
 
             const btnRelatorio = document.getElementById('btn-relatorio-mensageria');
             if (window.abaAtiva === 'mensageria') {
                 btnRelatorio.classList.remove('hidden');
-            } else {
-                btnRelatorio.classList.add('hidden');
+            } else { 
+                btnRelatorio.classList.add('hidden'); 
             }
 
             document.getElementById('count-p').innerText = window.db.filter(d => d.status === 'pendente').reduce((a,b)=>a+b.qtd,0);
             document.getElementById('count-m').innerText = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria').length;
             document.getElementById('count-e').innerText = window.db.filter(d => d.status === 'entregue' && d.destino !== 'mensageria').length;
 
-            const container = document.getElementById('render-container');
+            const container = document.getElementById('render-container'); 
             container.innerHTML = '';
-
-            if (window.listaVisivel.length === 0) {
-                container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold text-xs uppercase">Nenhum Registro Encontrado</div>`;
-                return;
+            
+            if (window.listaVisivel.length === 0) { 
+                container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold text-xs uppercase">Nenhum Registro Encontrado</div>`; 
+                return; 
             }
 
-            // NOVA LÓGICA UNIVERSAL DE ORGANIZAÇÃO INTELIGENTE POR DATA + SEPARAÇÃO OFFLINE
             const historyData = {};
             
             window.listaVisivel.forEach(d => {
                 let dateStr, timestamp, typeStr;
-
+                
                 if (d.isOffline) {
-                    dateStr = '🔄 OFFLINE - AGUARDANDO SINCRONIZAÇÃO';
-                    timestamp = 9999999999999; // Joga sempre pro topo absoluto
+                    dateStr = '🔄 OFFLINE - AGUARDANDO SINCRONIZAÇÃO'; 
+                    timestamp = 9999999999999;
                     if (window.abaAtiva === 'entregues') {
                         typeStr = d.destino === 'entregue_mensageria' ? 'Mensageria' : 'Portaria';
                     } else if (window.abaAtiva === 'mensageria') {
-                        typeStr = 'Mensageria';
+                        typeStr = 'Mensageria'; 
                     } else {
                         typeStr = 'Portaria';
                     }
                 } else {
                     if (window.abaAtiva === 'entregues') {
-                        dateStr = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : 'Sem Data';
-                        timestamp = d.saida ? new Date(d.saida).setHours(0,0,0,0) : 0;
+                        dateStr = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : 'Sem Data'; 
+                        timestamp = d.saida ? new Date(d.saida).setHours(0,0,0,0) : 0; 
                         typeStr = d.destino === 'entregue_mensageria' ? 'Mensageria' : 'Portaria';
                     } else if (window.abaAtiva === 'mensageria') {
-                        const refDate = d.dataMensageria || d.saida;
-                        dateStr = refDate ? new Date(refDate).toLocaleDateString('pt-PT') : 'Sem Data';
-                        timestamp = refDate ? new Date(refDate).setHours(0,0,0,0) : 0;
+                        const refDate = d.dataMensageria || d.saida; 
+                        dateStr = refDate ? new Date(refDate).toLocaleDateString('pt-PT') : 'Sem Data'; 
+                        timestamp = refDate ? new Date(refDate).setHours(0,0,0,0) : 0; 
                         typeStr = 'Mensageria';
                     } else {
                         dateStr = d.data || 'Sem Data';
-                        if (d.data) {
-                            const parts = d.data.split('/');
+                        if (d.data) { 
+                            const parts = d.data.split('/'); 
                             if (parts.length === 3) {
-                                timestamp = new Date(parts[2], parts[1]-1, parts[0]).getTime();
-                            } else { timestamp = 0; }
-                        } else { timestamp = 0; }
+                                timestamp = new Date(parts[2], parts[1]-1, parts[0]).getTime(); 
+                            } else {
+                                timestamp = 0; 
+                            }
+                        } else {
+                            timestamp = 0; 
+                        }
                         typeStr = 'Portaria';
                     }
                 }
 
-                if (!historyData[dateStr]) historyData[dateStr] = { timestamp, Portaria: {}, Mensageria: {} };
+                if (!historyData[dateStr]) {
+                    historyData[dateStr] = { timestamp, Portaria: {}, Mensageria: {} };
+                }
                 
                 const k = `${d.bloco}-${d.apto}`;
-                if (!historyData[dateStr][typeStr][k]) {
-                    historyData[dateStr][typeStr][k] = { b: d.bloco, a: d.apto, itens: [], total: 0, morador: d.morador, statusNotificado: (window.abaAtiva === 'pendentes' ? d.notificadoPortariaMorador : d.notificadoMensageria) };
+                if (!historyData[dateStr][typeStr][k]) { 
+                    historyData[dateStr][typeStr][k] = { 
+                        b: d.bloco, 
+                        a: d.apto, 
+                        itens: [], 
+                        total: 0, 
+                        morador: d.morador, 
+                        statusNotificado: (window.abaAtiva === 'pendentes' ? d.notificadoPortariaMorador : d.notificadoMensageria) 
+                    }; 
                 }
-                historyData[dateStr][typeStr][k].itens.push(d);
+                
+                historyData[dateStr][typeStr][k].itens.push(d); 
                 historyData[dateStr][typeStr][k].total += d.qtd;
             });
 
             const sortedDates = Object.keys(historyData).sort((a, b) => historyData[b].timestamp - historyData[a].timestamp);
 
             sortedDates.forEach(date => {
-                const dateSection = document.createElement('div');
+                const dateSection = document.createElement('div'); 
                 dateSection.className = "mb-8";
                 
                 const isOfflineBucket = date === '🔄 OFFLINE - AGUARDANDO SINCRONIZAÇÃO';
-                const badgeStyle = isOfflineBucket 
-                    ? 'bg-orange-100 text-orange-600 border border-orange-200 animate-pulse' 
-                    : 'bg-slate-100 text-slate-500';
+                const badgeStyle = isOfflineBucket ? 'bg-orange-100 text-orange-600 border border-orange-200 animate-pulse' : 'bg-slate-100 text-slate-500';
 
                 dateSection.innerHTML = `
                     <div class="flex items-center gap-2 mb-4">
@@ -2134,64 +2459,66 @@
                 container.appendChild(dateSection);
 
                 ['Portaria', 'Mensageria'].forEach(type => {
-                    const typeGroups = historyData[date][type];
-                    if (!typeGroups) return;
+                    const typeGroups = historyData[date][type]; 
+                    if (!typeGroups) return; 
+                    
                     const typeKeys = Object.keys(typeGroups);
                     
                     if (typeKeys.length > 0) {
-                        const typeContainer = document.createElement('div');
+                        const typeContainer = document.createElement('div'); 
                         typeContainer.className = "mb-4";
                         
-                        let typeHeaderTitle = '';
-                        let color = '';
+                        let typeHeaderTitle = ''; 
+                        let color = ''; 
                         let icon = '';
 
-                        if (window.abaAtiva === 'entregues') {
-                            color = type === 'Portaria' ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-indigo-600 bg-indigo-50 border-indigo-100';
-                            icon = type === 'Portaria' ? 'building' : 'package-check';
-                            typeHeaderTitle = `Entregues via ${type}`;
-                        } else if (window.abaAtiva === 'pendentes') {
-                            color = 'text-blue-600 bg-blue-50 border-blue-100';
-                            icon = 'log-in';
-                            typeHeaderTitle = `Recebidas na Portaria`;
-                        } else if (window.abaAtiva === 'mensageria') {
-                            color = 'text-orange-600 bg-orange-50 border-orange-100';
-                            icon = 'package';
-                            typeHeaderTitle = `Aguardando na Mensageria`;
+                        if (window.abaAtiva === 'entregues') { 
+                            color = type === 'Portaria' ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-indigo-600 bg-indigo-50 border-indigo-100'; 
+                            icon = type === 'Portaria' ? 'building' : 'package-check'; 
+                            typeHeaderTitle = `Entregues via ${type}`; 
+                        } else if (window.abaAtiva === 'pendentes') { 
+                            color = 'text-blue-600 bg-blue-50 border-blue-100'; 
+                            icon = 'log-in'; 
+                            typeHeaderTitle = `Recebidas na Portaria`; 
+                        } else if (window.abaAtiva === 'mensageria') { 
+                            color = 'text-orange-600 bg-orange-50 border-orange-100'; 
+                            icon = 'package'; 
+                            typeHeaderTitle = `Aguardando na Mensageria`; 
                         }
                         
-                        const typeHeader = document.createElement('h4');
-                        typeHeader.className = `text-[10px] font-black uppercase mb-3 px-3 py-2 rounded-xl flex items-center gap-2 ${color} inline-block shadow-sm border`;
-                        typeHeader.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${typeHeaderTitle}`;
+                        const typeHeader = document.createElement('h4'); 
+                        typeHeader.className = `text-[10px] font-black uppercase mb-3 px-3 py-2 rounded-xl flex items-center gap-2 ${color} inline-block shadow-sm border`; 
+                        typeHeader.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${typeHeaderTitle}`; 
                         typeContainer.appendChild(typeHeader);
 
                         const filtrados = Object.values(typeGroups).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
                         
                         filtrados.forEach(g => {
-                            const key = `${date}-${type}-${g.b}-${g.a}`;
+                            const key = `${date}-${type}-${g.b}-${g.a}`; 
                             let badgesHist = '';
                             
-                            if (window.abaAtiva === 'entregues') {
-                                const badgeColor = type === 'Portaria' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600';
-                                badgesHist = `<span class="text-[8px] ${badgeColor} font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE (${type.toUpperCase()})</span>`;
+                            if (window.abaAtiva === 'entregues') { 
+                                const badgeColor = type === 'Portaria' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'; 
+                                badgesHist = `<span class="text-[8px] ${badgeColor} font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE (${type.toUpperCase()})</span>`; 
                             } else if (window.abaAtiva === 'mensageria') {
                                 badgesHist = `<span class="text-[8px] bg-orange-100 text-orange-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">NA MENSAGERIA</span>`;
-                                // Calcula se tem item atrasado para por no cabecalho do apartamento
-                                const itensAtrasados = g.itens.filter(it => {
-                                    const refDate = it.dataMensageria || it.saida;
-                                    if (!refDate) return false;
-                                    const msDiff = Date.now() - new Date(refDate).getTime();
-                                    return Math.floor(msDiff / (1000 * 60 * 60 * 24)) >= 4;
+                                
+                                const itensAtrasados = g.itens.filter(it => { 
+                                    const refDate = it.dataMensageria || it.saida; 
+                                    if (!refDate) return false; 
+                                    const msDiff = Date.now() - new Date(refDate).getTime(); 
+                                    return Math.floor(msDiff / (1000 * 60 * 60 * 24)) >= 4; 
                                 });
-                                if (itensAtrasados.length > 0) {
-                                    const maxDays = Math.max(...itensAtrasados.map(it => Math.floor((Date.now() - new Date(it.dataMensageria || it.saida).getTime()) / (1000 * 60 * 60 * 24))));
-                                    badgesHist += `<span class="text-[8px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-600 uppercase animate-pulse border border-red-200 shadow-sm ml-1">⚠️ ${maxDays} DIAS</span>`;
+                                
+                                if (itensAtrasados.length > 0) { 
+                                    const maxDays = Math.max(...itensAtrasados.map(it => Math.floor((Date.now() - new Date(it.dataMensageria || it.saida).getTime()) / (1000 * 60 * 60 * 24)))); 
+                                    badgesHist += `<span class="text-[8px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-600 uppercase animate-pulse border border-red-200 shadow-sm ml-1">⚠️ ${maxDays} DIAS</span>`; 
                                 }
                             }
 
-                            const htmlStr = window.createCardHTML(g, key, badgesHist);
-                            const div = document.createElement('div');
-                            div.innerHTML = htmlStr;
+                            const htmlStr = window.createCardHTML(g, key, badgesHist); 
+                            const div = document.createElement('div'); 
+                            div.innerHTML = htmlStr; 
                             typeContainer.appendChild(div.firstElementChild);
                         });
                         
