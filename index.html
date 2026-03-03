@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Control - TrackEasy</title>
+    <title>Portaria Control - TrackEasy SaaS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Scanner de Código de Barras -->
@@ -48,7 +48,6 @@
             <h2 class="text-xl font-black text-slate-800 text-center uppercase tracking-tight">Portaria Control</h2>
             <p class="text-[10px] font-bold text-slate-400 text-center uppercase mb-8 mt-1">Acesso ao Sistema</p>
             
-            <!-- Transformado de <form> para <div> para burlar o gestor de senhas do Google Chrome -->
             <div id="login-form" class="space-y-4">
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">E-mail de Acesso</label>
@@ -246,7 +245,10 @@
                     <div class="bg-blue-600 p-2 rounded-lg text-white">
                         <i data-lucide="package" class="w-5 h-5"></i>
                     </div>
-                    <h1 class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight hidden sm:block">Portaria Control</h1>
+                    <div class="hidden sm:block">
+                        <h1 class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight leading-none">Portaria Control</h1>
+                        <span id="nome-condominio-header" class="text-[10px] font-black uppercase text-slate-400 tracking-widest block mt-0.5">Carregando...</span>
+                    </div>
                     
                     <!-- INDICADOR DE STATUS ONLINE/OFFLINE/SYNC -->
                     <div id="sync-status" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 transition-colors">
@@ -406,11 +408,9 @@
                             class="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 bg-white shadow-sm outline-none font-medium text-sm">
                     </div>
 
-                    <!-- Botões de Filtro Rápido COM ANIMAÇÃO -->
-                    <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                        <button onclick="setFastFilter('')" id="ff-all" class="whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border">Todos</button>
-                        <button onclick="setFastFilter('J')" id="ff-j" class="whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border">Bloco J</button>
-                        <button onclick="setFastFilter('P')" id="ff-p" class="whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border">Bloco P</button>
+                    <!-- Botões de Filtro Rápido DINÂMICOS (Pilar 2 SaaS) -->
+                    <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar" id="container-filtros-rapidos">
+                        <!-- Injetado via JS -->
                     </div>
 
                     <!-- BOTÃO DE ENVIO EM LOTE PARA MENSAGERIA -->
@@ -510,6 +510,33 @@
                         <span class="text-[10px] font-black uppercase text-center mt-1 text-red-600">Limpar Mês Passado</span>
                     </button>
                 </div>
+
+                <!-- Visualizador isolado de Backup JSON (não persiste no Firebase) -->
+                <div class="mt-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="bg-slate-100 p-2 rounded-lg text-slate-600">
+                            <i data-lucide="file-search" class="w-4 h-4"></i>
+                        </div>
+                        <h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">Leitor de Backup (JSON Local)</h4>
+                    </div>
+                    <p class="text-[10px] text-slate-500 font-medium leading-relaxed">
+                        Faça upload de um arquivo <b>.json</b> de backup mensal para apenas <b>visualizar</b> os dados. 
+                        Nada será importado para a base em produção; ao fechar ou recarregar a página, tudo some automaticamente.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                        <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-[10px] font-black uppercase text-slate-700 hover:bg-slate-200 active:scale-95 transition-all">
+                            <i data-lucide="folder-open" class="w-4 h-4"></i>
+                            <span>Carregar Backup Local</span>
+                            <input type="file" class="hidden" accept=".json" onchange="visualizarBackupLocal(this)">
+                        </label>
+                        <button type="button" onclick="limparVisualizacaoBackup()" class="text-[10px] font-bold text-slate-400 hover:text-slate-700 uppercase">
+                            Limpar Visualização
+                        </button>
+                    </div>
+                    <div id="backup-viewer" class="mt-2 max-h-60 overflow-y-auto no-scrollbar bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-700 hidden">
+                        <!-- Conteúdo do backup local renderizado aqui -->
+                    </div>
+                </div>
                 <div class="bg-orange-50 p-4 rounded-xl border border-orange-200">
                     <p class="text-[10px] text-orange-700 font-medium text-center uppercase leading-relaxed"><i data-lucide="info" class="w-3 h-3 inline pb-0.5"></i> <b>Nota:</b> Limpar o histórico apaga apenas encomendas <b>entregues</b>. O que estiver pendente na portaria será protegido para o próximo mês.</p>
                 </div>
@@ -522,8 +549,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // SEGREDO DO OFFLINE: persistentLocalCache
-        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // IMPORTADO O getDoc PARA O PILAR 2 (SaaS)
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
@@ -552,7 +579,9 @@
         });
         
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'portaria-trackeasy';
-        const encomendasRef = collection(dbFS, 'artifacts', appId, 'public', 'data', 'encomendas');
+        
+        // PILAR 2: A variável global original removida. Vamos usar 'window.encomendasRefAtiva' dinamicamente.
+        window.encomendasRefAtiva = null; 
         
         const loginOverlay = document.getElementById('login-overlay');
         const appContent = document.getElementById('app-content');
@@ -649,8 +678,8 @@
             else if (upperText.includes("SHOPEE")) data.empresa = "Shopee";
             else if (upperText.includes("CORREIOS") || /^[A-Z]{2}\d{9}[A-Z]{2}$/.test(upperText)) data.empresa = "Correios";
 
-            // Tentativa de achar Unidade (Ex: 71P, 11J) - Números seguidos de J ou P
-            const unidadeMatch = upperText.match(/\b(\d{1,3}[JP])\b/);
+            // Tentativa de achar Unidade Genérica - Números seguidos de Letras
+            const unidadeMatch = upperText.match(/\b(\d{1,3}[A-Z]+)\b/);
             if (unidadeMatch) {
                 data.unidade = unidadeMatch[1];
             }
@@ -761,10 +790,42 @@
         window.isAdmin = false; // Controle de acesso do Painel Admin
         window.isMensageria = false; // Controle de acesso para registrar na Mensageria
         window.nomeUsuarioLogado = "Colaborador"; // Armazena o nome extraído do email
+        
+        // --- PILAR 2: ESTADO SaaS ---
+        window.condominioLogado = { id: 'default', nome: 'Condomínio (Produção)' };
+        window.regrasCondominio = null; // Será carregado do Firestore
 
         let unsubscribeSnapshot = null;
 
-        onAuthStateChanged(auth, (user) => {
+        // --- PILAR 2: CARREGAR REGRAS DINÂMICAS DO CONDOMÍNIO ---
+        window.carregarRegrasSaaS = async (tenantId) => {
+            try {
+                const configRef = doc(dbFS, 'artifacts', appId, 'public', 'data', 'condominios', tenantId);
+                const docSnap = await getDoc(configRef);
+
+                if (docSnap.exists()) {
+                    window.regrasCondominio = docSnap.data();
+                    window.condominioLogado = { id: tenantId, nome: window.regrasCondominio.nome || tenantId };
+                } else {
+                    // FALLBACK PILAR 1: Se não houver configuração para o domínio logado (ex: portaria@condominio.com),
+                    // força o carregamento das regras originais rígidas que já existiam, para não quebrar a produção.
+                    window.condominioLogado = { id: 'default', nome: 'Condomínio (Produção)' };
+                    window.regrasCondominio = {
+                        blocosPermitidos: ['J', 'P'],
+                        aptoMin: 11,
+                        aptoMax: 181,
+                        terminacaoObrigatoria: 1 // n % 10 === 1
+                    };
+                }
+            } catch(e) {
+                console.error("Erro ao carregar regras SaaS", e);
+                // Fallback seguro em caso de indisponibilidade
+                window.condominioLogado = { id: 'default', nome: 'Condomínio (Offline)' };
+                window.regrasCondominio = { blocosPermitidos: ['J', 'P'], aptoMin: 11, aptoMax: 181, terminacaoObrigatoria: 1 };
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 loginOverlay.classList.add('hidden');
                 appContent.classList.remove('hidden');
@@ -788,8 +849,26 @@
                     document.getElementById('tab-a').classList.add('hidden');
                 }
 
-                // Monitorando alterações identificando o que é OFFLINE (hasPendingWrites)
-                unsubscribeSnapshot = onSnapshot(encomendasRef, { includeMetadataChanges: true }, (snapshot) => {
+                // --- INÍCIO PILAR 2 (SaaS) ---
+                const domainPart = emailStr.split('@')[1] || '';
+                const tenantId = domainPart.split('.')[0] || 'default';
+
+                // Carrega as regras dinâmicas ou aplica o Fallback do Pilar 1
+                await window.carregarRegrasSaaS(tenantId);
+
+                // Atualiza o Cabeçalho com o nome correto do Condomínio
+                const headerCondName = document.getElementById('nome-condominio-header');
+                if (headerCondName) headerCondName.innerText = window.condominioLogado.nome;
+
+                // Define a coleção correta (para proteger os dados do Pilar 1, se for 'default', mantém o nome clássico)
+                const collectionName = window.condominioLogado.id === 'default' ? 'encomendas' : `encomendas_${window.condominioLogado.id}`;
+                window.encomendasRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', collectionName);
+                // --- FIM PILAR 2 ---
+
+                if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+                // Monitorando alterações na coleção ATIVA do condomínio logado
+                unsubscribeSnapshot = onSnapshot(window.encomendasRefAtiva, { includeMetadataChanges: true }, (snapshot) => {
                     const hasPendingWrites = snapshot.metadata.hasPendingWrites;
                     window.updateStatusUI(navigator.onLine, hasPendingWrites);
 
@@ -929,7 +1008,7 @@
                         const it = window.db.find(d => String(d.id) === String(id));
                         if (it) { 
                             it.foto = compressed; 
-                            setDoc(doc(encomendasRef, String(it.id)), it).catch(err => console.log(err)); 
+                            setDoc(doc(window.encomendasRefAtiva, String(it.id)), it).catch(err => console.log(err)); 
                         }
                     };
                     img.src = e.target.result;
@@ -1027,7 +1106,7 @@
                 } else if (window.pendingConfirmationType === 'mensageria') {
                     it.notificadoMensageria = true;
                 }
-                setDoc(doc(encomendasRef, String(it.id)), it).catch(e => console.error(e));
+                setDoc(doc(window.encomendasRefAtiva, String(it.id)), it).catch(e => console.error(e));
             }
             window.closeConfirmSentModal();
         };
@@ -1121,7 +1200,7 @@
                 const tv = document.getElementById('edit-tokens').value;
                 item.tokens = tv ? tv.split(',').map(s => s.trim()).filter(s => s !== '') : [];
                 
-                setDoc(doc(encomendasRef, String(item.id)), item).catch(e => console.error(e));
+                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
                 window.closeEditModal();
             }
         }
@@ -1178,7 +1257,7 @@
                     item.destino = 'morador';
                 }
                 
-                setDoc(doc(encomendasRef, String(item.id)), item).catch(e => console.error(e));
+                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
                 window.closeBaixaModal();
             }
         }
@@ -1197,7 +1276,7 @@
                         item.saida = now; // Fallback para compatibilidade de ordenação
                         item.destino = 'mensageria';
                         
-                        const ref = doc(encomendasRef, String(item.id));
+                        const ref = doc(window.encomendasRefAtiva, String(item.id));
                         batch.set(ref, item);
                     });
                     
@@ -1209,12 +1288,34 @@
             }
         };
 
+        // --- PILAR 2: VALIDAÇÃO DINÂMICA SAAS ---
         window.validarUnidade = (txt) => {
+            if(!window.regrasCondominio) return { ok: false, msg: "Aguarde..." };
+
             const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
-            const num = clean.match(/\d+/); const blk = clean.match(/[JP]/);
-            if (!num || !blk) return { ok: false, msg: "Bloco?" };
-            const n = parseInt(num[0]); const b = blk[0];
-            if (n < 11 || n > 181 || n % 10 !== 1) return { ok: false, msg: "Inválida" };
+            const numMatch = clean.match(/\d+/); 
+            const blkMatch = clean.match(/[A-Z]+/); // Flexível para qualquer bloco (A, B, CD, J, etc)
+            
+            if (!numMatch || !blkMatch) return { ok: false, msg: "Bloco?" };
+            
+            const n = parseInt(numMatch[0]); 
+            const b = blkMatch[0];
+            const regras = window.regrasCondominio;
+
+            // Valida Blocos Permitidos
+            if (regras.blocosPermitidos && regras.blocosPermitidos.length > 0 && !regras.blocosPermitidos.includes(b)) {
+                return { ok: false, msg: "Inválido" };
+            }
+
+            // Valida Range Numérico
+            if (regras.aptoMin !== undefined && n < regras.aptoMin) return { ok: false, msg: "Inválida" };
+            if (regras.aptoMax !== undefined && n > regras.aptoMax) return { ok: false, msg: "Inválida" };
+            
+            // Valida Terminação (Ex: Finais 1)
+            if (regras.terminacaoObrigatoria !== undefined && regras.terminacaoObrigatoria !== null) {
+                if (n % 10 !== regras.terminacaoObrigatoria) return { ok: false, msg: "Inválida" };
+            }
+
             return { ok: true, apto: n, bloco: b, msg: `✓ ${b}-${n}` };
         }
 
@@ -1272,22 +1373,28 @@
                 notificadoPortariaMorador: false, notificadoMensageria: false
             };
             
-            // Dispara o salvamento pro firebase (ele gerencia o offline sozinho) SEM AWAIT
-            setDoc(doc(encomendasRef, nid), novoItem).catch(err => console.error("Erro Background Sync", err));
+            // Dispara o salvamento pro firebase (ele gerencia o offline sozinho)
+            // Aguarda a confirmação da API antes de seguir para o compartilhamento
+            setDoc(doc(window.encomendasRefAtiva, nid), novoItem)
+                .then(() => {
+                    // Após confirmado o salvamento na base local/online, dispara o fluxo de aviso
+                    if(!isMensageria) window.enviarGrupoCondominio(nid);
+                })
+                .catch(err => {
+                    console.error("Erro Background Sync", err);
+                    alert("Não foi possível salvar o registro na nuvem. Tente novamente em alguns instantes.");
+                });
 
             // Reseta toda a UI instantaneamente permitindo cadastrar o próximo sem travar
             document.getElementById('form-main').reset();
             window.removerFotoRegistro(); // Usa a função de remover foto para garantir que oculta a div da foto e mostra os botões
             document.getElementById('feedback-val').innerText = 'Pendente';
             document.getElementById('feedback-val').className = 'text-[9px] mt-1 ml-1 font-bold text-slate-400';
-            
+
             // Devolve o nome do porteiro para o campo automaticamente para o próximo registro
             document.getElementById('input-recebedor').value = window.nomeUsuarioLogado;
             
             document.getElementById('btn-gravar').disabled = true;
-
-            // Se for mensageria direta, não avisa no grupo condominio, só morador depois
-            if(!isMensageria) window.enviarGrupoCondominio(nid);
         }
 
         // --- NOVA LÓGICA DE AUDITORIA DE EQUIPE E EXPORTAÇÃO ---
@@ -1484,13 +1591,26 @@
                 item.dataMensageria = new Date().toISOString(); // Hora que foi pra mensageria
                 item.saida = item.dataMensageria; // Fallback de ordenação
                 item.destino = 'mensageria';
-                setDoc(doc(encomendasRef, String(item.id)), item).catch(e => console.error(e));
+                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
+            }
+        }
+
+        // Permite que uma encomenda que está na Mensageria volte para a Portaria,
+        // mantendo o histórico, mas voltando a aparecer na aba de Portaria.
+        window.retornarParaPortaria = async (id) => {
+            const idx = window.db.findIndex(d => String(d.id) === String(id));
+            if (idx !== -1) {
+                const item = window.db[idx];
+                item.status = 'pendente';
+                item.destino = null;
+                // Mantém dataMensageria e saída para preservar o percurso completo
+                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
             }
         }
 
         window.excluirUm = async (id) => { 
             if(confirm("Apagar permanentemente?")) { 
-                deleteDoc(doc(encomendasRef, String(id))).catch(e => console.error(e));
+                deleteDoc(doc(window.encomendasRefAtiva, String(id))).catch(e => console.error(e));
             } 
         }
 
@@ -1506,7 +1626,7 @@
 
                 const batch = writeBatch(dbFS);
                 paraExcluir.forEach(item => {
-                    const ref = doc(encomendasRef, String(item.id));
+                    const ref = doc(window.encomendasRefAtiva, String(item.id));
                     batch.delete(ref);
                 });
                 
@@ -1564,6 +1684,107 @@
             a.click(); 
         }
 
+        // Visualizador Isolado de Backup JSON (não persiste nada no Firebase)
+        window.visualizarBackupLocal = (input) => {
+            if(input.files && input.files[0]) {
+                const r = new FileReader();
+                r.onload = (e) => {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+                        const viewer = document.getElementById('backup-viewer');
+                        
+                        if (!Array.isArray(jsonData) || jsonData.length === 0) {
+                            viewer.innerText = "Nenhum registro encontrado neste backup.";
+                        } else {
+                            // Renderização simples em lista, sem misturar com window.db
+                            viewer.innerHTML = jsonData.map((it, idx) => {
+                                const unidade = `${it.apto || ''}${it.bloco || ''}`.trim();
+                                const morador = it.morador || 'Morador';
+                                const data = it.data || 'Sem data';
+                                const status = it.status || 'sem-status';
+
+                                // Monta percurso semelhante ao painel principal
+                                let percursoHtml = '';
+                                const temMensageria = !!it.dataMensageria;
+                                const temSaidaFinal = !!it.saida;
+
+                                if (temMensageria) {
+                                    const dtMens = new Date(it.dataMensageria).toLocaleString('pt-PT');
+                                    percursoHtml += `
+                                        <p class="text-[9px] text-indigo-600 font-bold uppercase border-l-2 border-indigo-400 pl-2 mt-1">
+                                            1. Portaria ➔ Mensageria<br>
+                                            <span class="text-slate-700 text-[10px] font-black tracking-normal">${dtMens}</span>
+                                        </p>
+                                    `;
+                                }
+
+                                if (temSaidaFinal) {
+                                    const dtSaida = new Date(it.saida).toLocaleString('pt-PT');
+                                    if (it.destino === 'entregue_mensageria') {
+                                        percursoHtml += `
+                                            <p class="text-[9px] text-emerald-600 font-bold uppercase border-l-2 border-emerald-400 pl-2 mt-1">
+                                                ${temMensageria ? '2.' : '1.'} Mensageria ➔ Morador<br>
+                                                <span class="text-slate-700 text-[10px] font-black tracking-normal">${dtSaida}</span>
+                                            </p>
+                                        `;
+                                    } else if (it.destino === 'morador') {
+                                        percursoHtml += `
+                                            <p class="text-[9px] text-emerald-600 font-bold uppercase border-l-2 border-emerald-400 pl-2 mt-1">
+                                                1. Portaria ➔ Morador<br>
+                                                <span class="text-slate-700 text-[10px] font-black tracking-normal">${dtSaida}</span>
+                                            </p>
+                                        `;
+                                    }
+                                }
+
+                                if (it.entreguePor || it.retiradoPor) {
+                                    percursoHtml += `
+                                        <div class="bg-white mt-2 p-2.5 rounded-lg border border-slate-200 shadow-sm space-y-0.5">
+                                            ${it.entreguePor ? `<p class="text-[9px] text-slate-600 font-bold uppercase">Entregue por: <span class="text-slate-900 text-[10px]">${it.entreguePor}</span></p>` : ''}
+                                            ${it.retiradoPor ? `<p class="text-[9px] text-slate-600 font-bold uppercase">Retirado por: <span class="text-slate-900 text-[10px]">${it.retiradoPor}</span></p>` : ''}
+                                        </div>
+                                    `;
+                                }
+
+                                return `
+                                    <div class="mb-2 pb-2 border-b border-slate-200 last:border-b-0 last:pb-0">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-[10px] font-black text-slate-500 uppercase">#${idx + 1} • ${unidade}</span>
+                                            <span class="text-[9px] font-bold uppercase ${status === 'entregue' ? 'text-emerald-600' : 'text-slate-500'}">${status}</span>
+                                        </div>
+                                        <p class="text-[11px] font-semibold text-slate-800 mt-0.5">${morador}</p>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">${it.descricao || ''}</p>
+                                        <p class="text-[9px] text-slate-400 mt-0.5">${data} • NF: ${it.nf || 'S/N'}</p>
+                                        ${percursoHtml ? `
+                                            <div class="mt-2 pt-2 border-t border-slate-200 bg-slate-50 rounded-lg px-2 pb-2">
+                                                <p class="text-[9px] text-slate-500 font-black uppercase tracking-wide mb-1">
+                                                    Percurso da Encomenda
+                                                </p>
+                                                ${percursoHtml}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            }).join('');
+                        }
+                        viewer.classList.remove('hidden');
+                    } catch (err) {
+                        alert("Arquivo JSON inválido para visualização.");
+                        console.error(err);
+                    }
+                };
+                r.readAsText(input.files[0]);
+            }
+        };
+
+        window.limparVisualizacaoBackup = () => {
+            const viewer = document.getElementById('backup-viewer');
+            if (viewer) {
+                viewer.innerHTML = '';
+                viewer.classList.add('hidden');
+            }
+        };
+
         window.importarDados = async (input) => {
             if(input.files && input.files[0]) {
                 if(!confirm("⚠️ AVISO DE SEGURANÇA ⚠️\n\nImportar um arquivo JSON vai MESCLAR os dados antigos com os dados ATUAIS da portaria.\n\nSe você quer apenas LER os dados antigos, cancele esta ação e abra o arquivo CSV no Excel.\n\nDeseja mesmo importar no sistema?")) {
@@ -1579,7 +1800,7 @@
                         
                         let count = 0;
                         for(let i = 0; i < jsonData.length; i++) {
-                            const ref = doc(encomendasRef, String(jsonData[i].id));
+                            const ref = doc(window.encomendasRefAtiva, String(jsonData[i].id));
                             batch.set(ref, jsonData[i]);
                             count++;
                         }
@@ -1710,6 +1931,7 @@
                                 ${window.abaAtiva === 'mensageria' ? `
                                     <div class="mt-4 pt-3 border-t space-y-2 no-print">
                                         <button onclick="openBaixaModal('${it.id}', 'mensageria')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm active:scale-95 transition-all">Confirmar Entrega ao Morador</button>
+                                        <button onclick="retornarParaPortaria('${it.id}')" class="w-full bg-slate-700 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm active:scale-95 transition-all">Retornar para Portaria</button>
                                     </div>` : ''}
                             </div>
                         `;
@@ -1730,9 +1952,18 @@
             const activeClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-blue-600 text-white border-blue-600 shadow-md";
             const inactiveClasses = "whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all duration-300 ease-in-out border bg-white border-slate-200 text-slate-500 hover:bg-slate-50";
             
-            document.getElementById('ff-all').className = window.blocoFiltro === '' ? activeClasses : inactiveClasses;
-            document.getElementById('ff-j').className = window.blocoFiltro === 'J' ? activeClasses : inactiveClasses;
-            document.getElementById('ff-p').className = window.blocoFiltro === 'P' ? activeClasses : inactiveClasses;
+            // --- PILAR 2: GERAR FILTROS RÁPIDOS DINAMICAMENTE BASEADOS NAS REGRAS ---
+            const containerFiltros = document.getElementById('container-filtros-rapidos');
+            if (containerFiltros) {
+                let htmlFiltros = `<button onclick="setFastFilter('')" class="${window.blocoFiltro === '' ? activeClasses : inactiveClasses}">Todos</button>`;
+                
+                if (window.regrasCondominio && window.regrasCondominio.blocosPermitidos) {
+                    window.regrasCondominio.blocosPermitidos.forEach(b => {
+                        htmlFiltros += `<button onclick="setFastFilter('${b}')" class="${window.blocoFiltro === b ? activeClasses : inactiveClasses}">Bloco ${b}</button>`;
+                    });
+                }
+                containerFiltros.innerHTML = htmlFiltros;
+            }
             
             let listaBase = [];
             if (window.abaAtiva === 'pendentes') {
@@ -1925,4 +2156,3 @@
     </script>
 </body>
 </html>
-
