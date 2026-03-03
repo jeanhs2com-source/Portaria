@@ -464,7 +464,58 @@
                     </div>
                 </div>
 
-                <!-- NOVA SECÇÃO: CADASTRO DE MORADORES NO PAINEL ADMIN -->
+                <!-- NOVA SECÇÃO: CADASTRO DE FUNCIONÁRIOS (ADMIN) -->
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                        <div class="bg-indigo-100 p-2 rounded-lg text-indigo-600"><i data-lucide="user-cog" class="w-4 h-4"></i></div>
+                        <h3 class="font-black text-slate-800 uppercase text-xs">Gestão de Equipe e Turnos</h3>
+                    </div>
+                    
+                    <form onsubmit="cadastrarFuncionario(event, false)" class="space-y-3 mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-[9px] font-black uppercase text-slate-400 mb-2">Criar Novo Funcionário</p>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nome de Exibição</label>
+                            <input id="admin-func-nome" type="text" required class="input-field py-2 text-xs" placeholder="Ex: Porteiro João">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Email de Acesso</label>
+                                <input id="admin-func-email" type="email" required class="input-field py-2 text-xs" placeholder="joao@condominio.com">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Senha Segura</label>
+                                <input id="admin-func-senha" type="password" required class="input-field py-2 text-xs" placeholder="••••••••">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Função</label>
+                                <select id="admin-func-role" class="input-field py-2 text-xs cursor-pointer">
+                                    <option value="portaria">Portaria</option>
+                                    <option value="mensageria">Mensageria</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Turno Início</label>
+                                <input id="admin-func-inicio" type="time" required class="input-field py-2 text-xs" value="07:00">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Turno Fim</label>
+                                <input id="admin-func-fim" type="time" required class="input-field py-2 text-xs" value="19:00">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-black uppercase text-[10px] py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm">
+                            <i data-lucide="plus-circle" class="w-3 h-3 inline pb-0.5"></i> Criar Acesso e Regras
+                        </button>
+                    </form>
+
+                    <div id="lista-funcionarios-admin" class="max-h-60 overflow-y-auto no-scrollbar space-y-2 border border-slate-100 rounded-xl bg-white p-2">
+                        <!-- Renderizado via JS -->
+                    </div>
+                </div>
+
+                <!-- SECÇÃO: CADASTRO DE MORADORES NO PAINEL ADMIN -->
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
                     <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
                         <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i data-lucide="user-plus" class="w-4 h-4"></i></div>
@@ -543,7 +594,6 @@
                         <span class="text-[10px] font-black uppercase text-center mt-1">Backup do Sistema (JSON)</span>
                     </button>
                     
-                    <!-- Importação e Exclusão ficam mais discretas por segurança -->
                     <label class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all text-slate-700 cursor-pointer">
                         <div class="bg-slate-100 p-3 rounded-full text-slate-600"><i data-lucide="upload-cloud"></i></div>
                         <span class="text-[10px] font-black uppercase text-center mt-1">Restaurar JSON</span>
@@ -651,12 +701,37 @@
 
                     <p class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Selecione o Condomínio Alvo</p>
                     <select id="master-select-condo" onchange="window.carregarDadosMaster(this.value)" class="input-field mb-4 bg-slate-50 cursor-pointer text-xs">
-                        <option value="">Selecione para carregar moradores...</option>
+                        <option value="">Selecione para carregar dados...</option>
                         <!-- Injetado via JS -->
                     </select>
 
                     <div id="master-data-area" class="hidden space-y-6">
                         
+                        <!-- Cadastro de Funcionários Master -->
+                        <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                            <h4 class="text-[10px] font-black text-indigo-800 uppercase mb-3"><i data-lucide="user-cog" class="w-3 h-3 inline pb-0.5"></i> Gestão de Equipe e Turnos</h4>
+                            <form onsubmit="cadastrarFuncionario(event, true)" class="space-y-3 mb-3">
+                                <div><input id="master-func-nome" type="text" required class="input-field py-2 text-xs" placeholder="Nome de Exibição (Ex: Porteiro João)"></div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input id="master-func-email" type="email" required class="input-field py-2 text-xs" placeholder="Email de Acesso">
+                                    <input id="master-func-senha" type="password" required class="input-field py-2 text-xs" placeholder="Senha">
+                                </div>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <select id="master-func-role" class="input-field py-2 text-xs cursor-pointer">
+                                        <option value="portaria">Portaria</option><option value="mensageria">Mensageria</option><option value="admin">Administrador</option>
+                                    </select>
+                                    <input id="master-func-inicio" type="time" required class="input-field py-2 text-xs" title="Início do Turno" value="07:00">
+                                    <input id="master-func-fim" type="time" required class="input-field py-2 text-xs" title="Fim do Turno" value="19:00">
+                                </div>
+                                <button type="submit" class="w-full bg-indigo-600 text-white font-black uppercase text-[10px] py-2.5 rounded-xl hover:bg-indigo-700 transition-colors">
+                                    Criar Acesso de Funcionário
+                                </button>
+                            </form>
+                            <div id="lista-funcionarios-master" class="max-h-40 overflow-y-auto no-scrollbar space-y-1 bg-white border border-indigo-100 rounded-lg p-1.5">
+                                <!-- Renderizado via JS -->
+                            </div>
+                        </div>
+
                         <!-- Cadastro de Moradores Master -->
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                             <h4 class="text-[10px] font-black text-slate-700 uppercase mb-3"><i data-lucide="users" class="w-3 h-3 inline pb-0.5"></i> Inserir Morador no Condomínio</h4>
@@ -683,19 +758,6 @@
                             </div>
                         </div>
 
-                        <!-- Cadastro de Funcionários (Aviso) -->
-                        <div class="bg-orange-50 p-4 rounded-2xl border border-orange-200 text-center">
-                            <i data-lucide="shield-alert" class="w-6 h-6 text-orange-500 mx-auto mb-2"></i>
-                            <h4 class="text-[10px] font-black text-orange-800 uppercase mb-1">Acessos de Funcionários</h4>
-                            <p class="text-[10px] text-orange-700 font-medium leading-tight">
-                                Para que um funcionário ou admin local entre no sistema, você deve criar o e-mail dele diretamente no <b>Console de Autenticação do Firebase</b>.
-                                <br><br>
-                                <b>Regras de E-mail:</b><br>
-                                • Portaria: <code>qualquer_nome@<b>dominio</b>.com</code><br>
-                                • Admin Local: <code>admin_nome@<b>dominio</b>.com</code><br>
-                                • Mensageria: <code>mensageria_nome@<b>dominio</b>.com</code>
-                            </p>
-                        </div>
                     </div>
                 </div>
 
@@ -708,7 +770,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
@@ -730,15 +792,14 @@
         }
 
         const auth = getAuth(app);
-        
-        // Inicializando o Firestore COM cache local ativado para funcionar 100% offline
         const dbFS = initializeFirestore(app, {
             localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
         });
         
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'portaria-trackeasy';
+        // TRUQUE DE MESTRE: App Secundário para criar funcionários sem deslogar o Master/Admin
+        const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
         
-        // Variável global para apontar para a coleção do condomínio logado
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'portaria-trackeasy';
         window.encomendasRefAtiva = null; 
         
         const loginOverlay = document.getElementById('login-overlay');
@@ -759,231 +820,126 @@
                 canvas.height = canvas.offsetHeight;
                 ctx.lineWidth = 3;
                 ctx.lineCap = 'round';
-                ctx.strokeStyle = '#0f172a'; // Cor escura (slate-900)
+                ctx.strokeStyle = '#0f172a';
             }
         }
-        
-        // Listener ajustado no resize da janela
         window.addEventListener('resize', resizeCanvas);
 
-        function startDrawing(e) {
-            isDrawing = true;
-            hasSignature = true;
-            draw(e);
-        }
-        function stopDrawing() {
-            isDrawing = false;
-            ctx.beginPath();
-        }
+        function startDrawing(e) { isDrawing = true; hasSignature = true; draw(e); }
+        function stopDrawing() { isDrawing = false; ctx.beginPath(); }
         function draw(e) {
             if (!isDrawing) return;
-            e.preventDefault(); // Impede rolagem no celular enquanto assina
+            e.preventDefault(); 
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
             ctx.lineTo(clientX - rect.left, clientY - rect.top);
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(clientX - rect.left, clientY - rect.top);
         }
 
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-        canvas.addEventListener('touchstart', startDrawing, {passive: false});
-        canvas.addEventListener('touchmove', draw, {passive: false});
-        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseout', stopDrawing); canvas.addEventListener('touchstart', startDrawing, {passive: false}); canvas.addEventListener('touchmove', draw, {passive: false}); canvas.addEventListener('touchend', stopDrawing);
 
-        window.limparAssinatura = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            hasSignature = false;
-        };
+        window.limparAssinatura = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); hasSignature = false; };
 
         // LÓGICA DO DRAG AND DROP (Arrastar Fotos)
         const dropZone = document.getElementById('drop-zone');
         const dropOverlay = document.getElementById('drop-overlay');
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropOverlay.classList.remove('hidden');
-        });
-        dropZone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            dropOverlay.classList.add('hidden');
-        });
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropOverlay.classList.add('hidden');
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                window.processarFoto(e.dataTransfer.files[0], true);
-            }
-        });
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropOverlay.classList.remove('hidden'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropOverlay.classList.add('hidden'); });
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropOverlay.classList.add('hidden'); if (e.dataTransfer.files && e.dataTransfer.files.length > 0) window.processarFoto(e.dataTransfer.files[0], true); });
 
         // LÓGICA DO SCANNER DE CÓDIGO DE BARRAS
         let html5QrCode = null;
-
-        // Extração Inteligente de Dados da Etiqueta
         window.parseBarcodeData = (text) => {
-            // Retorna o texto original como NF, e tenta extrair outras coisas
-            let data = { nf: text, empresa: "", unidade: "" };
-            let upperText = text.toUpperCase();
-
-            // Padrões de Empresa Comuns
+            let data = { nf: text, empresa: "", unidade: "" }; let upperText = text.toUpperCase();
             if (upperText.includes("MERCADO LIVRE") || upperText.includes("MELI")) data.empresa = "Mercado Livre";
             else if (upperText.includes("AMAZON")) data.empresa = "Amazon";
             else if (upperText.includes("LOGGI")) data.empresa = "Loggi";
             else if (upperText.includes("SHOPEE")) data.empresa = "Shopee";
             else if (upperText.includes("CORREIOS") || /^[A-Z]{2}\d{9}[A-Z]{2}$/.test(upperText)) data.empresa = "Correios";
-
-            // Tentativa de achar Unidade Genérica - Números seguidos de Letras
-            const unidadeMatch = upperText.match(/\b(\d{1,3}[A-Z]+)\b/);
-            if (unidadeMatch) {
-                data.unidade = unidadeMatch[1];
-            }
-
+            const unidadeMatch = upperText.match(/\b(\d{1,3}[A-Z]+)\b/); if (unidadeMatch) data.unidade = unidadeMatch[1];
             return data;
         };
 
         window.startScanner = () => {
             document.getElementById('modal-scanner').classList.remove('hidden');
-            
-            if(!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
-            
-            html5QrCode.start(
-                { facingMode: "environment" }, // Força a abertura direta da câmera traseira
-                {
-                    fps: 10,
-                    qrbox: { width: 250, height: 150 }
-                },
+            if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } },
                 (decodedText) => {
-                    // Ao ler com sucesso, aplica a inteligência de extração
                     const extraido = window.parseBarcodeData(decodedText);
-                    
                     document.getElementById('input-nf').value = extraido.nf;
-                    
-                    if (extraido.empresa) {
-                        document.getElementById('input-empresa').value = extraido.empresa;
-                    }
-                    
-                    if (extraido.unidade) {
-                        const inputUnidade = document.getElementById('input-unidade');
-                        inputUnidade.value = extraido.unidade;
-                        window.validarInput(inputUnidade); // Valida automaticamente
-                    }
-
-                    // Foca no campo morador para facilitar a edição rápida
-                    document.getElementById('input-morador').focus();
-
-                    window.stopScanner();
-                },
-                (errorMessage) => {
-                    // Falhas de leitura em tempo real (ignorar para não poluir console)
-                }
-            ).catch((err) => {
-                console.error("Erro ao iniciar a câmera para o scanner", err);
-                alert("Não foi possível acessar a câmera. Verifique as permissões do seu navegador.");
-                window.stopScanner();
-            });
+                    if (extraido.empresa) document.getElementById('input-empresa').value = extraido.empresa;
+                    if (extraido.unidade) { const inputUnidade = document.getElementById('input-unidade'); inputUnidade.value = extraido.unidade; window.validarInput(inputUnidade); }
+                    document.getElementById('input-morador').focus(); window.stopScanner();
+                }, (errorMessage) => {}).catch((err) => { alert("Sem permissão de câmera."); window.stopScanner(); });
         };
 
         window.stopScanner = () => {
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                }).catch(e => console.error("Falha ao parar scanner", e));
-            } else if (html5QrCode) {
-                html5QrCode.clear();
-            }
+            if (html5QrCode && html5QrCode.isScanning) { html5QrCode.stop().then(() => html5QrCode.clear()); } else if (html5QrCode) html5QrCode.clear();
             document.getElementById('modal-scanner').classList.add('hidden');
         };
 
-        // LÓGICA DO INDICADOR DE STATUS (Online / Offline / Sincronizando)
         window.updateStatusUI = (isOnline, isSyncing) => {
-            const statusDiv = document.getElementById('sync-status');
-            const statusDot = document.getElementById('status-dot');
-            const statusText = document.getElementById('status-text');
-            
-            if (!isOnline) {
-                statusDiv.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-red-50 border border-red-100 transition-colors";
-                statusDot.className = "w-2 h-2 rounded-full bg-red-500";
-                statusDot.innerHTML = "";
-                statusText.className = "text-[9px] font-black uppercase tracking-wider text-red-600";
-                statusText.innerText = "Offline";
-            } else if (isSyncing) {
-                statusDiv.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-orange-50 border border-orange-100 transition-colors";
-                statusDot.className = "w-3 h-3 text-orange-500 animate-spin";
-                statusDot.innerHTML = '<i data-lucide="loader-2"></i>';
-                statusText.className = "text-[9px] font-black uppercase tracking-wider text-orange-600";
-                statusText.innerText = "Sincronizando";
-            } else {
-                statusDiv.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 transition-colors";
-                statusDot.className = "w-2 h-2 rounded-full bg-emerald-500";
-                statusDot.innerHTML = "";
-                statusText.className = "text-[9px] font-black uppercase tracking-wider text-emerald-600";
-                statusText.innerText = "Online";
-            }
+            const statusDiv = document.getElementById('sync-status'); const statusDot = document.getElementById('status-dot'); const statusText = document.getElementById('status-text');
+            if (!isOnline) { statusDiv.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-red-50 border border-red-100 transition-colors"; statusDot.className = "w-2 h-2 rounded-full bg-red-500"; statusDot.innerHTML = ""; statusText.className = "text-[9px] font-black uppercase tracking-wider text-red-600"; statusText.innerText = "Offline"; } 
+            else if (isSyncing) { statusDiv.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-orange-50 border border-orange-100 transition-colors"; statusDot.className = "w-3 h-3 text-orange-500 animate-spin"; statusDot.innerHTML = '<i data-lucide="loader-2"></i>'; statusText.className = "text-[9px] font-black uppercase tracking-wider text-orange-600"; statusText.innerText = "Sincronizando"; } 
+            else { statusDiv.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 transition-colors"; statusDot.className = "w-2 h-2 rounded-full bg-emerald-500"; statusDot.innerHTML = ""; statusText.className = "text-[9px] font-black uppercase tracking-wider text-emerald-600"; statusText.innerText = "Online"; }
             if(window.lucide) lucide.createIcons();
         };
 
-        window.addEventListener('online', () => window.updateStatusUI(true, false));
-        window.addEventListener('offline', () => window.updateStatusUI(false, false));
-        if (!navigator.onLine) window.updateStatusUI(false, false);
+        window.addEventListener('online', () => window.updateStatusUI(true, false)); window.addEventListener('offline', () => window.updateStatusUI(false, false)); if (!navigator.onLine) window.updateStatusUI(false, false);
 
         // Estado da Aplicação Global
-        window.db = [];
-        window.listaVisivel = []; 
-        window.abaAtiva = 'pendentes';
-        window.termoBusca = '';
-        window.blocoFiltro = '';
-        window.currentPhoto = null;
-        window.expandidoKey = null;
-        window.baixaTargetId = null;
-        window.baixaTargetOrigem = null;
-        window.currentWhatsAppMsg = ""; 
-        window.pendingConfirmationId = null;
-        window.pendingConfirmationType = null;
+        window.db = []; window.listaVisivel = []; window.abaAtiva = 'pendentes'; window.termoBusca = ''; window.blocoFiltro = ''; window.currentPhoto = null; window.expandidoKey = null; window.baixaTargetId = null; window.baixaTargetOrigem = null; window.currentWhatsAppMsg = ""; window.pendingConfirmationId = null; window.pendingConfirmationType = null;
         
-        window.isAdmin = false; // Controle de acesso do Painel Admin
-        window.isMensageria = false; // Controle de acesso para registrar na Mensageria
-        window.isMaster = false; // Controle de acesso do Painel Master
-        window.nomeUsuarioLogado = "Colaborador"; 
+        window.isAdmin = false; window.isMensageria = false; window.isMaster = false; window.nomeUsuarioLogado = "Colaborador"; 
         
-        // ESTADO SaaS e MORADORES
         window.condominioLogado = { id: 'default', nome: 'Condomínio (Produção)' };
         window.regrasCondominio = null; 
-        window.bancoMoradoresFake = {}; // Será preenchido pelo Firestore
-        window.listaMoradoresBD = []; // Usado para gerenciar na aba admin/master
+        window.bancoMoradoresFake = {}; 
+        window.listaMoradoresBD = []; 
+        window.listaFuncionariosBD = []; // NOVO
+        window.usuarioLogadoConfig = null; // NOVO: Guarda as regras de horário da pessoa logada
 
-        let unsubscribeSnapshot = null;
-        let unsubscribeMoradores = null;
+        let unsubscribeSnapshot = null; let unsubscribeMoradores = null; let unsubscribeFuncionarios = null;
 
-        // CARREGAR REGRAS DINÂMICAS DO CONDOMÍNIO
         window.carregarRegrasSaaS = async (tenantId) => {
             try {
                 const configRef = doc(dbFS, 'artifacts', appId, 'public', 'data', 'condominios', tenantId);
                 const docSnap = await getDoc(configRef);
-
                 if (docSnap.exists()) {
-                    window.regrasCondominio = docSnap.data();
-                    window.condominioLogado = { id: tenantId, nome: window.regrasCondominio.nome || tenantId };
+                    window.regrasCondominio = docSnap.data(); window.condominioLogado = { id: tenantId, nome: window.regrasCondominio.nome || tenantId };
                 } else {
-                    // Fallback para produção atual
-                    window.condominioLogado = { id: 'default', nome: 'Condomínio (Produção)' };
-                    window.regrasCondominio = {
-                        blocosPermitidos: ['J', 'P'],
-                        aptoMin: 11,
-                        aptoMax: 181,
-                        terminacaoObrigatoria: 1 
-                    };
+                    window.condominioLogado = { id: 'default', nome: 'Condomínio (Produção)' }; window.regrasCondominio = { blocosPermitidos: ['J', 'P'], aptoMin: 11, aptoMax: 181, terminacaoObrigatoria: 1 };
                 }
-            } catch(e) {
-                console.error("Erro ao carregar regras SaaS", e);
-                window.condominioLogado = { id: 'default', nome: 'Condomínio (Offline)' };
-                window.regrasCondominio = { blocosPermitidos: ['J', 'P'], aptoMin: 11, aptoMax: 181, terminacaoObrigatoria: 1 };
+            } catch(e) { window.condominioLogado = { id: 'default', nome: 'Condomínio (Offline)' }; window.regrasCondominio = { blocosPermitidos: ['J', 'P'], aptoMin: 11, aptoMax: 181, terminacaoObrigatoria: 1 }; }
+        };
+
+        // VALIDADOR INTELIGENTE DE TURNOS
+        window.verificarTurno = () => {
+            if (window.isMaster || window.isAdmin) return true; // Admins e Master ignoram turnos
+            if (!window.usuarioLogadoConfig || !window.usuarioLogadoConfig.horaInicio || !window.usuarioLogadoConfig.horaFim) return true; // Sistema legado sem turno
+
+            const now = new Date();
+            // Checa se o admin apertou o botão de estender o turno
+            if (window.usuarioLogadoConfig.overrideAte && now.getTime() < window.usuarioLogadoConfig.overrideAte) {
+                return true;
+            }
+
+            const currentMins = now.getHours() * 60 + now.getMinutes();
+            const startParts = window.usuarioLogadoConfig.horaInicio.split(':');
+            const endParts = window.usuarioLogadoConfig.horaFim.split(':');
+            const startMins = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+            const endMins = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+
+            if (startMins <= endMins) {
+                // Turno Diurno (ex: 07:00 as 19:00)
+                return currentMins >= startMins && currentMins <= endMins;
+            } else {
+                // Turno Noturno que vira a madrugada (ex: 19:00 as 07:00)
+                return currentMins >= startMins || currentMins <= endMins;
             }
         };
 
@@ -994,765 +950,338 @@
                 appContent.classList.remove('hidden');
                 
                 const emailStr = user.email ? user.email.toLowerCase() : '';
-                
-                // DETECÇÃO DE PERFIS
                 window.isMaster = emailStr.includes('master@') || emailStr.includes('trackeasy');
-                window.isAdmin = window.isMaster || emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin');
-                window.isMensageria = window.isAdmin || emailStr.includes('mensageria');
-                
-                // Extrai o nome antes do @ e formata (ex: joao.silva@ -> Joao Silva)
-                const prefix = emailStr.split('@')[0];
-                window.nomeUsuarioLogado = prefix.split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                
-                // Preenche automaticamente o campo recebedor
-                const recInput = document.getElementById('input-recebedor');
-                if (recInput) recInput.value = window.nomeUsuarioLogado;
-                
-                // Controle de Abas
-                if (window.isAdmin) {
-                    document.getElementById('tab-a').classList.remove('hidden');
-                } else {
-                    document.getElementById('tab-a').classList.add('hidden');
-                }
-
-                if (window.isMaster) {
-                    document.getElementById('tab-master').classList.remove('hidden');
-                } else {
-                    document.getElementById('tab-master').classList.add('hidden');
-                }
-
-                // Identifica o Condomínio pelo domínio do email
                 const domainPart = emailStr.split('@')[1] || '';
                 const tenantId = domainPart.split('.')[0] || 'default';
 
-                // Carrega as regras e configurações
                 await window.carregarRegrasSaaS(tenantId);
-
                 const headerCondName = document.getElementById('nome-condominio-header');
                 if (headerCondName) headerCondName.innerText = window.condominioLogado.nome;
+
+                // NOVO: Busca as permissões de cargo no Firestore antes de assumir as strings do email
+                const funcRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`, emailStr);
+                const funcSnap = await getDoc(funcRef);
+                
+                if (funcSnap.exists()) {
+                    const fData = funcSnap.data();
+                    if (fData.ativo === false) {
+                        alert("Seu acesso ao sistema foi bloqueado/revogado pelo Administrador.");
+                        await signOut(auth);
+                        return;
+                    }
+                    window.usuarioLogadoConfig = fData;
+                    window.nomeUsuarioLogado = fData.nome || emailStr.split('@')[0];
+                    window.isAdmin = window.isMaster || fData.role === 'admin';
+                    window.isMensageria = window.isAdmin || fData.role === 'mensageria';
+                } else {
+                    // Fallback para contas legadas criadas antes da atualização
+                    window.usuarioLogadoConfig = null;
+                    window.isAdmin = window.isMaster || emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin');
+                    window.isMensageria = window.isAdmin || emailStr.includes('mensageria');
+                    const prefix = emailStr.split('@')[0];
+                    window.nomeUsuarioLogado = prefix.split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                }
+
+                const recInput = document.getElementById('input-recebedor');
+                if (recInput) recInput.value = window.nomeUsuarioLogado;
+                
+                if (window.isAdmin) document.getElementById('tab-a').classList.remove('hidden'); else document.getElementById('tab-a').classList.add('hidden');
+                if (window.isMaster) document.getElementById('tab-master').classList.remove('hidden'); else document.getElementById('tab-master').classList.add('hidden');
 
                 const collectionName = window.condominioLogado.id === 'default' ? 'encomendas' : `encomendas_${window.condominioLogado.id}`;
                 window.encomendasRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', collectionName);
 
-                // OUVINTE PARA A BASE DE DADOS DE MORADORES
+                // OUVINTE BASE DE DADOS DE MORADORES
                 if (unsubscribeMoradores) unsubscribeMoradores();
                 const moradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${window.condominioLogado.id}`);
-                
                 unsubscribeMoradores = onSnapshot(moradoresRef, (snap) => {
-                    window.bancoMoradoresFake = {};
-                    window.listaMoradoresBD = [];
-                    const datalist = document.getElementById('lista-moradores');
-                    datalist.innerHTML = '';
-                    
-                    snap.forEach(doc => {
-                        const data = doc.data();
-                        const key = `${data.bloco}-${data.apto}`;
-                        window.bancoMoradoresFake[key] = data.nome;
-                        datalist.innerHTML += `<option value="${data.nome}"></option>`;
-                        window.listaMoradoresBD.push({id: doc.id, ...data});
-                    });
-                    
+                    window.bancoMoradoresFake = {}; window.listaMoradoresBD = []; const datalist = document.getElementById('lista-moradores'); datalist.innerHTML = '';
+                    snap.forEach(doc => { const data = doc.data(); const key = `${data.bloco}-${data.apto}`; window.bancoMoradoresFake[key] = data.nome; datalist.innerHTML += `<option value="${data.nome}"></option>`; window.listaMoradoresBD.push({id: doc.id, ...data}); });
                     if(window.abaAtiva === 'admin') window.renderAdminMoradores();
                 });
 
-                // OUVINTE PARA AS ENCOMENDAS
-                if (unsubscribeSnapshot) unsubscribeSnapshot();
-                unsubscribeSnapshot = onSnapshot(window.encomendasRefAtiva, { includeMetadataChanges: true }, (snapshot) => {
-                    const hasPendingWrites = snapshot.metadata.hasPendingWrites;
-                    window.updateStatusUI(navigator.onLine, hasPendingWrites);
-
-                    window.db = snapshot.docs.map(doc => {
-                        const data = doc.data();
-                        data.isOffline = doc.metadata.hasPendingWrites; 
-                        return data;
+                // OUVINTE BASE DE DADOS DE FUNCIONARIOS
+                if (unsubscribeFuncionarios) unsubscribeFuncionarios();
+                const funcCollectionRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${window.condominioLogado.id}`);
+                unsubscribeFuncionarios = onSnapshot(funcCollectionRef, (snap) => {
+                    window.listaFuncionariosBD = [];
+                    snap.forEach(doc => { 
+                        const d = doc.data();
+                        if (d.ativo !== false) window.listaFuncionariosBD.push({id: doc.id, ...d}); 
                     });
-                    
-                    window.renderAdminStats(); 
-                    window.render(); 
-                }, (error) => {
-                    console.error("Erro no Sync Firestore:", error);
+                    if(window.abaAtiva === 'admin') window.renderAdminFuncionarios();
                 });
 
-                // Se for Master, carrega todos os condomínios no Select do painel Master
+                // OUVINTE ENCOMENDAS
+                if (unsubscribeSnapshot) unsubscribeSnapshot();
+                unsubscribeSnapshot = onSnapshot(window.encomendasRefAtiva, { includeMetadataChanges: true }, (snapshot) => {
+                    const hasPendingWrites = snapshot.metadata.hasPendingWrites; window.updateStatusUI(navigator.onLine, hasPendingWrites);
+                    window.db = snapshot.docs.map(doc => { const data = doc.data(); data.isOffline = doc.metadata.hasPendingWrites; return data; });
+                    window.renderAdminStats(); window.render(); 
+                }, (error) => { console.error("Erro no Sync:", error); });
+
+                // Master carrega dropdown
                 if (window.isMaster) {
                     const condosRef = collection(dbFS, 'artifacts', appId, 'public', 'data', 'condominios');
                     onSnapshot(condosRef, (snap) => {
                         const select = document.getElementById('master-select-condo');
                         select.innerHTML = '<option value="">Selecione um condomínio...</option>';
-                        snap.forEach(doc => {
-                            const data = doc.data();
-                            select.innerHTML += `<option value="${doc.id}">${data.nome || doc.id}</option>`;
-                        });
+                        snap.forEach(doc => { const data = doc.data(); select.innerHTML += `<option value="${doc.id}">${data.nome || doc.id}</option>`; });
                     });
                 }
 
             } else {
-                loginOverlay.classList.remove('hidden');
-                appContent.classList.add('hidden');
-                if (unsubscribeSnapshot) unsubscribeSnapshot();
-                if (unsubscribeMoradores) unsubscribeMoradores();
-                window.db = [];
-                window.render();
+                loginOverlay.classList.remove('hidden'); appContent.classList.add('hidden');
+                if (unsubscribeSnapshot) unsubscribeSnapshot(); if (unsubscribeMoradores) unsubscribeMoradores(); if (unsubscribeFuncionarios) unsubscribeFuncionarios();
+                window.db = []; window.render();
             }
         });
 
         // Lógica de Login
         const executarLogin = async () => {
-            const emailInput = document.getElementById('login-email');
-            const passwordInput = document.getElementById('login-password');
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            
-            if (!email || !password) {
-                loginError.innerHTML = `Falha no login:<br><span class="text-[9px] font-normal text-red-600">Preencha o e-mail e a senha.</span>`;
-                loginError.classList.remove('hidden');
-                return;
-            }
-            
-            passwordInput.value = '';
-            btnLogin.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Entrando...`;
-            btnLogin.disabled = true;
-            loginError.classList.add('hidden');
-
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                console.error("Erro no login:", error);
-                loginError.innerHTML = `Falha no login:<br><span class="text-[9px] font-normal text-red-600">${error.message}</span>`;
-                loginError.classList.remove('hidden');
-            } finally {
-                btnLogin.innerHTML = `Entrar no Sistema`;
-                btnLogin.disabled = false;
-                lucide.createIcons();
-            }
+            const emailInput = document.getElementById('login-email'); const passwordInput = document.getElementById('login-password');
+            const email = emailInput.value; const password = passwordInput.value;
+            if (!email || !password) { loginError.innerHTML = `Falha:<br><span class="text-[9px] text-red-600">Preencha tudo.</span>`; loginError.classList.remove('hidden'); return; }
+            passwordInput.value = ''; btnLogin.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Entrando...`; btnLogin.disabled = true; loginError.classList.add('hidden');
+            try { await signInWithEmailAndPassword(auth, email, password); } 
+            catch (error) { loginError.innerHTML = `Falha:<br><span class="text-[9px] text-red-600">${error.message}</span>`; loginError.classList.remove('hidden'); } 
+            finally { btnLogin.innerHTML = `Entrar no Sistema`; btnLogin.disabled = false; lucide.createIcons(); }
         };
 
         btnLogin.addEventListener('click', executarLogin);
+        const handleEnterKey = (e) => { if (e.key === 'Enter') executarLogin(); };
+        document.getElementById('login-email').addEventListener('keypress', handleEnterKey); document.getElementById('login-password').addEventListener('keypress', handleEnterKey);
+        window.realizarLogout = async () => { if(confirm("Deseja realmente sair do sistema?")) { try { await signOut(auth); } catch (error) { console.error(error); } } };
 
-        const handleEnterKey = (e) => {
-            if (e.key === 'Enter') executarLogin();
-        };
-        document.getElementById('login-email').addEventListener('keypress', handleEnterKey);
-        document.getElementById('login-password').addEventListener('keypress', handleEnterKey);
-
-        window.realizarLogout = async () => {
-            if(confirm("Deseja realmente sair do sistema?")) {
-                try {
-                    await signOut(auth);
-                } catch (error) {
-                    console.error("Erro ao sair", error);
-                }
-            }
-        };
-
-        // FUNÇÕES DE FOTO E CAMERA
         window.processarFoto = (inputOrFile, isFile = false) => {
             let file = isFile ? inputOrFile : (inputOrFile.files && inputOrFile.files[0]);
-            
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        const max_w = 600;
-                        let w = img.width, h = img.height;
-                        if (w > max_w) { h *= max_w / w; w = max_w; }
-                        canvas.width = w; canvas.height = h;
-                        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-                        window.currentPhoto = canvas.toDataURL("image/jpeg", 0.6);
-                        
-                        document.getElementById('preview-img').src = window.currentPhoto;
-                        document.getElementById('photo-container').classList.remove('hidden');
-                        document.getElementById('photo-buttons').classList.add('hidden');
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                        const canvas = document.createElement('canvas'); const max_w = 600; let w = img.width, h = img.height;
+                        if (w > max_w) { h *= max_w / w; w = max_w; } canvas.width = w; canvas.height = h;
+                        canvas.getContext("2d").drawImage(img, 0, 0, w, h); window.currentPhoto = canvas.toDataURL("image/jpeg", 0.6);
+                        document.getElementById('preview-img').src = window.currentPhoto; document.getElementById('photo-container').classList.remove('hidden'); document.getElementById('photo-buttons').classList.add('hidden');
+                    }; img.src = e.target.result;
+                }; reader.readAsDataURL(file);
             }
         }
-
-        window.removerFotoRegistro = () => {
-            window.currentPhoto = null;
-            document.getElementById('preview-img').src = "";
-            document.getElementById('photo-container').classList.add('hidden');
-            document.getElementById('photo-buttons').classList.remove('hidden');
-            document.getElementById('input-foto-cam').value = "";
-            document.getElementById('input-foto-gal').value = "";
-        };
-
-        window.openPhotoViewer = (src) => {
-            if (!src) return;
-            document.getElementById('viewer-img').src = src;
-            document.getElementById('modal-photo-viewer').classList.remove('hidden');
-        };
-        
-        window.closePhotoViewer = () => {
-            document.getElementById('modal-photo-viewer').classList.add('hidden');
-            setTimeout(() => document.getElementById('viewer-img').src = "", 200); 
-        };
+        window.removerFotoRegistro = () => { window.currentPhoto = null; document.getElementById('preview-img').src = ""; document.getElementById('photo-container').classList.add('hidden'); document.getElementById('photo-buttons').classList.remove('hidden'); document.getElementById('input-foto-cam').value = ""; document.getElementById('input-foto-gal').value = ""; };
+        window.openPhotoViewer = (src) => { if (!src) return; document.getElementById('viewer-img').src = src; document.getElementById('modal-photo-viewer').classList.remove('hidden'); };
+        window.closePhotoViewer = () => { document.getElementById('modal-photo-viewer').classList.add('hidden'); setTimeout(() => document.getElementById('viewer-img').src = "", 200); };
 
         window.addPhotoToRecord = (id, input) => {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = async function() {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 500; canvas.height = (img.height / img.width) * 500;
-                        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const compressed = canvas.toDataURL("image/jpeg", 0.5);
-                        
+                    const img = new Image(); img.onload = async function() {
+                        const canvas = document.createElement('canvas'); canvas.width = 500; canvas.height = (img.height / img.width) * 500;
+                        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height); const compressed = canvas.toDataURL("image/jpeg", 0.5);
                         const it = window.db.find(d => String(d.id) === String(id));
-                        if (it) { 
-                            it.foto = compressed; 
-                            setDoc(doc(window.encomendasRefAtiva, String(it.id)), it).catch(err => console.log(err)); 
-                        }
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
+                        if (it) { it.foto = compressed; setDoc(doc(window.encomendasRefAtiva, String(it.id)), it).catch(err => console.log(err)); }
+                    }; img.src = e.target.result;
+                }; reader.readAsDataURL(input.files[0]);
             }
         }
+        window.obterFicheiroFoto = async (base64, nome) => { if (!base64) return null; try { const response = await fetch(base64); const blob = await response.blob(); return new File([blob], nome, { type: 'image/jpeg' }); } catch (e) { return null; } }
 
-        window.obterFicheiroFoto = async (base64, nome) => {
-            if (!base64) return null;
-            try {
-                const response = await fetch(base64);
-                const blob = await response.blob();
-                return new File([blob], nome, { type: 'image/jpeg' });
-            } catch (e) { return null; }
-        }
-
-        // FUNÇÕES DE WHATSAPP E NOTIFICAÇÃO
         window.enviarGrupoCondominio = async (id) => {
-            const it = window.db.find(d => String(d.id) === String(id));
-            if (!it) return;
-            const msg = `📢 *CONTROLE DE ENCOMENDA - PORTARIA* \n\n` +
-                   `👤 *Morador:* ${it.morador}\n` +
-                   `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
-                   `📦 *Produto:* ${it.descricao}\n` +
-                   `🚚 *Empresa:* ${it.empresa}\n` +
-                   `🏷️ *Remetente:* ${it.remetente}\n` +
-                   `🔢 *NF/Doc:* ${it.nf}\n` +
-                   `👮 *Recebido por:* ${it.recebedor}\n` +
-                   `⏰ *Chegada:* ${it.data} às ${it.hora}\n` +
-                   `⏳ *Portaria até:* ${it.permanencia || 'N/A'}`;
-            
+            const it = window.db.find(d => String(d.id) === String(id)); if (!it) return;
+            const msg = `📢 *CONTROLE DE ENCOMENDA* \n\n👤 *Morador:* ${it.morador}\n🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n📦 *Produto:* ${it.descricao}\n🚚 *Empresa:* ${it.empresa}\n🏷️ *Remetente:* ${it.remetente}\n🔢 *NF/Doc:* ${it.nf}\n👮 *Recebido por:* ${it.recebedor}\n⏰ *Chegada:* ${it.data} às ${it.hora}\n⏳ *Portaria até:* ${it.permanencia || 'N/A'}`;
             const file = await window.obterFicheiroFoto(it.foto, `encomenda.jpg`);
-            
-            if (navigator.share && file) {
-                try {
-                    await navigator.share({ files: [file], title: 'Controle Portaria', text: msg });
-                    return;
-                } catch (err) {
-                    if (err.name === 'AbortError') return; 
-                }
-            }
-            
+            if (navigator.share && file) { try { await navigator.share({ files: [file], title: 'Controle Portaria', text: msg }); return; } catch (err) { if (err.name === 'AbortError') return; } }
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         window.closeWhatsAppModal = () => document.getElementById('modal-whatsapp').classList.add('hidden');
-        
         window.openWhatsApp = (type) => {
-            if (type === 'web') {
-                window.open(`https://web.whatsapp.com/send?text=${window.currentWhatsAppMsg}`, '_blank');
-            } else {
-                window.open(`https://api.whatsapp.com/send?text=${window.currentWhatsAppMsg}`, '_blank');
-            }
-            window.closeWhatsAppModal();
-
-            if (window.pendingConfirmationId) {
-                setTimeout(() => window.showConfirmSentModal(), 500);
-            }
+            if (type === 'web') window.open(`https://web.whatsapp.com/send?text=${window.currentWhatsAppMsg}`, '_blank');
+            else window.open(`https://api.whatsapp.com/send?text=${window.currentWhatsAppMsg}`, '_blank');
+            window.closeWhatsAppModal(); if (window.pendingConfirmationId) setTimeout(() => window.showConfirmSentModal(), 500);
         };
 
         window.enviarWhatsAppMorador = (msg, idToConfirm = null, confirmType = null) => {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            window.currentWhatsAppMsg = encodeURIComponent(msg);
-            window.pendingConfirmationId = idToConfirm;
-            window.pendingConfirmationType = confirmType;
-
-            if (isMobile) {
-                window.open(`https://api.whatsapp.com/send?text=${window.currentWhatsAppMsg}`, '_blank');
-                if (window.pendingConfirmationId) {
-                    setTimeout(() => window.showConfirmSentModal(), 500);
-                }
-            } else {
-                document.getElementById('modal-whatsapp').classList.remove('hidden');
-            }
+            window.currentWhatsAppMsg = encodeURIComponent(msg); window.pendingConfirmationId = idToConfirm; window.pendingConfirmationType = confirmType;
+            if (isMobile) { window.open(`https://api.whatsapp.com/send?text=${window.currentWhatsAppMsg}`, '_blank'); if (window.pendingConfirmationId) setTimeout(() => window.showConfirmSentModal(), 500); } 
+            else { document.getElementById('modal-whatsapp').classList.remove('hidden'); }
         };
 
-        window.showConfirmSentModal = () => {
-            document.getElementById('modal-confirm-sent').classList.remove('hidden');
-        };
-
-        window.closeConfirmSentModal = () => {
-            document.getElementById('modal-confirm-sent').classList.add('hidden');
-            window.pendingConfirmationId = null;
-            window.pendingConfirmationType = null;
-        };
-
+        window.showConfirmSentModal = () => document.getElementById('modal-confirm-sent').classList.remove('hidden');
+        window.closeConfirmSentModal = () => { document.getElementById('modal-confirm-sent').classList.add('hidden'); window.pendingConfirmationId = null; window.pendingConfirmationType = null; };
         window.confirmMessageSent = async () => {
             if (!window.pendingConfirmationId) return;
-            
             const it = window.db.find(d => String(d.id) === String(window.pendingConfirmationId));
             if (it) {
-                if (window.pendingConfirmationType === 'portaria') {
-                    it.notificadoPortariaMorador = true;
-                } else if (window.pendingConfirmationType === 'mensageria') {
-                    it.notificadoMensageria = true;
-                }
+                if (window.pendingConfirmationType === 'portaria') it.notificadoPortariaMorador = true; else if (window.pendingConfirmationType === 'mensageria') it.notificadoMensageria = true;
                 setDoc(doc(window.encomendasRefAtiva, String(it.id)), it).catch(e => console.error(e));
             }
             window.closeConfirmSentModal();
         };
 
         window.enviarAvisoMorador = async (id) => {
-            const it = window.db.find(d => String(d.id) === String(id));
-            if (!it) return;
-            let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Esta encomenda ficará na portaria até às *${it.permanencia}*. Após este horário, ela será encaminhada para a Mensageria.` : '';
-            const msg = `Olá! 👋 Temos uma ótima notícia: uma encomenda sua acaba de chegar à nossa portaria!\n\n` +
-                   `👤 *Para:* ${it.morador}\n` +
-                   `🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n` +
-                   `📦 *Item:* ${it.descricao}\n` +
-                   `🏷️ *Remetente:* ${it.remetente}\n` +
-                   `🚚 *Empresa:* ${it.empresa}\n` +
-                   `🔢 *Doc/NF:* ${it.nf}\n` +
-                   `👮 *Recebido por:* ${it.recebedor}\n` +
-                   `⏰ *Registrado em:* ${it.data} às ${it.hora}${permInfo}\n\n` +
-                   `A portaria é 24h e você pode retirar a qualquer momento. Até já! 📦✨`;
-            
+            const it = window.db.find(d => String(d.id) === String(id)); if (!it) return; let permInfo = it.permanencia ? `\n⚠️ *Atenção:* Ficará na portaria até *${it.permanencia}*.` : '';
+            const msg = `Olá! 👋 Uma encomenda sua acaba de chegar!\n\n👤 *Para:* ${it.morador}\n🏢 *Unidade:* ${it.apto} - Bloco ${it.bloco}\n📦 *Item:* ${it.descricao}\n🏷️ *Remetente:* ${it.remetente}\n⏰ *Entrada:* ${it.data} às ${it.hora}${permInfo}\n\nAté já!`;
             window.enviarWhatsAppMorador(msg, id, 'portaria');
         }
 
         window.enviarAvisoMensageria = async (id) => {
-            const it = window.db.find(d => String(d.id) === String(id));
-            if (!it) return;
-            const agora = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
-            
-            const msg = `Olá! 👋 Informamos que sua encomenda saiu da portaria e chegou à nossa *MENSAGERIA* e já está pronta para retirada.\n\n` +
-                   `🏢 *Local:* Unidade ${it.apto} - Bloco ${it.bloco}\n` +
-                   `📦 *Item:* ${it.descricao}\n` +
-                   `⏰ *Aviso enviado às:* ${agora}\n\n` +
-                   `Aguardamos sua visita para a retirada. Tenha um excelente dia! 📦✨`;
-            
+            const it = window.db.find(d => String(d.id) === String(id)); if (!it) return; const agora = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
+            const msg = `Olá! 👋 Informamos que sua encomenda saiu da portaria e chegou à *MENSAGERIA*.\n\n🏢 *Local:* ${it.apto} - Bloco ${it.bloco}\n📦 *Item:* ${it.descricao}\n⏰ *Aviso enviado às:* ${agora}\n\nAguardamos sua visita!`;
             window.enviarWhatsAppMorador(msg, id, 'mensageria');
         }
-
         window.compartilharRelatorioMensageria = () => {
-            const itensMensageria = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria');
-            if (itensMensageria.length === 0) {
-                alert("A Mensageria está vazia no momento.");
-                return;
-            }
-
-            const unidadesUnicas = new Set();
-            itensMensageria.forEach(it => {
-                unidadesUnicas.add(`${it.apto}${it.bloco}`);
-            });
-
-            let msg = "*Mensageria*\n";
-            Array.from(unidadesUnicas).sort().forEach(unidade => {
-                msg += `${unidade}\n`;
-            });
-
+            const itens = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria');
+            if (itens.length === 0) { alert("Mensageria vazia."); return; }
+            const unids = new Set(); itens.forEach(it => unids.add(`${it.apto}${it.bloco}`)); let msg = "*Mensageria*\n"; Array.from(unids).sort().forEach(u => msg += `${u}\n`);
             window.enviarWhatsAppMorador(msg);
         };
 
-        // FUNÇÕES DE EDIÇÃO E BAIXA
         window.openEditModal = (id) => {
-            const it = window.db.find(d => String(d.id) === String(id));
-            if (!it) return;
-            document.getElementById('edit-id').value = it.id;
-            document.getElementById('edit-unidade').value = it.apto + it.bloco;
-            document.getElementById('edit-morador').value = it.morador;
-            document.getElementById('edit-remetente').value = it.remetente;
-            document.getElementById('edit-empresa').value = it.empresa;
-            document.getElementById('edit-descricao').value = it.descricao;
-            document.getElementById('edit-nf').value = it.nf;
-            document.getElementById('edit-recebedor').value = it.recebedor;
-            document.getElementById('edit-permanencia').value = it.permanencia || '';
-            document.getElementById('edit-tokens').value = (it.tokens || []).join(', ');
+            const it = window.db.find(d => String(d.id) === String(id)); if (!it) return;
+            document.getElementById('edit-id').value = it.id; document.getElementById('edit-unidade').value = it.apto + it.bloco; document.getElementById('edit-morador').value = it.morador; document.getElementById('edit-remetente').value = it.remetente; document.getElementById('edit-empresa').value = it.empresa; document.getElementById('edit-descricao').value = it.descricao; document.getElementById('edit-nf').value = it.nf; document.getElementById('edit-recebedor').value = it.recebedor; document.getElementById('edit-permanencia').value = it.permanencia || ''; document.getElementById('edit-tokens').value = (it.tokens || []).join(', ');
             document.getElementById('modal-edit').classList.remove('hidden');
         }
-
-        window.closeEditModal = () => {
-            document.getElementById('modal-edit').classList.add('hidden');
-        }
-
+        window.closeEditModal = () => document.getElementById('modal-edit').classList.add('hidden');
         window.saveEdit = async () => {
-            const id = document.getElementById('edit-id').value;
-            const res = window.validarUnidade(document.getElementById('edit-unidade').value, window.regrasCondominio);
+            const id = document.getElementById('edit-id').value; const res = window.validarUnidade(document.getElementById('edit-unidade').value, window.regrasCondominio);
             if (!res.ok) { alert(res.msg); return; }
-            
             const idx = window.db.findIndex(d => String(d.id) === String(id));
-            
             if (idx !== -1) {
-                const item = window.db[idx];
-                item.apto = res.apto.toString(); 
-                item.bloco = res.bloco;
-                item.morador = document.getElementById('edit-morador').value;
-                item.remetente = document.getElementById('edit-remetente').value;
-                item.empresa = document.getElementById('edit-empresa').value;
-                item.descricao = document.getElementById('edit-descricao').value;
-                item.nf = document.getElementById('edit-nf').value;
-                item.recebedor = document.getElementById('edit-recebedor').value;
-                item.permanencia = document.getElementById('edit-permanencia').value;
-                const tv = document.getElementById('edit-tokens').value;
-                item.tokens = tv ? tv.split(',').map(s => s.trim()).filter(s => s !== '') : [];
-                
-                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
-                window.closeEditModal();
+                const item = window.db[idx]; item.apto = res.apto.toString(); item.bloco = res.bloco; item.morador = document.getElementById('edit-morador').value; item.remetente = document.getElementById('edit-remetente').value; item.empresa = document.getElementById('edit-empresa').value; item.descricao = document.getElementById('edit-descricao').value; item.nf = document.getElementById('edit-nf').value; item.recebedor = document.getElementById('edit-recebedor').value; item.permanencia = document.getElementById('edit-permanencia').value; const tv = document.getElementById('edit-tokens').value; item.tokens = tv ? tv.split(',').map(s => s.trim()).filter(s => s !== '') : [];
+                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e)); window.closeEditModal();
             }
         }
 
         window.openBaixaModal = (id, origem) => {
-            const it = window.db.find(d => String(d.id) === String(id));
-            if (!it) return;
-            window.baixaTargetId = id;
-            window.baixaTargetOrigem = origem;
-            
+            const it = window.db.find(d => String(d.id) === String(id)); if (!it) return;
+            window.baixaTargetId = id; window.baixaTargetOrigem = origem;
             document.getElementById('baixa-info-morador').innerText = `Bloco ${it.bloco} - Apto ${it.apto} (${it.morador})`;
-            document.getElementById('baixa-entregador').value = window.nomeUsuarioLogado;
-            document.getElementById('baixa-retirado').value = "";
-            
-            if (origem === 'mensageria') {
-                document.getElementById('area-assinatura').classList.remove('hidden');
-                setTimeout(() => window.limparAssinatura(), 50); 
-                setTimeout(() => resizeCanvas(), 100); 
-            } else {
-                document.getElementById('area-assinatura').classList.add('hidden');
-            }
-
+            document.getElementById('baixa-entregador').value = window.nomeUsuarioLogado; document.getElementById('baixa-retirado').value = "";
+            if (origem === 'mensageria') { document.getElementById('area-assinatura').classList.remove('hidden'); setTimeout(() => window.limparAssinatura(), 50); setTimeout(() => resizeCanvas(), 100); } 
+            else { document.getElementById('area-assinatura').classList.add('hidden'); }
             document.getElementById('modal-baixa').classList.remove('hidden');
         }
-
-        window.closeBaixaModal = () => {
-            document.getElementById('modal-baixa').classList.add('hidden');
-            window.limparAssinatura();
-        };
-
+        window.closeBaixaModal = () => { document.getElementById('modal-baixa').classList.add('hidden'); window.limparAssinatura(); };
         window.confirmarBaixaReal = async () => {
+            if (!window.verificarTurno()) { alert("⚠️ Ação Bloqueada: Seu turno encerrou!"); return; }
             if (!window.baixaTargetId) return;
             const idx = window.db.findIndex(d => String(d.id) === String(window.baixaTargetId));
-            
             if (idx !== -1) {
-                const item = window.db[idx];
-                const entregador = document.getElementById('baixa-entregador').value || "Não informado";
-                const retiradoPor = document.getElementById('baixa-retirado').value || "O Próprio";
-                
-                item.status = 'entregue';
-                item.saida = new Date().toISOString(); 
-                item.entreguePor = entregador;
-                item.retiradoPor = retiradoPor;
-                
-                if (window.baixaTargetOrigem === 'mensageria') {
-                    item.destino = 'entregue_mensageria';
-                    if (hasSignature) {
-                        item.assinatura = canvas.toDataURL("image/png", 0.7);
-                    }
-                } else {
-                    item.destino = 'morador';
-                }
-                
-                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
-                window.closeBaixaModal();
+                const item = window.db[idx]; const entregador = document.getElementById('baixa-entregador').value || "Não informado"; const retiradoPor = document.getElementById('baixa-retirado').value || "O Próprio";
+                item.status = 'entregue'; item.saida = new Date().toISOString(); item.entreguePor = entregador; item.retiradoPor = retiradoPor;
+                if (window.baixaTargetOrigem === 'mensageria') { item.destino = 'entregue_mensageria'; if (hasSignature) item.assinatura = canvas.toDataURL("image/png", 0.7); } 
+                else { item.destino = 'morador'; }
+                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e)); window.closeBaixaModal();
             }
         }
 
         window.transferirTodosParaMensageria = async () => {
+            if (!window.verificarTurno()) { alert("⚠️ Ação Bloqueada: Seu turno encerrou!"); return; }
             if(!window.listaVisivel || window.listaVisivel.length === 0) return;
-            
-            if(confirm(`ATENÇÃO: Deseja encaminhar TODAS as ${window.listaVisivel.length} encomendas exibidas na tela para a Mensageria de uma só vez?`)) {
+            if(confirm(`Encaminhar TODAS as ${window.listaVisivel.length} encomendas na tela para a Mensageria?`)) {
                 try {
-                    const batch = writeBatch(dbFS);
-                    const now = new Date().toISOString();
-                    
-                    window.listaVisivel.forEach(item => {
-                        item.status = 'entregue';
-                        item.dataMensageria = now; 
-                        item.saida = now; 
-                        item.destino = 'mensageria';
-                        
-                        const ref = doc(window.encomendasRefAtiva, String(item.id));
-                        batch.set(ref, item);
-                    });
-                    
+                    const batch = writeBatch(dbFS); const now = new Date().toISOString();
+                    window.listaVisivel.forEach(item => { item.status = 'entregue'; item.dataMensageria = now; item.saida = now; item.destino = 'mensageria'; const ref = doc(window.encomendasRefAtiva, String(item.id)); batch.set(ref, item); });
                     await batch.commit();
-                } catch (e) {
-                    console.error("Erro no envio em lote:", e);
-                    alert("Falha ao encaminhar lote para mensageria.");
-                }
+                } catch (e) { alert("Falha ao encaminhar lote."); }
             }
         };
 
-        // VALIDAÇÃO E REGISTRO DE ENCOMENDAS
         window.validarUnidade = (txt, regras) => {
             if(!regras) return { ok: false, msg: "Aguarde..." };
-
-            const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
-            const numMatch = clean.match(/\d+/); 
-            const blkMatch = clean.match(/[A-Z]+/); 
-            
+            const clean = txt.toUpperCase().replace(/[.\s,;-]/g, ''); const numMatch = clean.match(/\d+/); const blkMatch = clean.match(/[A-Z]+/); 
             if (!numMatch || !blkMatch) return { ok: false, msg: "Bloco?" };
-            
-            const n = parseInt(numMatch[0]); 
-            const b = blkMatch[0];
-
-            if (regras.blocosPermitidos && regras.blocosPermitidos.length > 0 && !regras.blocosPermitidos.includes(b)) {
-                return { ok: false, msg: "Inválido" };
-            }
-
+            const n = parseInt(numMatch[0]); const b = blkMatch[0];
+            if (regras.blocosPermitidos && regras.blocosPermitidos.length > 0 && !regras.blocosPermitidos.includes(b)) return { ok: false, msg: "Inválido" };
             if (regras.aptoMin !== undefined && n < regras.aptoMin) return { ok: false, msg: "Inválida" };
             if (regras.aptoMax !== undefined && n > regras.aptoMax) return { ok: false, msg: "Inválida" };
-            
-            if (regras.terminacaoObrigatoria !== undefined && regras.terminacaoObrigatoria !== null) {
-                if (n % 10 !== regras.terminacaoObrigatoria) return { ok: false, msg: "Inválida" };
-            }
-
+            if (regras.terminacaoObrigatoria !== undefined && regras.terminacaoObrigatoria !== null) { if (n % 10 !== regras.terminacaoObrigatoria) return { ok: false, msg: "Inválida" }; }
             return { ok: true, apto: n, bloco: b, msg: `✓ ${b}-${n}` };
         }
 
         window.validarInput = (el) => {
             const res = window.validarUnidade(el.value, window.regrasCondominio);
-            const fb = document.getElementById('feedback-val');
-            fb.innerText = res.msg;
-            fb.className = `text-[10px] mt-1 ml-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
+            const fb = document.getElementById('feedback-val'); fb.innerText = res.msg; fb.className = `text-[10px] mt-1 ml-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
             document.getElementById('btn-gravar').disabled = !res.ok;
-
-            if (res.ok) {
-                const key = `${res.bloco}-${res.apto}`;
-                if (window.bancoMoradoresFake[key]) {
-                    const moradorInput = document.getElementById('input-morador');
-                    if (!moradorInput.value || moradorInput.value.trim() === "") { 
-                        moradorInput.value = window.bancoMoradoresFake[key];
-                    }
-                }
-            }
+            if (res.ok) { const key = `${res.bloco}-${res.apto}`; if (window.bancoMoradoresFake[key]) { const moradorInput = document.getElementById('input-morador'); if (!moradorInput.value || moradorInput.value.trim() === "") moradorInput.value = window.bancoMoradoresFake[key]; } }
         }
 
         window.handleRegistrar = (e) => {
             e.preventDefault();
+            if (!window.verificarTurno()) { 
+                alert("⚠️ AÇÃO BLOQUEADA!\n\nVocê está tentando registrar uma encomenda FORA do seu horário de trabalho estabelecido.\n\nSe o seu plantão atrasou a troca, solicite ao Síndico ou Administrador para 'Estender seu Turno' no painel de Gestão."); 
+                return; 
+            }
+
             const res = window.validarUnidade(document.getElementById('input-unidade').value, window.regrasCondominio);
             if (!res.ok) return;
 
-            const now = new Date();
-            const nid = String(Date.now() + Math.floor(Math.random()*1000));
-            const isMensageria = window.abaAtiva === 'mensageria';
-
+            const now = new Date(); const nid = String(Date.now() + Math.floor(Math.random()*1000)); const isMensageria = window.abaAtiva === 'mensageria';
             const novoItem = {
-                id: nid, apto: res.apto.toString(), bloco: res.bloco,
-                morador: document.getElementById('input-morador').value || "Morador",
-                empresa: document.getElementById('input-empresa').value || "Empresa",
-                remetente: document.getElementById('input-remetente').value || "Remetente",
-                descricao: document.getElementById('input-descricao').value || "Volume",
-                nf: document.getElementById('input-nf').value || "S/N",
-                recebedor: document.getElementById('input-recebedor').value || "Porteiro",
-                permanencia: document.getElementById('input-permanencia').value || "",
-                qtd: parseInt(document.getElementById('input-qtd').value) || 1,
-                foto: window.currentPhoto, data: now.toLocaleDateString('pt-PT'),
-                hora: now.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}),
-                status: isMensageria ? 'entregue' : 'pendente', 
-                destino: isMensageria ? 'mensageria' : null,
-                saida: isMensageria ? now.toISOString() : null,
-                tokens: [],
-                notificadoPortariaMorador: false, notificadoMensageria: false
+                id: nid, apto: res.apto.toString(), bloco: res.bloco, morador: document.getElementById('input-morador').value || "Morador", empresa: document.getElementById('input-empresa').value || "Empresa", remetente: document.getElementById('input-remetente').value || "Remetente", descricao: document.getElementById('input-descricao').value || "Volume", nf: document.getElementById('input-nf').value || "S/N", recebedor: document.getElementById('input-recebedor').value || "Porteiro", permanencia: document.getElementById('input-permanencia').value || "", qtd: parseInt(document.getElementById('input-qtd').value) || 1, foto: window.currentPhoto, data: now.toLocaleDateString('pt-PT'), hora: now.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}), status: isMensageria ? 'entregue' : 'pendente', destino: isMensageria ? 'mensageria' : null, saida: isMensageria ? now.toISOString() : null, tokens: [], notificadoPortariaMorador: false, notificadoMensageria: false
             };
             
-            setDoc(doc(window.encomendasRefAtiva, nid), novoItem)
-                .then(() => {
-                    if(!isMensageria) window.enviarGrupoCondominio(nid);
-                })
-                .catch(err => {
-                    console.error("Erro Background Sync", err);
-                    alert("Não foi possível salvar o registro na nuvem. Tente novamente em alguns instantes.");
-                });
-
-            document.getElementById('form-main').reset();
-            window.removerFotoRegistro(); 
-            document.getElementById('feedback-val').innerText = 'Pendente';
-            document.getElementById('feedback-val').className = 'text-[9px] mt-1 ml-1 font-bold text-slate-400';
-            document.getElementById('input-recebedor').value = window.nomeUsuarioLogado;
-            document.getElementById('btn-gravar').disabled = true;
+            setDoc(doc(window.encomendasRefAtiva, nid), novoItem).then(() => { if(!isMensageria) window.enviarGrupoCondominio(nid); }).catch(err => { alert("Erro Background Sync"); });
+            document.getElementById('form-main').reset(); window.removerFotoRegistro(); document.getElementById('feedback-val').innerText = 'Pendente'; document.getElementById('feedback-val').className = 'text-[9px] mt-1 ml-1 font-bold text-slate-400'; document.getElementById('input-recebedor').value = window.nomeUsuarioLogado; document.getElementById('btn-gravar').disabled = true;
         }
 
-        // FUNÇÕES DO PAINEL ADMIN (Gestão e Estatísticas)
         window.renderAdminStats = () => {
             if(!window.isAdmin) return;
-            
             const mesAtual = new Date().toLocaleDateString('pt-PT', {month:'2-digit', year:'numeric'});
-            let recebidosMes = 0;
-            let somaHoras = 0;
-            let countEntregues = 0;
-            let pendentesPortaria = 0;
-            let pendentesMensageria = 0;
-            
+            let recebidosMes = 0; let somaHoras = 0; let countEntregues = 0; let pendentesPortaria = 0; let pendentesMensageria = 0;
             const colaboradores = new Set();
 
             window.db.forEach(it => {
                 if(it.data && it.data.includes(mesAtual)) recebidosMes += it.qtd;
-                
-                if(it.saida && it.destino === 'entregue_mensageria' && it.dataMensageria) {
-                    const hSaida = new Date(it.saida).getTime();
-                    const hEntrada = new Date(it.dataMensageria).getTime();
-                    somaHoras += (hSaida - hEntrada) / (1000 * 60 * 60);
-                    countEntregues++;
-                }
-
+                if(it.saida && it.destino === 'entregue_mensageria' && it.dataMensageria) { const hSaida = new Date(it.saida).getTime(); const hEntrada = new Date(it.dataMensageria).getTime(); somaHoras += (hSaida - hEntrada) / (1000 * 60 * 60); countEntregues++; }
                 if (it.status === 'pendente') pendentesPortaria++;
                 if (it.status === 'entregue' && it.destino === 'mensageria') pendentesMensageria++;
-
-                if (it.recebedor) colaboradores.add(it.recebedor);
-                if (it.entreguePor) colaboradores.add(it.entreguePor);
+                if (it.recebedor) colaboradores.add(it.recebedor); if (it.entreguePor) colaboradores.add(it.entreguePor);
             });
 
-            document.getElementById('adm-total-mes').innerText = recebidosMes;
-            const media = countEntregues > 0 ? (somaHoras / countEntregues).toFixed(1) : '--';
-            document.getElementById('adm-tempo-medio').innerText = `${media} h`;
-            document.getElementById('adm-pendentes-portaria').innerText = pendentesPortaria;
-            document.getElementById('adm-pendentes-mensageria').innerText = pendentesMensageria;
+            document.getElementById('adm-total-mes').innerText = recebidosMes; document.getElementById('adm-tempo-medio').innerText = `${countEntregues > 0 ? (somaHoras / countEntregues).toFixed(1) : '--'} h`; document.getElementById('adm-pendentes-portaria').innerText = pendentesPortaria; document.getElementById('adm-pendentes-mensageria').innerText = pendentesMensageria;
 
-            const selectColab = document.getElementById('adm-colaborador-select');
-            const selecaoAtual = selectColab.value;
-            selectColab.innerHTML = '<option value="">Selecione um colaborador...</option>';
-            
-            Array.from(colaboradores).sort().forEach(nome => {
-                if (nome && nome.toLowerCase() !== "não informado" && nome.toLowerCase() !== "porteiro") {
-                    selectColab.innerHTML += `<option value="${nome}">${nome}</option>`;
-                }
-            });
-
-            if (selecaoAtual && colaboradores.has(selecaoAtual)) {
-                selectColab.value = selecaoAtual;
-            }
-
+            const selectColab = document.getElementById('adm-colaborador-select'); const selecaoAtual = selectColab.value; selectColab.innerHTML = '<option value="">Selecione um colaborador...</option>';
+            Array.from(colaboradores).sort().forEach(nome => { if (nome && nome.toLowerCase() !== "não informado" && nome.toLowerCase() !== "porteiro") selectColab.innerHTML += `<option value="${nome}">${nome}</option>`; });
+            if (selecaoAtual && colaboradores.has(selecaoAtual)) selectColab.value = selecaoAtual;
             window.renderEmployeeStats();
         };
 
         window.renderEmployeeStats = () => {
-            const empName = document.getElementById('adm-colaborador-select').value;
-            const statsContainer = document.getElementById('adm-colaborador-stats');
-            const historyContainer = document.getElementById('adm-colaborador-history');
-            
-            if (!empName) {
-                statsContainer.classList.add('hidden');
-                historyContainer.innerHTML = '';
-                return;
-            }
-
+            const empName = document.getElementById('adm-colaborador-select').value; const statsContainer = document.getElementById('adm-colaborador-stats'); const historyContainer = document.getElementById('adm-colaborador-history');
+            if (!empName) { statsContainer.classList.add('hidden'); historyContainer.innerHTML = ''; return; }
             statsContainer.classList.remove('hidden');
 
-            let recebidasCount = 0;
-            let entreguesCount = 0;
-            let histItems = [];
-
+            let recebidasCount = 0; let entreguesCount = 0; let histItems = [];
             window.db.forEach(it => {
-                if (it.recebedor === empName) {
-                    recebidasCount += it.qtd;
-                    
-                    let timestamp = 0;
-                    if (it.data) {
-                        const p = it.data.split('/');
-                        if (p.length === 3) {
-                            timestamp = new Date(`${p[2]}-${p[1]}-${p[0]}T${it.hora || '00:00'}`).getTime();
-                        }
-                    }
-
-                    histItems.push({
-                        time: timestamp,
-                        displayTime: `${it.data} às ${it.hora}`,
-                        action: 'Recebeu',
-                        color: 'text-blue-600 bg-blue-100',
-                        desc: `Apto ${it.apto}${it.bloco} - ${it.remetente} (${it.qtd} vols)`
-                    });
-                }
-
-                if (it.entreguePor === empName && (it.destino === 'morador' || it.destino === 'entregue_mensageria')) {
-                    entreguesCount++;
-                    const timestamp = it.saida ? new Date(it.saida).getTime() : 0;
-                    const timeStr = it.saida ? new Date(it.saida).toLocaleString('pt-PT') : 'Sem data';
-
-                    histItems.push({
-                        time: timestamp,
-                        displayTime: timeStr,
-                        action: 'Entregou',
-                        color: 'text-emerald-600 bg-emerald-100',
-                        desc: `Apto ${it.apto}${it.bloco} para ${it.retiradoPor || 'Morador'}`
-                    });
-                }
+                if (it.recebedor === empName) { recebidasCount += it.qtd; let ts = 0; if (it.data) { const p = it.data.split('/'); if (p.length === 3) ts = new Date(`${p[2]}-${p[1]}-${p[0]}T${it.hora || '00:00'}`).getTime(); } histItems.push({ time: ts, displayTime: `${it.data} às ${it.hora}`, action: 'Recebeu', color: 'text-blue-600 bg-blue-100', desc: `Apto ${it.apto}${it.bloco} - ${it.remetente} (${it.qtd} vols)` }); }
+                if (it.entreguePor === empName && (it.destino === 'morador' || it.destino === 'entregue_mensageria')) { entreguesCount++; const ts = it.saida ? new Date(it.saida).getTime() : 0; const timeStr = it.saida ? new Date(it.saida).toLocaleString('pt-PT') : 'Sem data'; histItems.push({ time: ts, displayTime: timeStr, action: 'Entregou', color: 'text-emerald-600 bg-emerald-100', desc: `Apto ${it.apto}${it.bloco} para ${it.retiradoPor || 'Morador'}` }); }
             });
-
-            document.getElementById('adm-colab-recebidas').innerText = recebidasCount;
-            document.getElementById('adm-colab-entregues').innerText = entreguesCount;
-
-            histItems.sort((a, b) => b.time - a.time);
-            const topHistory = histItems.slice(0, 15);
-
-            if (topHistory.length > 0) {
-                historyContainer.innerHTML = `<h4 class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 sticky top-0 bg-slate-50 pt-1 pb-2">Últimas 15 Ações</h4>` + 
-                    topHistory.map(h => `
-                        <div class="flex items-center gap-3 mb-2 pb-2 border-b border-slate-200 last:border-0">
-                            <span class="px-2 py-1 rounded text-[8px] font-black uppercase ${h.color} w-[60px] text-center shrink-0 shadow-sm">${h.action}</span>
-                            <div class="flex-1">
-                                <p class="text-[10px] font-bold text-slate-700 leading-tight">${h.desc}</p>
-                                <p class="text-[8px] font-semibold text-slate-400 mt-0.5">${h.displayTime}</p>
-                            </div>
-                        </div>
-                    `).join('');
-            } else {
-                historyContainer.innerHTML = '<p class="text-[10px] text-slate-400 text-center mt-4 font-bold uppercase">Nenhuma ação registrada para este colaborador.</p>';
-            }
+            document.getElementById('adm-colab-recebidas').innerText = recebidasCount; document.getElementById('adm-colab-entregues').innerText = entreguesCount;
+            histItems.sort((a, b) => b.time - a.time); const topHistory = histItems.slice(0, 15);
+            if (topHistory.length > 0) { historyContainer.innerHTML = `<h4 class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 sticky top-0 bg-slate-50 pt-1 pb-2">Últimas 15 Ações</h4>` + topHistory.map(h => `<div class="flex items-center gap-3 mb-2 pb-2 border-b border-slate-200 last:border-0"><span class="px-2 py-1 rounded text-[8px] font-black uppercase ${h.color} w-[60px] text-center shrink-0 shadow-sm">${h.action}</span><div class="flex-1"><p class="text-[10px] font-bold text-slate-700 leading-tight">${h.desc}</p><p class="text-[8px] font-semibold text-slate-400 mt-0.5">${h.displayTime}</p></div></div>`).join(''); } else { historyContainer.innerHTML = '<p class="text-[10px] text-slate-400 text-center mt-4 font-bold uppercase">Nenhuma ação registrada para este colaborador.</p>'; }
         };
 
-        // CONTROLE DE NAVEGAÇÃO E ABAS
         window.switchTab = (t) => {
-            window.abaAtiva = t; 
-            window.expandidoKey = null; 
-            window.blocoFiltro = '';
+            window.abaAtiva = t; window.expandidoKey = null; window.blocoFiltro = '';
+            const ativo = "bg-white text-blue-600 shadow-sm"; const inativo = "text-slate-500 hover:bg-slate-200"; const admAtivo = "bg-purple-600 text-white shadow-sm"; const admInativo = "text-purple-600 hover:bg-purple-100"; const masterAtivo = "bg-red-600 text-white shadow-sm"; const masterInativo = "text-red-600 hover:bg-red-100";
             
-            const ativo = "bg-white text-blue-600 shadow-sm";
-            const inativo = "text-slate-500 hover:bg-slate-200";
-            const admAtivo = "bg-purple-600 text-white shadow-sm";
-            const admInativo = "text-purple-600 hover:bg-purple-100";
-            const masterAtivo = "bg-red-600 text-white shadow-sm";
-            const masterInativo = "text-red-600 hover:bg-red-100";
-            
-            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='pendentes'?ativo:inativo}`;
-            document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='mensageria'?ativo:inativo}`;
-            document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='entregues'?ativo:inativo}`;
-            document.getElementById('tab-a').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='admin'?admAtivo:admInativo} ${window.isAdmin?'':'hidden'}`;
-            document.getElementById('tab-master').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='master'?masterAtivo:masterInativo} ${window.isMaster?'':'hidden'}`;
+            document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='pendentes'?ativo:inativo}`; document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='mensageria'?ativo:inativo}`; document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='entregues'?ativo:inativo}`; document.getElementById('tab-a').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='admin'?admAtivo:admInativo} ${window.isAdmin?'':'hidden'}`; document.getElementById('tab-master').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='master'?masterAtivo:masterInativo} ${window.isMaster?'':'hidden'}`;
 
             if (t === 'admin') {
-                document.getElementById('area-operacional').style.display = 'none';
-                document.getElementById('area-master').style.display = 'none';
-                document.getElementById('area-admin').style.display = 'block';
-                window.renderAdminStats();
-                window.renderAdminMoradores();
+                document.getElementById('area-operacional').style.display = 'none'; document.getElementById('area-master').style.display = 'none'; document.getElementById('area-admin').style.display = 'block';
+                window.renderAdminStats(); window.renderAdminMoradores(); window.renderAdminFuncionarios();
             } else if (t === 'master') {
-                document.getElementById('area-operacional').style.display = 'none';
-                document.getElementById('area-admin').style.display = 'none';
-                document.getElementById('area-master').style.display = 'block';
+                document.getElementById('area-operacional').style.display = 'none'; document.getElementById('area-admin').style.display = 'none'; document.getElementById('area-master').style.display = 'block';
             } else {
-                document.getElementById('area-operacional').style.display = 'block';
-                document.getElementById('area-admin').style.display = 'none';
-                document.getElementById('area-master').style.display = 'none';
-                
-                let showRegistro = false;
-                if (t === 'pendentes') showRegistro = true;
-                if (t === 'mensageria' && window.isMensageria) showRegistro = true; 
-                
+                document.getElementById('area-operacional').style.display = 'block'; document.getElementById('area-admin').style.display = 'none'; document.getElementById('area-master').style.display = 'none';
+                let showRegistro = false; if (t === 'pendentes') showRegistro = true; if (t === 'mensageria' && window.isMensageria) showRegistro = true; 
                 document.getElementById('area-registro').style.display = showRegistro ? 'block' : 'none';
-                
                 const tituloReg = document.getElementById('titulo-registro');
-                if (t === 'pendentes') {
-                    tituloReg.innerHTML = `<i data-lucide="camera" class="w-4 h-4 text-blue-600"></i> Registro de Encomenda`;
-                } else if (t === 'mensageria') {
-                    tituloReg.innerHTML = `<i data-lucide="camera" class="w-4 h-4 text-orange-500"></i> Entrada Direta: Mensageria`;
-                }
-                
+                if (t === 'pendentes') tituloReg.innerHTML = `<i data-lucide="camera" class="w-4 h-4 text-blue-600"></i> Registro de Encomenda`; else if (t === 'mensageria') tituloReg.innerHTML = `<i data-lucide="camera" class="w-4 h-4 text-orange-500"></i> Entrada Direta: Mensageria`;
                 window.render();
             }
         }
@@ -1761,339 +1290,146 @@
         window.setFastFilter = (f) => { window.blocoFiltro = f; window.render(); }
         window.toggleExpand = (key) => { window.expandidoKey = window.expandidoKey === key ? null : key; window.render(); }
 
-        window.darBaixaDiretaMensageria = async (id) => {
-            const idx = window.db.findIndex(d => String(d.id) === String(id));
-            if (idx !== -1) {
-                const item = window.db[idx];
-                item.status = 'entregue';
-                item.dataMensageria = new Date().toISOString();
-                item.saida = item.dataMensageria;
-                item.destino = 'mensageria';
-                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
-            }
-        }
+        window.darBaixaDiretaMensageria = async (id) => { if (!window.verificarTurno()) { alert("⚠️ Ação Bloqueada: Seu turno encerrou!"); return; } const idx = window.db.findIndex(d => String(d.id) === String(id)); if (idx !== -1) { const item = window.db[idx]; item.status = 'entregue'; item.dataMensageria = new Date().toISOString(); item.saida = item.dataMensageria; item.destino = 'mensageria'; setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e)); } }
+        window.retornarParaPortaria = async (id) => { if (!window.verificarTurno()) { alert("⚠️ Ação Bloqueada: Seu turno encerrou!"); return; } const idx = window.db.findIndex(d => String(d.id) === String(id)); if (idx !== -1) { const item = window.db[idx]; item.status = 'pendente'; item.destino = null; setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e)); } }
+        window.excluirUm = async (id) => { if(confirm("Apagar permanentemente?")) { deleteDoc(doc(window.encomendasRefAtiva, String(id))).catch(e => console.error(e)); } }
+        window.limparHistorico = async () => { if(confirm("Deseja realmente apagar o histórico de encomendas JÁ ENTREGUES?")) { const paraExcluir = window.db.filter(d => d.status === 'entregue' && (d.destino === 'morador' || d.destino === 'entregue_mensageria')); if (paraExcluir.length === 0) { alert("Vazio."); return; } const batch = writeBatch(dbFS); paraExcluir.forEach(item => { const ref = doc(window.encomendasRefAtiva, String(item.id)); batch.delete(ref); }); batch.commit().then(() => { alert(`${paraExcluir.length} registros apagados.`); }).catch(e => console.error(e)); } }
+        window.exportarExcel = () => { let csv = 'Data Entrada;Hora Entrada;Bloco;Apartamento;Morador;Empresa;Remetente;Descricao;Qtd;NF/Doc;Recebedor (Portaria);Status;Data Saida/Mensageria;Quem Entregou;Quem Retirou\n'; window.db.forEach(it => { const safeStr = (str) => { if (!str) return ''; return `"${String(str).replace(/"/g, '""').replace(/;/g, ',').replace(/\n/g, ' ')}"`; }; const dataSaida = it.saida ? new Date(it.saida).toLocaleString('pt-PT') : ''; let statusStr = 'Pendente'; if (it.status === 'entregue') { statusStr = it.destino === 'mensageria' ? 'Aguardando Mensageria' : 'Entregue ao Morador'; } csv += `${safeStr(it.data)};${safeStr(it.hora)};${safeStr(it.bloco)};${safeStr(it.apto)};${safeStr(it.morador)};${safeStr(it.empresa)};${safeStr(it.remetente)};${safeStr(it.descricao)};${safeStr(it.qtd)};${safeStr(it.nf)};${safeStr(it.recebedor)};${safeStr(statusStr)};${safeStr(dataSaida)};${safeStr(it.entreguePor)};${safeStr(it.retiradoPor)}\n`; }); const blob = new Blob(["\ufeff", csv], {type: 'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); const d = new Date(); const month = String(d.getMonth() + 1).padStart(2, '0'); const year = d.getFullYear(); a.href = url; a.download = `Relatorio-Portaria-${month}-${year}.csv`; a.click(); };
+        window.exportarDados = () => { const d = new Date(); const month = String(d.getMonth() + 1).padStart(2, '0'); const year = d.getFullYear(); const b = new Blob([JSON.stringify(window.db,null,2)],{type:'application/json'}); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `backup-sistema-${month}-${year}.json`; a.click(); }
 
-        window.retornarParaPortaria = async (id) => {
-            const idx = window.db.findIndex(d => String(d.id) === String(id));
-            if (idx !== -1) {
-                const item = window.db[idx];
-                item.status = 'pendente';
-                item.destino = null;
-                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
-            }
-        }
-
-        window.excluirUm = async (id) => {
-            if(confirm("Apagar permanentemente?")) {
-                deleteDoc(doc(window.encomendasRefAtiva, String(id))).catch(e => console.error(e));
-            }
-        }
-
-        window.limparHistorico = async () => { 
-            if(confirm("Deseja realmente apagar o histórico de encomendas JÁ ENTREGUES?")) { 
-                const paraExcluir = window.db.filter(d => d.status === 'entregue' && (d.destino === 'morador' || d.destino === 'entregue_mensageria'));
-                
-                if (paraExcluir.length === 0) {
-                    alert("Não há entregas finalizadas para limpar.");
-                    return;
-                }
-
-                const batch = writeBatch(dbFS);
-                paraExcluir.forEach(item => {
-                    const ref = doc(window.encomendasRefAtiva, String(item.id));
-                    batch.delete(ref);
-                });
-                
-                batch.commit().then(() => {
-                    alert(`${paraExcluir.length} registros apagados com sucesso.`);
-                }).catch(e => console.error(e));
-            } 
-        }
-
-        // FUNÇÕES DE EXPORTAÇÃO E BACKUP
-        window.exportarExcel = () => {
-            let csv = 'Data Entrada;Hora Entrada;Bloco;Apartamento;Morador;Empresa;Remetente;Descricao;Qtd;NF/Doc;Recebedor (Portaria);Status;Data Saida/Mensageria;Quem Entregou;Quem Retirou\n';
-            
-            window.db.forEach(it => {
-                const safeStr = (str) => {
-                    if (!str) return '';
-                    return `"${String(str).replace(/"/g, '""').replace(/;/g, ',').replace(/\n/g, ' ')}"`;
-                };
-
-                const dataSaida = it.saida ? new Date(it.saida).toLocaleString('pt-PT') : '';
-                let statusStr = 'Pendente';
-                if (it.status === 'entregue') {
-                    statusStr = it.destino === 'mensageria' ? 'Aguardando Mensageria' : 'Entregue ao Morador';
-                }
-
-                csv += `${safeStr(it.data)};${safeStr(it.hora)};${safeStr(it.bloco)};${safeStr(it.apto)};${safeStr(it.morador)};${safeStr(it.empresa)};${safeStr(it.remetente)};${safeStr(it.descricao)};${safeStr(it.qtd)};${safeStr(it.nf)};${safeStr(it.recebedor)};${safeStr(statusStr)};${safeStr(dataSaida)};${safeStr(it.entreguePor)};${safeStr(it.retiradoPor)}\n`;
-            });
-
-            const blob = new Blob(["\ufeff", csv], {type: 'text/csv;charset=utf-8;'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const d = new Date();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-            
-            a.href = url;
-            a.download = `Relatorio-Portaria-${month}-${year}.csv`;
-            a.click();
-        };
-
-        window.exportarDados = () => { 
-            const d = new Date();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-
-            const b = new Blob([JSON.stringify(window.db,null,2)],{type:'application/json'}); 
-            const u = URL.createObjectURL(b); 
-            const a = document.createElement('a'); 
-            a.href = u; 
-            a.download = `backup-sistema-${month}-${year}.json`; 
-            a.click(); 
-        }
-
-        // VISUALIZADOR DE BACKUP (JSON LOCAL)
+        // VISUALIZADOR DE BACKUP
         window.backupLocalData = [];
-        
-        window.renderBackupViewer = (filtro = '') => {
-            const viewer = document.getElementById('backup-viewer');
-            const termo = filtro.toLowerCase().trim();
+        window.renderBackupViewer = (filtro = '') => { const viewer = document.getElementById('backup-viewer'); const termo = filtro.toLowerCase().trim(); const filtrados = window.backupLocalData.filter(it => { if (!termo) return true; const searchString = `${it.apto || ''} ${it.bloco || ''} ${it.morador || ''} ${it.remetente || ''} ${it.empresa || ''} ${it.nf || ''} ${it.descricao || ''}`.toLowerCase(); return searchString.includes(termo); }); if (filtrados.length === 0) { viewer.innerHTML = '<p class="text-[11px] text-slate-500 text-center font-bold uppercase py-4">Nenhum registro encontrado para esta busca.</p>'; } else { viewer.innerHTML = filtrados.map((it, idx) => { const unidade = `${it.apto || ''}${it.bloco || ''}`.trim(); const morador = it.morador || 'Morador'; const data = it.data || 'Sem data'; const status = it.status || 'sem-status'; let percursoHtml = ''; const temMensageria = !!it.dataMensageria; const temSaidaFinal = !!it.saida; if (temMensageria) { const dtMens = new Date(it.dataMensageria).toLocaleString('pt-PT'); percursoHtml += `<p class="text-[9px] text-indigo-600 font-bold uppercase border-l-2 border-indigo-400 pl-2 mt-1">1. Portaria ➔ Mensageria<br><span class="text-slate-700 text-[10px] font-black tracking-normal">${dtMens}</span></p>`; } if (temSaidaFinal) { const dtSaida = new Date(it.saida).toLocaleString('pt-PT'); if (it.destino === 'entregue_mensageria') { percursoHtml += `<p class="text-[9px] text-emerald-600 font-bold uppercase border-l-2 border-emerald-400 pl-2 mt-1">${temMensageria ? '2.' : '1.'} Mensageria ➔ Morador<br><span class="text-slate-700 text-[10px] font-black tracking-normal">${dtSaida}</span></p>`; } else if (it.destino === 'morador') { percursoHtml += `<p class="text-[9px] text-emerald-600 font-bold uppercase border-l-2 border-emerald-400 pl-2 mt-1">1. Portaria ➔ Morador<br><span class="text-slate-700 text-[10px] font-black tracking-normal">${dtSaida}</span></p>`; } } if (it.entreguePor || it.retiradoPor) { percursoHtml += `<div class="bg-white mt-2 p-2.5 rounded-lg border border-slate-200 shadow-sm space-y-0.5">${it.entreguePor ? `<p class="text-[9px] text-slate-600 font-bold uppercase">Entregue por: <span class="text-slate-900 text-[10px]">${it.entreguePor}</span></p>` : ''}${it.retiradoPor ? `<p class="text-[9px] text-slate-600 font-bold uppercase">Retirado por: <span class="text-slate-900 text-[10px]">${it.retiradoPor}</span></p>` : ''}</div>`; } return `<div class="mb-2 pb-2 border-b border-slate-200 last:border-b-0 last:pb-0"><div class="flex justify-between items-center"><span class="text-[10px] font-black text-slate-500 uppercase">#${idx + 1} • ${unidade}</span><span class="text-[9px] font-bold uppercase ${status === 'entregue' ? 'text-emerald-600' : 'text-slate-500'}">${status}</span></div><p class="text-[11px] font-semibold text-slate-800 mt-0.5">${morador}</p><p class="text-[10px] text-slate-500 mt-0.5">${it.descricao || ''}</p><p class="text-[9px] text-slate-400 mt-0.5">${data} • NF: ${it.nf || 'S/N'}</p>${percursoHtml ? `<div class="mt-2 pt-2 border-t border-slate-200 bg-slate-50 rounded-lg px-2 pb-2"><p class="text-[9px] text-slate-500 font-black uppercase tracking-wide mb-1">Percurso</p>${percursoHtml}</div>` : ''}</div>`; }).join(''); } viewer.classList.remove('hidden'); if(window.lucide) lucide.createIcons(); };
+        window.filtrarBackupLocal = (termo) => { window.renderBackupViewer(termo); };
+        window.visualizarBackupLocal = (input) => { if(input.files && input.files[0]) { const r = new FileReader(); r.onload = (e) => { try { const jsonData = JSON.parse(e.target.result); if (!Array.isArray(jsonData) || jsonData.length === 0) { document.getElementById('backup-viewer').innerText = "Vazio."; document.getElementById('backup-viewer').classList.remove('hidden'); document.getElementById('backup-search-container').classList.add('hidden'); } else { window.backupLocalData = jsonData; document.getElementById('backup-search-container').classList.remove('hidden'); document.getElementById('input-busca-backup').value = ''; window.renderBackupViewer(''); } } catch (err) { alert("Inválido."); } }; r.readAsText(input.files[0]); } };
+        window.limparVisualizacaoBackup = () => { window.backupLocalData = []; const viewer = document.getElementById('backup-viewer'); if (viewer) { viewer.innerHTML = ''; viewer.classList.add('hidden'); } const searchContainer = document.getElementById('backup-search-container'); if (searchContainer) { searchContainer.classList.add('hidden'); document.getElementById('input-busca-backup').value = ''; } const fileInput = document.getElementById('input-file-backup'); if(fileInput) fileInput.value = ''; };
+        window.importarDados = async (input) => { if(input.files && input.files[0]) { if(!confirm("⚠️ AVISO: Importar vai MESCLAR os dados antigos. Deseja mesmo importar?")) { input.value = ""; return; } const r = new FileReader(); r.onload = async (e) => { try { const jsonData = JSON.parse(e.target.result); const batch = writeBatch(dbFS); let count = 0; for(let i = 0; i < jsonData.length; i++) { const ref = doc(window.encomendasRefAtiva, String(jsonData[i].id)); batch.set(ref, jsonData[i]); count++; } await batch.commit(); alert(`${count} importadas!`); } catch(err){ alert("Erro."); } }; r.readAsText(input.files[0]); } }
 
-            const filtrados = window.backupLocalData.filter(it => {
-                if (!termo) return true;
-                const searchString = `${it.apto || ''} ${it.bloco || ''} ${it.morador || ''} ${it.remetente || ''} ${it.empresa || ''} ${it.nf || ''} ${it.descricao || ''}`.toLowerCase();
-                return searchString.includes(termo);
-            });
-
-            if (filtrados.length === 0) {
-                viewer.innerHTML = '<p class="text-[11px] text-slate-500 text-center font-bold uppercase py-4">Nenhum registro encontrado para esta busca.</p>';
-            } else {
-                viewer.innerHTML = filtrados.map((it, idx) => {
-                    const unidade = `${it.apto || ''}${it.bloco || ''}`.trim();
-                    const morador = it.morador || 'Morador';
-                    const data = it.data || 'Sem data';
-                    const status = it.status || 'sem-status';
-
-                    let percursoHtml = '';
-                    const temMensageria = !!it.dataMensageria;
-                    const temSaidaFinal = !!it.saida;
-
-                    if (temMensageria) {
-                        const dtMens = new Date(it.dataMensageria).toLocaleString('pt-PT');
-                        percursoHtml += `
-                            <p class="text-[9px] text-indigo-600 font-bold uppercase border-l-2 border-indigo-400 pl-2 mt-1">
-                                1. Portaria ➔ Mensageria<br>
-                                <span class="text-slate-700 text-[10px] font-black tracking-normal">${dtMens}</span>
-                            </p>
-                        `;
-                    }
-
-                    if (temSaidaFinal) {
-                        const dtSaida = new Date(it.saida).toLocaleString('pt-PT');
-                        if (it.destino === 'entregue_mensageria') {
-                            percursoHtml += `
-                                <p class="text-[9px] text-emerald-600 font-bold uppercase border-l-2 border-emerald-400 pl-2 mt-1">
-                                    ${temMensageria ? '2.' : '1.'} Mensageria ➔ Morador<br>
-                                    <span class="text-slate-700 text-[10px] font-black tracking-normal">${dtSaida}</span>
-                                </p>
-                            `;
-                        } else if (it.destino === 'morador') {
-                            percursoHtml += `
-                                <p class="text-[9px] text-emerald-600 font-bold uppercase border-l-2 border-emerald-400 pl-2 mt-1">
-                                    1. Portaria ➔ Morador<br>
-                                    <span class="text-slate-700 text-[10px] font-black tracking-normal">${dtSaida}</span>
-                                </p>
-                            `;
-                        }
-                    }
-
-                    if (it.entreguePor || it.retiradoPor) {
-                        percursoHtml += `
-                            <div class="bg-white mt-2 p-2.5 rounded-lg border border-slate-200 shadow-sm space-y-0.5">
-                                ${it.entreguePor ? `<p class="text-[9px] text-slate-600 font-bold uppercase">Entregue por: <span class="text-slate-900 text-[10px]">${it.entreguePor}</span></p>` : ''}
-                                ${it.retiradoPor ? `<p class="text-[9px] text-slate-600 font-bold uppercase">Retirado por: <span class="text-slate-900 text-[10px]">${it.retiradoPor}</span></p>` : ''}
-                            </div>
-                        `;
-                    }
-
-                    return `
-                        <div class="mb-2 pb-2 border-b border-slate-200 last:border-b-0 last:pb-0">
-                            <div class="flex justify-between items-center">
-                                <span class="text-[10px] font-black text-slate-500 uppercase">#${idx + 1} • ${unidade}</span>
-                                <span class="text-[9px] font-bold uppercase ${status === 'entregue' ? 'text-emerald-600' : 'text-slate-500'}">${status}</span>
-                            </div>
-                            <p class="text-[11px] font-semibold text-slate-800 mt-0.5">${morador}</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">${it.descricao || ''}</p>
-                            <p class="text-[9px] text-slate-400 mt-0.5">${data} • NF: ${it.nf || 'S/N'}</p>
-                            ${percursoHtml ? `
-                                <div class="mt-2 pt-2 border-t border-slate-200 bg-slate-50 rounded-lg px-2 pb-2">
-                                    <p class="text-[9px] text-slate-500 font-black uppercase tracking-wide mb-1">
-                                        Percurso da Encomenda
-                                    </p>
-                                    ${percursoHtml}
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                }).join('');
-            }
-            viewer.classList.remove('hidden');
-            if(window.lucide) lucide.createIcons();
-        };
-
-        window.filtrarBackupLocal = (termo) => {
-            window.renderBackupViewer(termo);
-        };
-
-        window.visualizarBackupLocal = (input) => {
-            if(input.files && input.files[0]) {
-                const r = new FileReader();
-                r.onload = (e) => {
-                    try {
-                        const jsonData = JSON.parse(e.target.result);
-                        
-                        if (!Array.isArray(jsonData) || jsonData.length === 0) {
-                            document.getElementById('backup-viewer').innerText = "Nenhum registro encontrado neste backup.";
-                            document.getElementById('backup-viewer').classList.remove('hidden');
-                            document.getElementById('backup-search-container').classList.add('hidden');
-                        } else {
-                            window.backupLocalData = jsonData;
-                            document.getElementById('backup-search-container').classList.remove('hidden');
-                            document.getElementById('input-busca-backup').value = ''; 
-                            window.renderBackupViewer('');
-                        }
-                    } catch (err) {
-                        alert("Arquivo JSON inválido para visualização.");
-                        console.error(err);
-                    }
-                };
-                r.readAsText(input.files[0]);
-            }
-        };
-
-        window.limparVisualizacaoBackup = () => {
-            window.backupLocalData = []; 
-            
-            const viewer = document.getElementById('backup-viewer');
-            if (viewer) {
-                viewer.innerHTML = '';
-                viewer.classList.add('hidden');
-            }
-            
-            const searchContainer = document.getElementById('backup-search-container');
-            if (searchContainer) {
-                searchContainer.classList.add('hidden');
-                document.getElementById('input-busca-backup').value = '';
-            }
-
-            const fileInput = document.getElementById('input-file-backup');
-            if(fileInput) fileInput.value = '';
-        };
-
-        window.importarDados = async (input) => {
-            if(input.files && input.files[0]) {
-                if(!confirm("⚠️ AVISO DE SEGURANÇA ⚠️\n\nImportar um arquivo JSON vai MESCLAR os dados antigos com os dados ATUAIS da portaria.\n\nDeseja mesmo importar no sistema?")) {
-                    input.value = "";
-                    return;
-                }
-
-                const r = new FileReader();
-                r.onload = async (e) => { 
-                    try { 
-                        const jsonData = JSON.parse(e.target.result); 
-                        const batch = writeBatch(dbFS);
-                        
-                        let count = 0;
-                        for(let i = 0; i < jsonData.length; i++) {
-                            const ref = doc(window.encomendasRefAtiva, String(jsonData[i].id));
-                            batch.set(ref, jsonData[i]);
-                            count++;
-                        }
-                        await batch.commit();
-                        alert(`${count} encomendas importadas para a Nuvem com Sucesso!`);
-                    } catch(err){
-                        alert("Erro ao importar dados para a nuvem!");
-                        console.error(err);
-                    } 
-                };
-                r.readAsText(input.files[0]);
-            }
-        }
-
-        // --- GESTÃO DE MORADORES (ADMIN) E CONDOMÍNIOS (MASTER) ---
+        // --- GESTÃO DE MORADORES E FUNCIONÁRIOS (RH SaaS) ---
         window.renderAdminMoradores = (termo = '') => {
-            const container = document.getElementById('lista-moradores-admin');
-            if(!container) return;
-            
-            const txt = termo.toLowerCase().trim();
-            const filtrados = window.listaMoradoresBD.filter(m => {
-                if(!txt) return true;
-                return `${m.bloco} ${m.apto} ${m.nome}`.toLowerCase().includes(txt);
-            }).sort((a,b) => a.bloco.localeCompare(b.bloco) || a.apto - b.apto);
-
-            if(filtrados.length === 0) {
-                container.innerHTML = '<p class="text-[10px] text-slate-400 text-center font-bold uppercase p-2">Nenhum morador encontrado.</p>';
-                return;
-            }
-
-            container.innerHTML = filtrados.map(m => `
-                <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors">
-                    <div>
-                        <span class="text-[9px] font-black uppercase text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">Apto ${m.apto}${m.bloco}</span>
-                        <p class="text-[11px] font-bold text-slate-700 mt-1">${m.nome}</p>
-                    </div>
-                    <button onclick="excluirMoradorAdmin('${m.id}')" class="p-1.5 text-red-400 hover:bg-red-100 rounded-lg transition-colors" title="Remover Morador">
-                        <i data-lucide="trash-2" class="w-3 h-3"></i>
-                    </button>
-                </div>
-            `).join('');
+            const container = document.getElementById('lista-moradores-admin'); if(!container) return;
+            const txt = termo.toLowerCase().trim(); const filtrados = window.listaMoradoresBD.filter(m => { if(!txt) return true; return `${m.bloco} ${m.apto} ${m.nome}`.toLowerCase().includes(txt); }).sort((a,b) => a.bloco.localeCompare(b.bloco) || a.apto - b.apto);
+            if(filtrados.length === 0) { container.innerHTML = '<p class="text-[10px] text-slate-400 text-center font-bold uppercase p-2">Nenhum morador encontrado.</p>'; return; }
+            container.innerHTML = filtrados.map(m => `<div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors"><div><span class="text-[9px] font-black uppercase text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">Apto ${m.apto}${m.bloco}</span><p class="text-[11px] font-bold text-slate-700 mt-1">${m.nome}</p></div><button onclick="excluirMoradorAdmin('${m.id}')" class="p-1.5 text-red-400 hover:bg-red-100 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
             lucide.createIcons();
         };
 
         window.filtrarMoradoresAdmin = (t) => window.renderAdminMoradores(t);
-
-        window.excluirMoradorAdmin = async (idMorador) => {
-            if(confirm("Remover este morador da base de dados? (Não afeta as encomendas antigas dele)")) {
-                const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${window.condominioLogado.id}`, idMorador);
-                deleteDoc(ref).catch(e => alert("Erro ao deletar"));
-            }
-        };
+        window.excluirMoradorAdmin = async (idMorador) => { if(confirm("Remover este morador?")) { deleteDoc(doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${window.condominioLogado.id}`, idMorador)).catch(e => alert("Erro")); } };
 
         window.cadastrarMorador = async (e, isMasterPanel) => {
             e.preventDefault();
             const prefix = isMasterPanel ? 'master' : 'add';
-            const bloco = document.getElementById(`${prefix}-morador-bloco`).value.toUpperCase().trim();
-            const apto = parseInt(document.getElementById(`${prefix}-morador-apto`).value);
-            const nome = document.getElementById(`${prefix}-morador-nome`).value.trim();
+            const bloco = document.getElementById(`${prefix}-morador-bloco`).value.toUpperCase().trim(); const apto = parseInt(document.getElementById(`${prefix}-morador-apto`).value); const nome = document.getElementById(`${prefix}-morador-nome`).value.trim();
+            let tenantIdAlvo = window.condominioLogado.id; let regrasAlvo = window.regrasCondominio;
+            if (isMasterPanel) { tenantIdAlvo = document.getElementById('master-select-condo').value; if (!tenantIdAlvo) { alert("Selecione um condomínio."); return; } } 
+            else { const res = window.validarUnidade(`${apto}${bloco}`, regrasAlvo); if (!res.ok) { alert(`Regras bloqueiam: ${res.msg}`); return; } }
+            const idDoc = `${bloco}-${apto}`; const moradorRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantIdAlvo}`, idDoc);
+            try { await setDoc(moradorRef, { bloco, apto, nome }); document.getElementById(`${prefix}-morador-bloco`).value = ''; document.getElementById(`${prefix}-morador-apto`).value = ''; document.getElementById(`${prefix}-morador-nome`).value = ''; if (isMasterPanel) { window.carregarDadosMaster(tenantIdAlvo); } alert("Morador salvo!"); } catch (err) { alert("Erro ao salvar."); }
+        };
+
+        // --- SISTEMA MÁGICO DE CADASTRO DE FUNCIONÁRIOS (Firebase Secondary App Trick) ---
+        window.cadastrarFuncionario = async (e, isMasterPanel) => {
+            e.preventDefault();
+            const prefix = isMasterPanel ? 'master' : 'admin';
+            const tenantIdAlvo = isMasterPanel ? document.getElementById('master-select-condo').value : window.condominioLogado.id;
             
-            let tenantIdAlvo = window.condominioLogado.id;
-            let regrasAlvo = window.regrasCondominio;
+            if (!tenantIdAlvo) { alert("Por favor, selecione um condomínio antes de cadastrar o funcionário."); return; }
 
-            if (isMasterPanel) {
-                tenantIdAlvo = document.getElementById('master-select-condo').value;
-                if (!tenantIdAlvo) { alert("Selecione um condomínio primeiro."); return; }
-            } else {
-                const res = window.validarUnidade(`${apto}${bloco}`, regrasAlvo);
-                if (!res.ok) { alert(`Apto/Bloco não permitidos nas regras: ${res.msg}`); return; }
-            }
-
-            const idDoc = `${bloco}-${apto}`; 
-            const moradorRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantIdAlvo}`, idDoc);
+            const nome = document.getElementById(`${prefix}-func-nome`).value.trim();
+            const email = document.getElementById(`${prefix}-func-email`).value.trim().toLowerCase();
+            const senha = document.getElementById(`${prefix}-func-senha`).value;
+            const role = document.getElementById(`${prefix}-func-role`).value;
+            const horaInicio = document.getElementById(`${prefix}-func-inicio`).value;
+            const horaFim = document.getElementById(`${prefix}-func-fim`).value;
 
             try {
-                await setDoc(moradorRef, { bloco, apto, nome });
-                document.getElementById(`${prefix}-morador-bloco`).value = '';
-                document.getElementById(`${prefix}-morador-apto`).value = '';
-                document.getElementById(`${prefix}-morador-nome`).value = '';
+                // 1. Cria a conta de Auth usando o App secundário para não deslogar o Admin
+                const { getAuth: getAuthSecondary, createUserWithEmailAndPassword: createUserSecondary, signOut: signOutSecondary } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+                const secAuth = getAuthSecondary(secondaryApp);
                 
-                if (isMasterPanel) {
-                    window.carregarDadosMaster(tenantIdAlvo);
+                await createUserSecondary(secAuth, email, senha);
+                await signOutSecondary(secAuth); // Desloga imediatamente da instância secundária
+
+                // 2. Salva as regras e perfil no banco de dados do condomínio
+                const funcRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, email);
+                await setDoc(funcRef, {
+                    nome, email, role, horaInicio, horaFim, ativo: true, overrideAte: null
+                });
+
+                alert(`✅ Funcionário ${nome} criado com sucesso e pronto para uso!`);
+                e.target.reset();
+                if (isMasterPanel) window.carregarDadosMaster(tenantIdAlvo);
+            } catch (error) {
+                console.error(error);
+                if (error.code === 'auth/email-already-in-use') {
+                    alert("Atenção: Este e-mail já existe no sistema global. Para aproveitá-lo, tente apenas salvar as regras dele para este condomínio.");
+                } else {
+                    alert("Erro ao cadastrar funcionário na Nuvem: " + error.message);
                 }
-                alert("Morador salvo na base!");
-            } catch (err) {
-                alert("Erro ao salvar."); console.error(err);
+            }
+        };
+
+        // Renderiza Lista de Funcionários (Admin Local)
+        window.renderAdminFuncionarios = () => {
+            const container = document.getElementById('lista-funcionarios-admin');
+            if(!container) return;
+            
+            if(window.listaFuncionariosBD.length === 0) {
+                container.innerHTML = '<p class="text-[10px] text-slate-400 text-center font-bold uppercase p-2">Nenhum funcionário cadastrado pelo sistema.</p>';
+                return;
+            }
+
+            container.innerHTML = window.listaFuncionariosBD.map(f => {
+                let statusTurno = "Fechado";
+                let colorTurno = "text-slate-400";
+                
+                // Simulação simples para exibição
+                const now = new Date(); const currentMins = now.getHours() * 60 + now.getMinutes();
+                const sMins = parseInt(f.horaInicio.split(':')[0]) * 60 + parseInt(f.horaInicio.split(':')[1]);
+                const eMins = parseInt(f.horaFim.split(':')[0]) * 60 + parseInt(f.horaFim.split(':')[1]);
+                let isTrabalhando = (sMins <= eMins) ? (currentMins >= sMins && currentMins <= eMins) : (currentMins >= sMins || currentMins <= eMins);
+                
+                if (f.overrideAte && now.getTime() < f.overrideAte) { isTrabalhando = true; statusTurno = "Estendido"; colorTurno = "text-orange-500 font-black"; }
+                else if (isTrabalhando) { statusTurno = "Trabalhando"; colorTurno = "text-emerald-500 font-bold"; }
+
+                return `
+                <div class="flex flex-col p-3 bg-white rounded-lg border border-slate-100 shadow-sm mb-2">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-800">${f.nome} <span class="text-[9px] font-normal text-slate-400">(${f.email})</span></p>
+                            <p class="text-[9px] uppercase font-black tracking-widest text-indigo-600">${f.role} • ${f.horaInicio} às ${f.horaFim}</p>
+                        </div>
+                        <span class="text-[9px] uppercase ${colorTurno} flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full ${isTrabalhando?'bg-emerald-500':'bg-slate-300'}"></span> ${statusTurno}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <button onclick="estenderTurnoAdmin('${f.id}')" class="py-1.5 text-[9px] font-bold uppercase bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md transition-colors shadow-sm border border-slate-200">
+                            + Estender Turno 2h
+                        </button>
+                        <button onclick="excluirFuncionarioAdmin('${f.id}')" class="py-1.5 text-[9px] font-bold uppercase bg-red-50 hover:bg-red-100 text-red-500 rounded-md transition-colors shadow-sm">
+                            Bloquear / Deletar
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+        };
+
+        window.estenderTurnoAdmin = async (emailId) => {
+            if(confirm("Estender o turno deste funcionário por 2 horas a partir de AGORA?")) {
+                const overrideTime = Date.now() + (2 * 60 * 60 * 1000); // +2 horas
+                const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${window.condominioLogado.id}`, emailId);
+                await setDoc(ref, { overrideAte: overrideTime }, { merge: true });
+                alert("Turno estendido temporariamente.");
+            }
+        };
+
+        window.excluirFuncionarioAdmin = async (emailId) => {
+            if(confirm("⚠️ ATENÇÃO: Isso revogará imediatamente o acesso desta pessoa ao sistema. Confirmar bloqueio?")) {
+                const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${window.condominioLogado.id}`, emailId);
+                // Não excluímos do Auth (pois requer Admin SDK backend), mas setamos ativo=false. 
+                // O app verificará no onAuthStateChanged e deslogará a pessoa.
+                await setDoc(ref, { ativo: false }, { merge: true });
+                alert("Acesso bloqueado com sucesso!");
             }
         };
 
@@ -2110,84 +1446,63 @@
             if (!idDomain) return;
 
             const blocosPermitidos = blocosStr.split(',').map(b => b.trim()).filter(b => b);
-            
-            const novoConfig = {
-                nome: nome,
-                blocosPermitidos: blocosPermitidos
-            };
-            if(min) novoConfig.aptoMin = parseInt(min);
-            if(max) novoConfig.aptoMax = parseInt(max);
-            if(term) novoConfig.terminacaoObrigatoria = parseInt(term);
+            const novoConfig = { nome: nome, blocosPermitidos: blocosPermitidos };
+            if(min) novoConfig.aptoMin = parseInt(min); if(max) novoConfig.aptoMax = parseInt(max); if(term) novoConfig.terminacaoObrigatoria = parseInt(term);
 
-            try {
-                const configRef = doc(dbFS, 'artifacts', appId, 'public', 'data', 'condominios', idDomain);
-                await setDoc(configRef, novoConfig);
-                alert(`Condomínio '${nome}' registrado com sucesso!`);
-                e.target.reset();
-            } catch(err) {
-                alert("Falha ao criar condomínio.");
-                console.error(err);
-            }
+            try { await setDoc(doc(dbFS, 'artifacts', appId, 'public', 'data', 'condominios', idDomain), novoConfig); alert(`Condomínio '${nome}' registrado!`); e.target.reset(); } 
+            catch(err) { alert("Falha ao criar condomínio."); }
         };
 
-        let unsubMasterMoradores = null;
-        window.listaMoradoresMasterLocal = []; 
+        let unsubMasterMoradores = null; let unsubMasterFuncionarios = null;
+        window.listaMoradoresMasterLocal = []; window.listaFuncionariosMasterLocal = [];
 
         window.carregarDadosMaster = (tenantId) => {
             const dataArea = document.getElementById('master-data-area');
-            if (!tenantId) { 
-                dataArea.classList.add('hidden'); 
-                if(unsubMasterMoradores) unsubMasterMoradores(); 
-                return; 
-            }
-            
+            if (!tenantId) { dataArea.classList.add('hidden'); if(unsubMasterMoradores) unsubMasterMoradores(); if(unsubMasterFuncionarios) unsubMasterFuncionarios(); return; }
             dataArea.classList.remove('hidden');
             
             if(unsubMasterMoradores) unsubMasterMoradores();
-            const moradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantId}`);
-            
-            unsubMasterMoradores = onSnapshot(moradoresRef, (snap) => {
-                window.listaMoradoresMasterLocal = [];
-                snap.forEach(doc => window.listaMoradoresMasterLocal.push({id: doc.id, ...doc.data()}));
-                document.getElementById('master-count-moradores').innerText = window.listaMoradoresMasterLocal.length;
-                window.renderMasterMoradores('');
+            unsubMasterMoradores = onSnapshot(collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantId}`), (snap) => {
+                window.listaMoradoresMasterLocal = []; snap.forEach(doc => window.listaMoradoresMasterLocal.push({id: doc.id, ...doc.data()}));
+                document.getElementById('master-count-moradores').innerText = window.listaMoradoresMasterLocal.length; window.renderMasterMoradores('');
+            });
+
+            if(unsubMasterFuncionarios) unsubMasterFuncionarios();
+            unsubMasterFuncionarios = onSnapshot(collection(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`), (snap) => {
+                window.listaFuncionariosMasterLocal = []; snap.forEach(doc => { if(doc.data().ativo !== false) window.listaFuncionariosMasterLocal.push({id: doc.id, ...doc.data()}); });
+                window.renderMasterFuncionarios();
             });
         };
 
-        window.renderMasterMoradores = (termo = '') => {
-            const container = document.getElementById('lista-moradores-master');
-            if(!container) return;
-            
-            const txt = termo.toLowerCase().trim();
-            const filtrados = window.listaMoradoresMasterLocal.filter(m => {
-                if(!txt) return true; 
-                return `${m.bloco} ${m.apto} ${m.nome}`.toLowerCase().includes(txt);
-            }).sort((a,b) => a.bloco.localeCompare(b.bloco) || a.apto - b.apto);
-
-            if(filtrados.length === 0) { 
-                container.innerHTML = '<p class="text-[9px] text-slate-400 text-center font-bold p-2">Vazio</p>'; 
-                return; 
-            }
-
-            container.innerHTML = filtrados.map(m => `
+        window.renderMasterFuncionarios = () => {
+            const container = document.getElementById('lista-funcionarios-master'); if(!container) return;
+            if(window.listaFuncionariosMasterLocal.length === 0) { container.innerHTML = '<p class="text-[9px] text-slate-400 text-center font-bold p-2">Sem funcionários registrados.</p>'; return; }
+            container.innerHTML = window.listaFuncionariosMasterLocal.map(f => `
                 <div class="flex justify-between items-center p-1.5 hover:bg-slate-50 border-b border-slate-100 last:border-0">
-                    <p class="text-[10px] font-bold text-slate-700 uppercase"><span class="text-blue-500 mr-1">${m.apto}${m.bloco}</span> ${m.nome}</p>
-                    <button onclick="excluirMoradorMaster('${m.id}')" class="text-red-400 hover:text-red-600"><i data-lucide="x" class="w-3 h-3"></i></button>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-700">${f.nome}</p>
+                        <p class="text-[8px] text-indigo-500 uppercase tracking-widest">${f.role} • ${f.horaInicio} - ${f.horaFim}</p>
+                    </div>
+                    <button onclick="excluirFuncionarioMaster('${f.id}')" class="text-red-400 hover:text-red-600" title="Revogar"><i data-lucide="x" class="w-4 h-4"></i></button>
                 </div>
             `).join('');
             lucide.createIcons();
         };
 
-        window.filtrarMoradoresMaster = (t) => window.renderMasterMoradores(t);
-        
-        window.excluirMoradorMaster = async (idMorador) => {
-            const tenantIdAlvo = document.getElementById('master-select-condo').value;
-            if(!tenantIdAlvo) return;
-            if(confirm("Remover este morador?")) {
-                const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantIdAlvo}`, idMorador);
-                deleteDoc(ref).catch(e => alert("Erro"));
-            }
+        window.excluirFuncionarioMaster = async (emailId) => {
+            const tenantIdAlvo = document.getElementById('master-select-condo').value; if(!tenantIdAlvo) return;
+            if(confirm("Revogar acesso?")) { await setDoc(doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, emailId), { ativo: false }, { merge: true }); alert("Bloqueado."); }
         };
+
+        window.renderMasterMoradores = (termo = '') => {
+            const container = document.getElementById('lista-moradores-master'); if(!container) return;
+            const txt = termo.toLowerCase().trim(); const filtrados = window.listaMoradoresMasterLocal.filter(m => { if(!txt) return true; return `${m.bloco} ${m.apto} ${m.nome}`.toLowerCase().includes(txt); }).sort((a,b) => a.bloco.localeCompare(b.bloco) || a.apto - b.apto);
+            if(filtrados.length === 0) { container.innerHTML = '<p class="text-[9px] text-slate-400 text-center font-bold p-2">Vazio</p>'; return; }
+            container.innerHTML = filtrados.map(m => `<div class="flex justify-between items-center p-1.5 hover:bg-slate-50 border-b border-slate-100 last:border-0"><p class="text-[10px] font-bold text-slate-700 uppercase"><span class="text-blue-500 mr-1">${m.apto}${m.bloco}</span> ${m.nome}</p><button onclick="excluirMoradorMaster('${m.id}')" class="text-red-400 hover:text-red-600"><i data-lucide="x" class="w-3 h-3"></i></button></div>`).join('');
+            lucide.createIcons();
+        };
+        window.filtrarMoradoresMaster = (t) => window.renderMasterMoradores(t);
+        window.excluirMoradorMaster = async (idMorador) => { const tenantIdAlvo = document.getElementById('master-select-condo').value; if(!tenantIdAlvo) return; if(confirm("Remover?")) { deleteDoc(doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantIdAlvo}`, idMorador)).catch(e => alert("Erro")); } };
 
         // --- RENDERIZAÇÃO DA UI PRINCIPAL ---
         window.createCardHTML = (g, key, badgesHist) => {
