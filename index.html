@@ -477,7 +477,7 @@
                 <div id="render-container" class="space-y-4 pb-10"></div>
             </div>
 
-            <!-- ÁREA DE GESTÃO ADMIN (Somente do Condomínio do utilizador) -->
+            <!-- ÁREA DE GESTÃO ADMIN -->
             <div id="area-admin" class="hidden space-y-6">
                 <!-- Dashboard Global -->
                 <div class="bg-purple-600 p-6 rounded-3xl shadow-lg text-white text-center animate-fade-in relative overflow-hidden">
@@ -526,7 +526,7 @@
 
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Email (Apenas Prefixo)</label>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Email (Apenas Nome)</label>
                                 <div class="flex">
                                     <input id="admin-func-email-prefix" type="text" oninput="this.value = this.value.split('@')[0]" required class="input-field py-2 text-xs rounded-r-none border-r-0" placeholder="joao">
                                     <span id="admin-func-email-domain" class="bg-slate-200 border border-slate-300 border-l-0 rounded-r-xl px-3 flex items-center text-[10px] text-slate-600 font-black overflow-hidden whitespace-nowrap text-ellipsis max-w-[140px]">@...</span>
@@ -578,9 +578,9 @@
                             </div>
 
                             <div id="admin-func-data-base-container" class="hidden mt-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
-                                <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Data Base (Primeiro dia trabalhado)</label>
+                                <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Data Base (Primeiro dia trabalhado na escala)</label>
                                 <input id="admin-func-data-base" type="date" class="input-field py-1.5 text-xs mt-1">
-                                <p class="text-[8px] text-slate-400 mt-1 ml-1 leading-tight">O sistema usará esta data para calcular automaticamente as folgas intercaladas.</p>
+                                <p class="text-[8px] text-slate-400 mt-1 ml-1 leading-tight">O sistema usará esta data para calcular as folgas intercaladas automaticamente.</p>
                             </div>
                         </div>
 
@@ -741,9 +741,9 @@
                     <form onsubmit="cadastrarCondominio(event)" class="space-y-4">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Domínio (Sem o @) <span class="text-red-500">*</span></label>
-                                <input id="master-condo-id" type="text" required class="input-field py-2 text-xs" placeholder="Ex: predioazul.com">
-                                <p class="text-[8px] text-slate-400 mt-1 ml-1 leading-tight">O texto que aparece DEPOIS do @ nos emails deste prédio.</p>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">ID do Condomínio <span class="text-red-500">*</span></label>
+                                <input id="master-condo-id" type="text" required class="input-field py-2 text-xs" placeholder="Ex: predioazul">
+                                <p class="text-[8px] text-slate-400 mt-1 ml-1 leading-tight">O nome principal do domínio do email (sem o @ e sem o .com)</p>
                             </div>
                             <div>
                                 <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nome de Exibição</label>
@@ -766,7 +766,7 @@
                             <div>
                                 <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Terminação Restrita</label>
                                 <input id="master-condo-term" type="number" class="input-field py-2 text-xs" placeholder="Deixe Vazio para todas">
-                                <p class="text-[7px] text-slate-400 mt-1 leading-tight">Use apenas se os aptos tiverem um final padrão (Ex: '1' para 11, 21, 31...).</p>
+                                <p class="text-[7px] text-slate-400 mt-1 leading-tight">Ex: '1' para 11, 21, 31...</p>
                             </div>
                         </div>
                         <button type="submit" class="w-full bg-red-600 text-white font-black uppercase text-[10px] py-3 rounded-xl hover:bg-red-700 transition-colors shadow-sm">
@@ -790,12 +790,12 @@
 
                     <div id="master-data-area" class="hidden space-y-6">
                         
-                        <!-- ACESSO OPERACIONAL DO MASTER (Visualizar e Editar Encomendas) -->
+                        <!-- ACESSO OPERACIONAL DO MASTER -->
                         <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200 text-center shadow-sm">
                             <i data-lucide="boxes" class="w-6 h-6 text-blue-500 mx-auto mb-2"></i>
                             <h4 class="text-[10px] font-black text-blue-800 uppercase mb-1">Acesso Operacional</h4>
                             <p class="text-[10px] text-blue-700 font-medium leading-tight mb-3">
-                                Como Master, você pode entrar na portaria deste condomínio para auditar, visualizar e editar as encomendas.
+                                Como Master, você pode entrar na portaria deste condomínio para auditar e gerenciar.
                             </p>
                             <button onclick="acessarPortariaMaster()" class="bg-blue-600 text-white font-black uppercase text-[10px] py-2 px-6 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
                                 Entrar na Portaria do Condomínio
@@ -1272,7 +1272,7 @@
                 const domainPart = emailStr.split('@')[1] || '';
                 window.adminDomain = domainPart || 'dominio.com'; 
                 
-                // RESTAURAÇÃO COMPLETA DO CAMINHO ORIGINAL DO SEU BANCO DE DADOS
+                // RESTAURAÇÃO COMPLETA: Usar o prefixo do domínio garante que não perde os dados antigos
                 const tenantId = domainPart.split('.')[0] || 'default'; 
 
                 await window.carregarRegrasSaaS(tenantId);
@@ -1441,11 +1441,14 @@
         };
 
         // ==========================================
-        // ACESSO OPERACIONAL DO MASTER (NOVO)
+        // ACESSO OPERACIONAL DO MASTER
         // ==========================================
-        window.acessarPortariaMaster = () => {
+        window.acessarPortariaMaster = async () => {
             const tenantIdAlvo = document.getElementById('master-select-condo').value;
             if(!tenantIdAlvo) return;
+
+            // CARREGA AS REGRAS DO CONDOMÍNIO PARA OS FILTROS FUNCIONAREM
+            await window.carregarRegrasSaaS(tenantIdAlvo);
 
             if (unsubscribeSnapshot) unsubscribeSnapshot();
             
@@ -1474,7 +1477,7 @@
         };
 
         // ==========================================
-        // PROCESSAMENTO DE FOTOS
+        // PROCESSAMENTO DE FOTOS E MEDIA
         // ==========================================
         window.processarFoto = (inputOrFile, isFile = false) => { 
             let file = isFile ? inputOrFile : (inputOrFile.files && inputOrFile.files[0]); 
@@ -1753,7 +1756,7 @@
         
         window.confirmarBaixaReal = async () => { 
             if (!window.verificarTurno()) { 
-                alert("⚠️ Ação Bloqueada: Seu turno de trabalho não permite registrar agora!"); 
+                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento ou solicite a extensão do seu turno."); 
                 return; 
             } 
             if (!window.baixaTargetId) return; 
@@ -1786,7 +1789,7 @@
         
         window.transferirTodosParaMensageria = async () => { 
             if (!window.verificarTurno()) { 
-                alert("⚠️ Ação Bloqueada: Seu turno encerrou!"); 
+                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento ou solicite a extensão do seu turno."); 
                 return; 
             } 
             
@@ -1866,7 +1869,7 @@
             e.preventDefault();
             
             if (!window.verificarTurno()) { 
-                alert("⚠️ AÇÃO BLOQUEADA!\n\nVocê está fora do seu horário de trabalho ou no dia de folga.\nSe o seu plantão atrasou, solicite ao Síndico para 'Estender seu Turno' no painel de Gestão."); 
+                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento ou solicite a extensão do seu turno."); 
                 return; 
             }
             
@@ -2008,7 +2011,7 @@
             
             let email = isMasterPanel 
                 ? document.getElementById(`${prefix}-func-email`).value.trim().toLowerCase() 
-                : `${document.getElementById(`${prefix}-func-email-prefix`).value.trim().toLowerCase()}@${window.adminDomain}`;
+                : `${document.getElementById(`${prefix}-func-email-prefix`).value.trim().toLowerCase().split('@')[0]}@${window.adminDomain}`;
                 
             const senha = document.getElementById(`${prefix}-func-senha`).value;
             const role = document.getElementById(`${prefix}-func-role`).value;
@@ -2133,7 +2136,11 @@
         // ==========================================
         window.cadastrarCondominio = async (e) => {
             e.preventDefault();
-            const idDomain = document.getElementById('master-condo-id').value.trim().toLowerCase(); 
+            
+            // Corrige automaticamente a entrada do Master para extrair apenas o prefixo (o tenantId)
+            let idDomainRaw = document.getElementById('master-condo-id').value.trim().toLowerCase(); 
+            const idDomain = idDomainRaw.replace('@', '').split('.')[0];
+
             const nome = document.getElementById('master-condo-nome').value.trim(); 
             const blocosStr = document.getElementById('master-condo-blocos').value.toUpperCase(); 
             const min = document.getElementById('master-condo-min').value; 
@@ -2475,7 +2482,7 @@
         }
 
         // ==========================================
-        // EXPORTAÇÃO (Excel e JSON)
+        // EXPORTAÇÃO E LEITOR DE BACKUP
         // ==========================================
         window.exportarExcel = () => { 
             let csv = 'Data Entrada;Hora Entrada;Bloco;Apartamento;Morador;Empresa;Remetente;Descricao;Qtd;NF/Doc;Recebedor (Portaria);Status;Data Saida/Mensageria;Quem Entregou;Quem Retirou\n'; 
@@ -2520,6 +2527,128 @@
             a.href = u; 
             a.download = `backup-sistema-${month}-${year}.json`; 
             a.click(); 
+        }
+
+        window.backupLocalData = [];
+        
+        window.renderBackupViewer = (filtro = '') => { 
+            const viewer = document.getElementById('backup-viewer'); 
+            if(!viewer) return;
+
+            const termo = filtro.toLowerCase().trim(); 
+            const filtrados = window.backupLocalData.filter(it => { 
+                if (!termo) return true; 
+                const searchString = `${it.apto || ''} ${it.bloco || ''} ${it.morador || ''} ${it.remetente || ''} ${it.empresa || ''} ${it.nf || ''} ${it.descricao || ''}`.toLowerCase(); 
+                return searchString.includes(termo); 
+            }); 
+            
+            if (filtrados.length === 0) { 
+                viewer.innerHTML = '<p class="text-[11px] text-slate-500 text-center font-bold uppercase py-4">Nenhum registro encontrado para esta busca.</p>'; 
+            } else { 
+                viewer.innerHTML = filtrados.map((it, idx) => { 
+                    const unidade = `${it.apto || ''}${it.bloco || ''}`.trim(); 
+                    const morador = it.morador || 'Morador'; 
+                    const data = it.data || 'Sem data'; 
+                    const status = it.status || 'sem-status'; 
+                    
+                    let percursoHtml = ''; 
+                    const temMensageria = !!it.dataMensageria; 
+                    const temSaidaFinal = !!it.saida; 
+                    
+                    if (temMensageria) { 
+                        const dtMens = new Date(it.dataMensageria).toLocaleString('pt-PT'); 
+                        percursoHtml += `<p class="text-[9px] text-indigo-600 font-bold uppercase border-l-2 border-indigo-400 pl-2 mt-1">1. Portaria ➔ Mensageria<br><span class="text-slate-700 text-[10px] font-black tracking-normal">${dtMens}</span></p>`; 
+                    } 
+                    
+                    if (temSaidaFinal) { 
+                        const dtSaida = new Date(it.saida).toLocaleString('pt-PT'); 
+                        if (it.destino === 'entregue_mensageria') { 
+                            percursoHtml += `<p class="text-[9px] text-emerald-600 font-bold uppercase border-l-2 border-emerald-400 pl-2 mt-1">${temMensageria ? '2.' : '1.'} Mensageria ➔ Morador<br><span class="text-slate-700 text-[10px] font-black tracking-normal">${dtSaida}</span></p>`; 
+                        } else if (it.destino === 'morador') { 
+                            percursoHtml += `<p class="text-[9px] text-emerald-600 font-bold uppercase border-l-2 border-emerald-400 pl-2 mt-1">1. Portaria ➔ Morador<br><span class="text-slate-700 text-[10px] font-black tracking-normal">${dtSaida}</span></p>`; 
+                        } 
+                    } 
+                    
+                    if (it.entreguePor || it.retiradoPor) { 
+                        percursoHtml += `<div class="bg-white mt-2 p-2.5 rounded-lg border border-slate-200 shadow-sm space-y-0.5">${it.entreguePor ? `<p class="text-[9px] text-slate-600 font-bold uppercase">Entregue por: <span class="text-slate-900 text-[10px]">${it.entreguePor}</span></p>` : ''}${it.retiradoPor ? `<p class="text-[9px] text-slate-600 font-bold uppercase">Retirado por: <span class="text-slate-900 text-[10px]">${it.retiradoPor}</span></p>` : ''}</div>`; 
+                    } 
+                    
+                    return `<div class="mb-2 pb-2 border-b border-slate-200 last:border-b-0 last:pb-0"><div class="flex justify-between items-center"><span class="text-[10px] font-black text-slate-500 uppercase">#${idx + 1} • ${unidade}</span><span class="text-[9px] font-bold uppercase ${status === 'entregue' ? 'text-emerald-600' : 'text-slate-500'}">${status}</span></div><p class="text-[11px] font-semibold text-slate-800 mt-0.5">${morador}</p><p class="text-[10px] text-slate-500 mt-0.5">${it.descricao || ''}</p><p class="text-[9px] text-slate-400 mt-0.5">${data} • NF: ${it.nf || 'S/N'}</p>${percursoHtml ? `<div class="mt-2 pt-2 border-t border-slate-200 bg-slate-50 rounded-lg px-2 pb-2"><p class="text-[9px] text-slate-500 font-black uppercase tracking-wide mb-1">Percurso</p>${percursoHtml}</div>` : ''}</div>`; 
+                }).join(''); 
+            } 
+            viewer.classList.remove('hidden'); 
+            if(window.lucide) lucide.createIcons(); 
+        };
+
+        window.filtrarBackupLocal = (termo) => { 
+            window.renderBackupViewer(termo); 
+        };
+
+        window.visualizarBackupLocal = (input) => { 
+            if(input.files && input.files[0]) { 
+                const r = new FileReader(); 
+                r.onload = (e) => { 
+                    try { 
+                        const jsonData = JSON.parse(e.target.result); 
+                        if (!Array.isArray(jsonData) || jsonData.length === 0) { 
+                            document.getElementById('backup-viewer').innerText = "Nenhum registo encontrado neste backup."; 
+                            document.getElementById('backup-viewer').classList.remove('hidden'); 
+                            document.getElementById('backup-search-container').classList.add('hidden'); 
+                        } else { 
+                            window.backupLocalData = jsonData; 
+                            document.getElementById('backup-search-container').classList.remove('hidden'); 
+                            document.getElementById('input-busca-backup').value = ''; 
+                            window.renderBackupViewer(''); 
+                        } 
+                    } catch (err) { 
+                        alert("Arquivo JSON inválido."); 
+                    } 
+                }; 
+                r.readAsText(input.files[0]); 
+            } 
+        };
+
+        window.limparVisualizacaoBackup = () => { 
+            window.backupLocalData = []; 
+            const viewer = document.getElementById('backup-viewer'); 
+            if (viewer) { 
+                viewer.innerHTML = ''; 
+                viewer.classList.add('hidden'); 
+            } 
+            const searchContainer = document.getElementById('backup-search-container'); 
+            if (searchContainer) { 
+                searchContainer.classList.add('hidden'); 
+                document.getElementById('input-busca-backup').value = ''; 
+            } 
+            const fileInput = document.getElementById('input-file-backup'); 
+            if(fileInput) fileInput.value = ''; 
+        };
+
+        window.importarDados = async (input) => { 
+            if(input.files && input.files[0]) { 
+                if(!confirm("⚠️ AVISO: Importar vai MESCLAR os dados antigos com os atuais da base de dados online. Deseja mesmo importar?")) { 
+                    input.value = ""; 
+                    return; 
+                } 
+                const r = new FileReader(); 
+                r.onload = async (e) => { 
+                    try { 
+                        const jsonData = JSON.parse(e.target.result); 
+                        const batch = writeBatch(dbFS); 
+                        let count = 0; 
+                        for(let i = 0; i < jsonData.length; i++) { 
+                            const ref = doc(window.encomendasRefAtiva, String(jsonData[i].id)); 
+                            batch.set(ref, jsonData[i]); 
+                            count++; 
+                        } 
+                        await batch.commit(); 
+                        alert(`${count} encomendas importadas para a Nuvem com Sucesso!`); 
+                    } catch(err){ 
+                        alert("Erro ao importar."); 
+                    } 
+                }; 
+                r.readAsText(input.files[0]); 
+            } 
         }
 
         // ==========================================
