@@ -155,7 +155,9 @@
                     <h3 class="font-black text-slate-800 uppercase text-sm flex items-center gap-2">
                         <i data-lucide="scan-line" class="w-4 h-4 text-blue-600"></i> Escanear Etiqueta
                     </h3>
-                    <button onclick="stopScanner()" class="text-slate-400 p-2 bg-slate-100 rounded-full hover:bg-slate-200"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    <button onclick="stopScanner()" class="text-slate-400 p-2 bg-slate-100 rounded-full hover:bg-slate-200">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
                 </div>
                 <div id="reader" class="w-full rounded-xl overflow-hidden bg-slate-100 min-h-[300px]"></div>
                 <p class="text-[10px] text-slate-500 text-center mt-3 font-medium uppercase">Aponte a câmera para o código de barras ou QR Code da encomenda.</p>
@@ -166,7 +168,9 @@
         <div id="modal-whatsapp" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 modal-overlay">
             <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in">
                 <div class="flex justify-center mb-2">
-                    <div class="bg-green-100 p-3 rounded-2xl text-green-600"><i data-lucide="message-circle" class="w-8 h-8"></i></div>
+                    <div class="bg-green-100 p-3 rounded-2xl text-green-600">
+                        <i data-lucide="message-circle" class="w-8 h-8"></i>
+                    </div>
                 </div>
                 <h3 class="font-black text-slate-800 uppercase text-center text-sm">Notificar via WhatsApp</h3>
                 <div class="flex flex-col gap-3 pt-2">
@@ -192,7 +196,9 @@
                 <h3 class="font-black text-slate-800 uppercase text-sm">Confirmação de Envio</h3>
                 <p class="text-xs text-slate-500 font-medium px-2">A mensagem foi enviada com sucesso para o morador?</p>
                 <div class="flex gap-3 pt-4">
-                    <button onclick="closeConfirmSentModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-500 font-black rounded-xl text-[10px] uppercase transition-colors">Ainda Não</button>
+                    <button onclick="closeConfirmSentModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-500 font-black rounded-xl text-[10px] uppercase transition-colors">
+                        Ainda Não
+                    </button>
                     <button onclick="confirmMessageSent()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-[10px] uppercase shadow-lg transition-colors flex items-center justify-center gap-2">
                         <i data-lucide="check" class="w-4 h-4"></i> Sim, Enviada
                     </button>
