@@ -528,7 +528,6 @@
                             <div>
                                 <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Email (Apenas Prefixo)</label>
                                 <div class="flex">
-                                    <!-- AQUI ESTÁ A CORREÇÃO (oninput) PARA NÃO DEIXAR DIGITAR O '@' -->
                                     <input id="admin-func-email-prefix" type="text" oninput="this.value = this.value.split('@')[0]" required class="input-field py-2 text-xs rounded-r-none border-r-0" placeholder="joao">
                                     <span id="admin-func-email-domain" class="bg-slate-200 border border-slate-300 border-l-0 rounded-r-xl px-3 flex items-center text-[10px] text-slate-600 font-black overflow-hidden whitespace-nowrap text-ellipsis max-w-[140px]">@...</span>
                                 </div>
@@ -568,39 +567,16 @@
                                 <option value="12x36">12x36 (Dia sim, dia não)</option>
                             </select>
 
-                            <!-- Checkboxes de Dias da Semana -->
                             <div id="admin-func-dias-container" class="grid grid-cols-4 sm:grid-cols-7 gap-1 mt-2">
-                                <div class="relative">
-                                    <input type="checkbox" id="adm-day-1" value="1" class="day-checkbox hidden peer" checked>
-                                    <label for="adm-day-1" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Seg</label>
-                                </div>
-                                <div class="relative">
-                                    <input type="checkbox" id="adm-day-2" value="2" class="day-checkbox hidden peer" checked>
-                                    <label for="adm-day-2" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Ter</label>
-                                </div>
-                                <div class="relative">
-                                    <input type="checkbox" id="adm-day-3" value="3" class="day-checkbox hidden peer" checked>
-                                    <label for="adm-day-3" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qua</label>
-                                </div>
-                                <div class="relative">
-                                    <input type="checkbox" id="adm-day-4" value="4" class="day-checkbox hidden peer" checked>
-                                    <label for="adm-day-4" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qui</label>
-                                </div>
-                                <div class="relative">
-                                    <input type="checkbox" id="adm-day-5" value="5" class="day-checkbox hidden peer" checked>
-                                    <label for="adm-day-5" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sex</label>
-                                </div>
-                                <div class="relative">
-                                    <input type="checkbox" id="adm-day-6" value="6" class="day-checkbox hidden peer">
-                                    <label for="adm-day-6" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sab</label>
-                                </div>
-                                <div class="relative">
-                                    <input type="checkbox" id="adm-day-0" value="0" class="day-checkbox hidden peer">
-                                    <label for="adm-day-0" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Dom</label>
-                                </div>
+                                <div class="relative"><input type="checkbox" id="adm-day-1" value="1" class="day-checkbox hidden peer" checked><label for="adm-day-1" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Seg</label></div>
+                                <div class="relative"><input type="checkbox" id="adm-day-2" value="2" class="day-checkbox hidden peer" checked><label for="adm-day-2" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Ter</label></div>
+                                <div class="relative"><input type="checkbox" id="adm-day-3" value="3" class="day-checkbox hidden peer" checked><label for="adm-day-3" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qua</label></div>
+                                <div class="relative"><input type="checkbox" id="adm-day-4" value="4" class="day-checkbox hidden peer" checked><label for="adm-day-4" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qui</label></div>
+                                <div class="relative"><input type="checkbox" id="adm-day-5" value="5" class="day-checkbox hidden peer" checked><label for="adm-day-5" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sex</label></div>
+                                <div class="relative"><input type="checkbox" id="adm-day-6" value="6" class="day-checkbox hidden peer"><label for="adm-day-6" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sab</label></div>
+                                <div class="relative"><input type="checkbox" id="adm-day-0" value="0" class="day-checkbox hidden peer"><label for="adm-day-0" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Dom</label></div>
                             </div>
 
-                            <!-- Data Base 12x36 -->
                             <div id="admin-func-data-base-container" class="hidden mt-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
                                 <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Data Base (Primeiro dia trabalhado)</label>
                                 <input id="admin-func-data-base" type="date" class="input-field py-1.5 text-xs mt-1">
@@ -810,11 +786,22 @@
                     <p class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Selecione o Condomínio Alvo</p>
                     <select id="master-select-condo" onchange="window.carregarDadosMaster(this.value)" class="input-field mb-4 bg-slate-50 cursor-pointer text-xs">
                         <option value="">Selecione para carregar dados...</option>
-                        <!-- Injetado via JS -->
                     </select>
 
                     <div id="master-data-area" class="hidden space-y-6">
                         
+                        <!-- ACESSO OPERACIONAL DO MASTER (Visualizar e Editar Encomendas) -->
+                        <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200 text-center shadow-sm">
+                            <i data-lucide="boxes" class="w-6 h-6 text-blue-500 mx-auto mb-2"></i>
+                            <h4 class="text-[10px] font-black text-blue-800 uppercase mb-1">Acesso Operacional</h4>
+                            <p class="text-[10px] text-blue-700 font-medium leading-tight mb-3">
+                                Como Master, você pode entrar na portaria deste condomínio para auditar, visualizar e editar as encomendas.
+                            </p>
+                            <button onclick="acessarPortariaMaster()" class="bg-blue-600 text-white font-black uppercase text-[10px] py-2 px-6 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+                                Entrar na Portaria do Condomínio
+                            </button>
+                        </div>
+
                         <!-- Cadastro de Funcionários Master -->
                         <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
                             <h4 class="text-[10px] font-black text-indigo-800 uppercase mb-3">
@@ -851,34 +838,13 @@
                                     </select>
         
                                     <div id="master-func-dias-container" class="grid grid-cols-4 sm:grid-cols-7 gap-1 mt-2">
-                                        <div class="relative">
-                                            <input type="checkbox" id="mst-day-1" value="1" class="day-checkbox hidden peer" checked>
-                                            <label for="mst-day-1" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Seg</label>
-                                        </div>
-                                        <div class="relative">
-                                            <input type="checkbox" id="mst-day-2" value="2" class="day-checkbox hidden peer" checked>
-                                            <label for="mst-day-2" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Ter</label>
-                                        </div>
-                                        <div class="relative">
-                                            <input type="checkbox" id="mst-day-3" value="3" class="day-checkbox hidden peer" checked>
-                                            <label for="mst-day-3" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qua</label>
-                                        </div>
-                                        <div class="relative">
-                                            <input type="checkbox" id="mst-day-4" value="4" class="day-checkbox hidden peer" checked>
-                                            <label for="mst-day-4" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qui</label>
-                                        </div>
-                                        <div class="relative">
-                                            <input type="checkbox" id="mst-day-5" value="5" class="day-checkbox hidden peer" checked>
-                                            <label for="mst-day-5" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sex</label>
-                                        </div>
-                                        <div class="relative">
-                                            <input type="checkbox" id="mst-day-6" value="6" class="day-checkbox hidden peer">
-                                            <label for="mst-day-6" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sab</label>
-                                        </div>
-                                        <div class="relative">
-                                            <input type="checkbox" id="mst-day-0" value="0" class="day-checkbox hidden peer">
-                                            <label for="mst-day-0" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Dom</label>
-                                        </div>
+                                        <div class="relative"><input type="checkbox" id="mst-day-1" value="1" class="day-checkbox hidden peer" checked><label for="mst-day-1" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Seg</label></div>
+                                        <div class="relative"><input type="checkbox" id="mst-day-2" value="2" class="day-checkbox hidden peer" checked><label for="mst-day-2" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Ter</label></div>
+                                        <div class="relative"><input type="checkbox" id="mst-day-3" value="3" class="day-checkbox hidden peer" checked><label for="mst-day-3" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qua</label></div>
+                                        <div class="relative"><input type="checkbox" id="mst-day-4" value="4" class="day-checkbox hidden peer" checked><label for="mst-day-4" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qui</label></div>
+                                        <div class="relative"><input type="checkbox" id="mst-day-5" value="5" class="day-checkbox hidden peer" checked><label for="mst-day-5" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sex</label></div>
+                                        <div class="relative"><input type="checkbox" id="mst-day-6" value="6" class="day-checkbox hidden peer"><label for="mst-day-6" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sab</label></div>
+                                        <div class="relative"><input type="checkbox" id="mst-day-0" value="0" class="day-checkbox hidden peer"><label for="mst-day-0" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Dom</label></div>
                                     </div>
         
                                     <div id="master-func-data-base-container" class="hidden mt-2 bg-indigo-100 p-2 rounded-xl border border-indigo-200">
@@ -1306,8 +1272,8 @@
                 const domainPart = emailStr.split('@')[1] || '';
                 window.adminDomain = domainPart || 'dominio.com'; 
                 
-                // USA O DOMINIO INTEIRO COMO TENANT ID
-                const tenantId = domainPart || 'default'; 
+                // RESTAURAÇÃO COMPLETA DO CAMINHO ORIGINAL DO SEU BANCO DE DADOS
+                const tenantId = domainPart.split('.')[0] || 'default'; 
 
                 await window.carregarRegrasSaaS(tenantId);
                 const headerCondName = document.getElementById('nome-condominio-header'); 
@@ -1472,6 +1438,39 @@
                     await signOut(auth); 
                 } catch (error) {} 
             } 
+        };
+
+        // ==========================================
+        // ACESSO OPERACIONAL DO MASTER (NOVO)
+        // ==========================================
+        window.acessarPortariaMaster = () => {
+            const tenantIdAlvo = document.getElementById('master-select-condo').value;
+            if(!tenantIdAlvo) return;
+
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+            
+            const collectionName = tenantIdAlvo === 'default' ? 'encomendas' : `encomendas_${tenantIdAlvo}`;
+            window.encomendasRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', collectionName);
+            
+            const selectEl = document.getElementById('master-select-condo');
+            const nomeCondo = selectEl.options[selectEl.selectedIndex].text;
+            document.getElementById('nome-condominio-header').innerText = `MODO MASTER: ${nomeCondo}`;
+
+            unsubscribeSnapshot = onSnapshot(window.encomendasRefAtiva, { includeMetadataChanges: true }, (snapshot) => {
+                const hasPendingWrites = snapshot.metadata.hasPendingWrites; 
+                window.updateStatusUI(navigator.onLine, hasPendingWrites);
+                window.db = snapshot.docs.map(doc => { 
+                    const data = doc.data(); 
+                    data.isOffline = doc.metadata.hasPendingWrites; 
+                    return data; 
+                });
+                window.renderAdminStats(); 
+                window.render(); 
+            });
+
+            document.getElementById('area-master').style.display = 'none';
+            document.getElementById('area-operacional').style.display = 'block';
+            window.switchTab('pendentes');
         };
 
         // ==========================================
@@ -2007,10 +2006,9 @@
 
             const nome = document.getElementById(`${prefix}-func-nome`).value.trim();
             
-            // MAGIA AQUI: Se o input tiver um '@' por engano, ele limpa. E usa a variável travada.
             let email = isMasterPanel 
                 ? document.getElementById(`${prefix}-func-email`).value.trim().toLowerCase() 
-                : `${document.getElementById(`${prefix}-func-email-prefix`).value.trim().toLowerCase().split('@')[0]}@${window.adminDomain}`;
+                : `${document.getElementById(`${prefix}-func-email-prefix`).value.trim().toLowerCase()}@${window.adminDomain}`;
                 
             const senha = document.getElementById(`${prefix}-func-senha`).value;
             const role = document.getElementById(`${prefix}-func-role`).value;
@@ -2886,6 +2884,7 @@
                         typeContainer.className = "mb-4";
                         
                         let th = '', col = '', ic = '';
+                        
                         if (window.abaAtiva === 'entregues') { 
                             col = type === 'Portaria' ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-indigo-600 bg-indigo-50 border-indigo-100'; 
                             ic = type === 'Portaria' ? 'building' : 'package-check'; 
