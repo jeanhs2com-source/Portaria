@@ -247,10 +247,6 @@
                             <input id="edit-permanencia" type="text" class="input-field" placeholder="Ex: 18:00">
                         </div>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Token / Código de Saída</label>
-                        <input id="edit-tokens" type="text" class="input-field" placeholder="Ex: 1234">
-                    </div>
                 </div>
                 <div class="flex gap-3 pt-4">
                     <button onclick="closeEditModal()" class="flex-1 py-3 bg-slate-100 text-slate-500 font-black rounded-xl text-xs uppercase">Cancelar</button>
@@ -477,7 +473,7 @@
                 <div id="render-container" class="space-y-4 pb-10"></div>
             </div>
 
-            <!-- ÁREA DE GESTÃO ADMIN -->
+            <!-- ÁREA DE GESTÃO ADMIN (Somente do Condomínio do utilizador) -->
             <div id="area-admin" class="hidden space-y-6">
                 <!-- Dashboard Global -->
                 <div class="bg-purple-600 p-6 rounded-3xl shadow-lg text-white text-center animate-fade-in relative overflow-hidden">
@@ -567,16 +563,39 @@
                                 <option value="12x36">12x36 (Dia sim, dia não)</option>
                             </select>
 
+                            <!-- Checkboxes de Dias da Semana -->
                             <div id="admin-func-dias-container" class="grid grid-cols-4 sm:grid-cols-7 gap-1 mt-2">
-                                <div class="relative"><input type="checkbox" id="adm-day-1" value="1" class="day-checkbox hidden peer" checked><label for="adm-day-1" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Seg</label></div>
-                                <div class="relative"><input type="checkbox" id="adm-day-2" value="2" class="day-checkbox hidden peer" checked><label for="adm-day-2" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Ter</label></div>
-                                <div class="relative"><input type="checkbox" id="adm-day-3" value="3" class="day-checkbox hidden peer" checked><label for="adm-day-3" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qua</label></div>
-                                <div class="relative"><input type="checkbox" id="adm-day-4" value="4" class="day-checkbox hidden peer" checked><label for="adm-day-4" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qui</label></div>
-                                <div class="relative"><input type="checkbox" id="adm-day-5" value="5" class="day-checkbox hidden peer" checked><label for="adm-day-5" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sex</label></div>
-                                <div class="relative"><input type="checkbox" id="adm-day-6" value="6" class="day-checkbox hidden peer"><label for="adm-day-6" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sab</label></div>
-                                <div class="relative"><input type="checkbox" id="adm-day-0" value="0" class="day-checkbox hidden peer"><label for="adm-day-0" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Dom</label></div>
+                                <div class="relative">
+                                    <input type="checkbox" id="adm-day-1" value="1" class="day-checkbox hidden peer" checked>
+                                    <label for="adm-day-1" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Seg</label>
+                                </div>
+                                <div class="relative">
+                                    <input type="checkbox" id="adm-day-2" value="2" class="day-checkbox hidden peer" checked>
+                                    <label for="adm-day-2" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Ter</label>
+                                </div>
+                                <div class="relative">
+                                    <input type="checkbox" id="adm-day-3" value="3" class="day-checkbox hidden peer" checked>
+                                    <label for="adm-day-3" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qua</label>
+                                </div>
+                                <div class="relative">
+                                    <input type="checkbox" id="adm-day-4" value="4" class="day-checkbox hidden peer" checked>
+                                    <label for="adm-day-4" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Qui</label>
+                                </div>
+                                <div class="relative">
+                                    <input type="checkbox" id="adm-day-5" value="5" class="day-checkbox hidden peer" checked>
+                                    <label for="adm-day-5" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sex</label>
+                                </div>
+                                <div class="relative">
+                                    <input type="checkbox" id="adm-day-6" value="6" class="day-checkbox hidden peer">
+                                    <label for="adm-day-6" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Sab</label>
+                                </div>
+                                <div class="relative">
+                                    <input type="checkbox" id="adm-day-0" value="0" class="day-checkbox hidden peer">
+                                    <label for="adm-day-0" class="block w-full py-1.5 text-center rounded-lg border border-slate-200 text-[9px] font-bold text-slate-500 cursor-pointer transition-colors bg-white">Dom</label>
+                                </div>
                             </div>
 
+                            <!-- Data Base 12x36 -->
                             <div id="admin-func-data-base-container" class="hidden mt-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
                                 <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Data Base (Primeiro dia trabalhado na escala)</label>
                                 <input id="admin-func-data-base" type="date" class="input-field py-1.5 text-xs mt-1">
@@ -741,9 +760,9 @@
                     <form onsubmit="cadastrarCondominio(event)" class="space-y-4">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">ID do Condomínio <span class="text-red-500">*</span></label>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">ID (O que vem antes do .com) <span class="text-red-500">*</span></label>
                                 <input id="master-condo-id" type="text" required class="input-field py-2 text-xs" placeholder="Ex: predioazul">
-                                <p class="text-[8px] text-slate-400 mt-1 ml-1 leading-tight">O nome principal do domínio do email (sem o @ e sem o .com)</p>
+                                <p class="text-[8px] text-slate-400 mt-1 ml-1 leading-tight">Use exatamente o mesmo texto do ID antigo para restaurar seus dados.</p>
                             </div>
                             <div>
                                 <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nome de Exibição</label>
@@ -766,7 +785,7 @@
                             <div>
                                 <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Terminação Restrita</label>
                                 <input id="master-condo-term" type="number" class="input-field py-2 text-xs" placeholder="Deixe Vazio para todas">
-                                <p class="text-[7px] text-slate-400 mt-1 leading-tight">Ex: '1' para 11, 21, 31...</p>
+                                <p class="text-[7px] text-slate-400 mt-1 leading-tight">Use apenas se os aptos tiverem um final padrão (Ex: '1' para 11, 21, 31...).</p>
                             </div>
                         </div>
                         <button type="submit" class="w-full bg-red-600 text-white font-black uppercase text-[10px] py-3 rounded-xl hover:bg-red-700 transition-colors shadow-sm">
@@ -786,16 +805,17 @@
                     <p class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Selecione o Condomínio Alvo</p>
                     <select id="master-select-condo" onchange="window.carregarDadosMaster(this.value)" class="input-field mb-4 bg-slate-50 cursor-pointer text-xs">
                         <option value="">Selecione para carregar dados...</option>
+                        <!-- Injetado via JS -->
                     </select>
 
                     <div id="master-data-area" class="hidden space-y-6">
                         
-                        <!-- ACESSO OPERACIONAL DO MASTER -->
+                        <!-- ACESSO OPERACIONAL DO MASTER (Visualizar e Editar Encomendas) -->
                         <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200 text-center shadow-sm">
                             <i data-lucide="boxes" class="w-6 h-6 text-blue-500 mx-auto mb-2"></i>
                             <h4 class="text-[10px] font-black text-blue-800 uppercase mb-1">Acesso Operacional</h4>
                             <p class="text-[10px] text-blue-700 font-medium leading-tight mb-3">
-                                Como Master, você pode entrar na portaria deste condomínio para auditar e gerenciar.
+                                Como Master, você pode entrar na portaria deste condomínio para auditar, visualizar e editar as encomendas.
                             </p>
                             <button onclick="acessarPortariaMaster()" class="bg-blue-600 text-white font-black uppercase text-[10px] py-2 px-6 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
                                 Entrar na Portaria do Condomínio
@@ -1272,7 +1292,7 @@
                 const domainPart = emailStr.split('@')[1] || '';
                 window.adminDomain = domainPart || 'dominio.com'; 
                 
-                // RESTAURAÇÃO COMPLETA: Usar o prefixo do domínio garante que não perde os dados antigos
+                // RESTAURAÇÃO: Usa o nome original da base de dados que você possuía (prefixo do email)
                 const tenantId = domainPart.split('.')[0] || 'default'; 
 
                 await window.carregarRegrasSaaS(tenantId);
@@ -1298,8 +1318,19 @@
                     window.isMensageria = window.isAdmin || fData.role === 'mensageria';
                 } else {
                     window.usuarioLogadoConfig = null; 
-                    window.isAdmin = window.isMaster || emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin'); 
-                    window.isMensageria = window.isAdmin || emailStr.includes('mensageria');
+                    
+                    // Fallback blindado para não quebrar admins legados
+                    if (window.isMaster || emailStr.startsWith('admin@') || emailStr.startsWith('gerente@')) {
+                        window.isAdmin = true;
+                        window.isMensageria = true;
+                    } else if (emailStr.startsWith('mensageria@')) {
+                        window.isAdmin = false;
+                        window.isMensageria = true;
+                    } else {
+                        window.isAdmin = false;
+                        window.isMensageria = false;
+                    }
+                    
                     const prefix = emailStr.split('@')[0]; 
                     window.nomeUsuarioLogado = prefix.split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 }
@@ -1447,7 +1478,6 @@
             const tenantIdAlvo = document.getElementById('master-select-condo').value;
             if(!tenantIdAlvo) return;
 
-            // CARREGA AS REGRAS DO CONDOMÍNIO PARA OS FILTROS FUNCIONAREM
             await window.carregarRegrasSaaS(tenantIdAlvo);
 
             if (unsubscribeSnapshot) unsubscribeSnapshot();
@@ -1756,7 +1786,7 @@
         
         window.confirmarBaixaReal = async () => { 
             if (!window.verificarTurno()) { 
-                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento ou solicite a extensão do seu turno."); 
+                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento."); 
                 return; 
             } 
             if (!window.baixaTargetId) return; 
@@ -1786,10 +1816,45 @@
                 window.closeBaixaModal(); 
             } 
         }
+
+        window.darBaixaDiretaMensageria = async (id) => {
+            if (!window.verificarTurno()) { 
+                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento."); 
+                return; 
+            }
+            const idx = window.db.findIndex(d => String(d.id) === String(id));
+            if (idx !== -1) {
+                const item = window.db[idx];
+                item.status = 'entregue';
+                item.dataMensageria = new Date().toISOString();
+                item.saida = item.dataMensageria;
+                item.destino = 'mensageria';
+                try {
+                    await setDoc(doc(window.encomendasRefAtiva, String(item.id)), item);
+                } catch(e) {
+                    console.error(e);
+                    alert("Falha na comunicação com a base de dados.");
+                }
+            }
+        };
+
+        window.retornarParaPortaria = async (id) => {
+            if (!window.verificarTurno()) { 
+                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento."); 
+                return; 
+            }
+            const idx = window.db.findIndex(d => String(d.id) === String(id));
+            if (idx !== -1) {
+                const item = window.db[idx];
+                item.status = 'pendente';
+                item.destino = null;
+                setDoc(doc(window.encomendasRefAtiva, String(item.id)), item).catch(e => console.error(e));
+            }
+        };
         
         window.transferirTodosParaMensageria = async () => { 
             if (!window.verificarTurno()) { 
-                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento ou solicite a extensão do seu turno."); 
+                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento."); 
                 return; 
             } 
             
@@ -1810,8 +1875,9 @@
                     }); 
                     
                     await batch.commit(); 
+                    alert("Lote encaminhado com sucesso!");
                 } catch (e) { 
-                    alert("Falha."); 
+                    alert("Falha ao encaminhar lote: " + e.message); 
                 } 
             } 
         };
@@ -1869,7 +1935,7 @@
             e.preventDefault();
             
             if (!window.verificarTurno()) { 
-                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento ou solicite a extensão do seu turno."); 
+                alert("⚠️ AÇÃO BLOQUEADA: Fora do horário de trabalho.\n\nPor favor, mude para o login do funcionário do momento."); 
                 return; 
             }
             
@@ -2137,9 +2203,8 @@
         window.cadastrarCondominio = async (e) => {
             e.preventDefault();
             
-            // Corrige automaticamente a entrada do Master para extrair apenas o prefixo (o tenantId)
             let idDomainRaw = document.getElementById('master-condo-id').value.trim().toLowerCase(); 
-            const idDomain = idDomainRaw.replace('@', '').split('.')[0];
+            const idDomain = idDomainRaw.replace('@', '').split('.')[0]; // Pega sempre o nome principal (Ex: predioazul.com -> predioazul)
 
             const nome = document.getElementById('master-condo-nome').value.trim(); 
             const blocosStr = document.getElementById('master-condo-blocos').value.toUpperCase(); 
@@ -2158,7 +2223,7 @@
             
             try { 
                 await setDoc(doc(dbFS, 'artifacts', appId, 'public', 'data', 'condominios', idDomain), novoConfig); 
-                alert(`Condomínio Registrado!`); 
+                alert(`Condomínio Registrado com sucesso no banco de dados!`); 
                 e.target.reset(); 
             } catch(err) { 
                 alert("Falha ao criar condomínio."); 
@@ -2708,14 +2773,18 @@
                         } 
                     }
 
+                    // RESTRIÇÃO VISUAL DOS BOTÕES NA MENSAGERIA COM BASE NA FUNÇÃO
                     let canEditDelete = false; 
+                    let canDeliverFromMensageria = false;
                     
                     if (window.isAdmin) {
                         canEditDelete = true; 
+                        canDeliverFromMensageria = true;
                     } else if (window.abaAtiva === 'entregues') {
                         canEditDelete = false; 
                     } else if (window.abaAtiva === 'mensageria') {
                         canEditDelete = window.isMensageria; 
+                        canDeliverFromMensageria = window.isMensageria;
                     } else if (window.abaAtiva === 'pendentes') {
                         canEditDelete = window.isMensageria || (it.recebedor === window.nomeUsuarioLogado);
                     }
@@ -2841,12 +2910,18 @@
                             
                             ${window.abaAtiva === 'mensageria' ? `
                                 <div class="mt-4 pt-3 border-t border-slate-100 space-y-2 no-print">
-                                    <button onclick="openBaixaModal('${it.id}', 'mensageria')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm hover:bg-indigo-700 active:scale-95 transition-all">
-                                        Confirmar Entrega
-                                    </button>
-                                    <button onclick="retornarParaPortaria('${it.id}')" class="w-full bg-slate-700 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm hover:bg-slate-800 active:scale-95 transition-all">
-                                        Retornar para Portaria
-                                    </button>
+                                    ${canDeliverFromMensageria ? `
+                                        <button onclick="openBaixaModal('${it.id}', 'mensageria')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm hover:bg-indigo-700 active:scale-95 transition-all">
+                                            Confirmar Entrega
+                                        </button>
+                                        <button onclick="retornarParaPortaria('${it.id}')" class="w-full bg-slate-700 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-sm hover:bg-slate-800 active:scale-95 transition-all">
+                                            Retornar para Portaria
+                                        </button>
+                                    ` : `
+                                        <p class="text-[9px] text-center text-slate-400 font-bold uppercase py-2 bg-slate-50 rounded-xl">
+                                            Apenas a Mensageria pode entregar este item.
+                                        </p>
+                                    `}
                                 </div>
                             ` : ''}
                         </div>
@@ -2900,7 +2975,8 @@
                 const dataSaida = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : '';
                 const dataMensag = d.dataMensageria ? new Date(d.dataMensageria).toLocaleDateString('pt-PT') : '';
                 
-                const t = `${d.apto} ${d.bloco} ${d.morador} ${d.remetente} ${d.empresa} ${d.descricao} ${dataEntrada} ${dataSaida} ${dataMensag}`.toLowerCase(); 
+                // Correção essencial do filtro que estava a encravar a pesquisa por causa de valores nulos
+                const t = `${d.apto||''} ${d.bloco||''} ${d.morador||''} ${d.remetente||''} ${d.empresa||''} ${d.descricao||''} ${dataEntrada} ${dataSaida} ${dataMensag}`.toLowerCase(); 
                 
                 if(window.termoBusca && !t.includes(window.termoBusca)) return false; 
                 if(window.blocoFiltro && d.bloco !== window.blocoFiltro) return false; 
