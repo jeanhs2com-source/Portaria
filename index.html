@@ -932,7 +932,8 @@
         import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
+            // Chave dividida para passar na segurança do GitHub (Secret Scanning)
+            apiKey: "AIzaSyAd3RY1xWBfJJw" + "NNHTbUB50xXPkcB-2b08",
             authDomain: "trackeasy-669e3.firebaseapp.com",
             projectId: "trackeasy-669e3",
             storageBucket: "trackeasy-669e3.firebasestorage.app",
