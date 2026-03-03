@@ -464,7 +464,7 @@
                     </div>
                 </div>
 
-                <!-- NOVA SECÇÃO: CADASTRO DE FUNCIONÁRIOS (ADMIN) -->
+                <!-- NOVA SECÇÃO: CADASTRO DE FUNCIONÁRIOS (ADMIN) COM DOMÍNIO BLOQUEADO -->
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
                     <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
                         <div class="bg-indigo-100 p-2 rounded-lg text-indigo-600"><i data-lucide="user-cog" class="w-4 h-4"></i></div>
@@ -473,20 +473,26 @@
                     
                     <form onsubmit="cadastrarFuncionario(event, false)" class="space-y-3 mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                         <p class="text-[9px] font-black uppercase text-slate-400 mb-2">Criar Novo Funcionário</p>
+                        
                         <div>
                             <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nome de Exibição</label>
                             <input id="admin-func-nome" type="text" required class="input-field py-2 text-xs" placeholder="Ex: Porteiro João">
                         </div>
+
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Email de Acesso</label>
-                                <input id="admin-func-email" type="email" required class="input-field py-2 text-xs" placeholder="joao@condominio.com">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Email (Apenas Prefixo)</label>
+                                <div class="flex">
+                                    <input id="admin-func-email-prefix" type="text" required class="input-field py-2 text-xs rounded-r-none border-r-0" placeholder="joao">
+                                    <span id="admin-func-email-domain" class="bg-slate-100 border border-slate-200 border-l-0 rounded-r-xl px-3 flex items-center text-[10px] text-slate-500 font-bold overflow-hidden whitespace-nowrap text-ellipsis max-w-[120px]">@...</span>
+                                </div>
                             </div>
                             <div>
                                 <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Senha Segura</label>
                                 <input id="admin-func-senha" type="password" required class="input-field py-2 text-xs" placeholder="••••••••">
                             </div>
                         </div>
+
                         <div class="grid grid-cols-3 gap-2">
                             <div>
                                 <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Função</label>
@@ -505,7 +511,22 @@
                                 <input id="admin-func-fim" type="time" required class="input-field py-2 text-xs" value="19:00">
                             </div>
                         </div>
-                        <button type="submit" class="w-full bg-indigo-600 text-white font-black uppercase text-[10px] py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm">
+
+                        <div class="grid grid-cols-2 gap-2 border-t border-slate-200 pt-3 mt-2">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Escala de Trabalho</label>
+                                <select id="admin-func-escala" class="input-field py-2 text-xs cursor-pointer" onchange="toggleDataBase(this, 'admin')">
+                                    <option value="diaria">Diária (Todos os dias)</option>
+                                    <option value="12x36">12x36 (Dia sim, dia não)</option>
+                                </select>
+                            </div>
+                            <div id="admin-func-data-base-container" class="hidden">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Data Base (1º dia de trab.)</label>
+                                <input id="admin-func-data-base" type="date" class="input-field py-2 text-xs text-slate-600">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-black uppercase text-[10px] py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm mt-2">
                             <i data-lucide="plus-circle" class="w-3 h-3 inline pb-0.5"></i> Criar Acesso e Regras
                         </button>
                     </form>
@@ -628,7 +649,6 @@
                         </button>
                     </div>
                     
-                    <!-- Campo de busca isolado para o backup -->
                     <div id="backup-search-container" class="mt-3 hidden relative transition-all">
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
                         <input id="input-busca-backup" type="text" placeholder="Buscar no backup (apto, bloco, morador, nf)..." oninput="filtrarBackupLocal(this.value)" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white shadow-sm outline-none font-medium text-xs focus:border-blue-500">
@@ -713,7 +733,7 @@
                             <form onsubmit="cadastrarFuncionario(event, true)" class="space-y-3 mb-3">
                                 <div><input id="master-func-nome" type="text" required class="input-field py-2 text-xs" placeholder="Nome de Exibição (Ex: Porteiro João)"></div>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <input id="master-func-email" type="email" required class="input-field py-2 text-xs" placeholder="Email de Acesso">
+                                    <input id="master-func-email" type="email" required class="input-field py-2 text-xs" placeholder="Email Completo de Acesso">
                                     <input id="master-func-senha" type="password" required class="input-field py-2 text-xs" placeholder="Senha">
                                 </div>
                                 <div class="grid grid-cols-3 gap-2">
@@ -722,6 +742,15 @@
                                     </select>
                                     <input id="master-func-inicio" type="time" required class="input-field py-2 text-xs" title="Início do Turno" value="07:00">
                                     <input id="master-func-fim" type="time" required class="input-field py-2 text-xs" title="Fim do Turno" value="19:00">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-indigo-200">
+                                    <select id="master-func-escala" class="input-field py-2 text-xs cursor-pointer" onchange="toggleDataBase(this, 'master')">
+                                        <option value="diaria">Diária</option>
+                                        <option value="12x36">12x36</option>
+                                    </select>
+                                    <div id="master-func-data-base-container" class="hidden">
+                                        <input id="master-func-data-base" type="date" class="input-field py-2 text-xs" title="Data Base 12x36">
+                                    </div>
                                 </div>
                                 <button type="submit" class="w-full bg-indigo-600 text-white font-black uppercase text-[10px] py-2.5 rounded-xl hover:bg-indigo-700 transition-colors">
                                     Criar Acesso de Funcionário
@@ -900,8 +929,8 @@
         window.regrasCondominio = null; 
         window.bancoMoradoresFake = {}; 
         window.listaMoradoresBD = []; 
-        window.listaFuncionariosBD = []; // NOVO
-        window.usuarioLogadoConfig = null; // NOVO: Guarda as regras de horário da pessoa logada
+        window.listaFuncionariosBD = [];
+        window.usuarioLogadoConfig = null; 
 
         let unsubscribeSnapshot = null; let unsubscribeMoradores = null; let unsubscribeFuncionarios = null;
 
@@ -917,29 +946,64 @@
             } catch(e) { window.condominioLogado = { id: 'default', nome: 'Condomínio (Offline)' }; window.regrasCondominio = { blocosPermitidos: ['J', 'P'], aptoMin: 11, aptoMax: 181, terminacaoObrigatoria: 1 }; }
         };
 
-        // VALIDADOR INTELIGENTE DE TURNOS
-        window.verificarTurno = () => {
-            if (window.isMaster || window.isAdmin) return true; // Admins e Master ignoram turnos
-            if (!window.usuarioLogadoConfig || !window.usuarioLogadoConfig.horaInicio || !window.usuarioLogadoConfig.horaFim) return true; // Sistema legado sem turno
+        // VALIDADOR INTELIGENTE DE TURNOS (MOTOR MATEMÁTICO 12x36 e Diária)
+        window.checarSeEstaTrabalhando = (fConfig, dateObj = new Date()) => {
+            if (!fConfig || fConfig.role === 'admin') return true; 
+            if (fConfig.overrideAte && dateObj.getTime() < fConfig.overrideAte) return true;
+            if (!fConfig.horaInicio || !fConfig.horaFim) return true; // Conta legada
 
-            const now = new Date();
-            // Checa se o admin apertou o botão de estender o turno
-            if (window.usuarioLogadoConfig.overrideAte && now.getTime() < window.usuarioLogadoConfig.overrideAte) {
-                return true;
+            const currentMins = dateObj.getHours() * 60 + dateObj.getMinutes();
+            const sMins = parseInt(fConfig.horaInicio.split(':')[0]) * 60 + parseInt(fConfig.horaInicio.split(':')[1]);
+            const eMins = parseInt(fConfig.horaFim.split(':')[0]) * 60 + parseInt(fConfig.horaFim.split(':')[1]);
+
+            let isTrabalhandoHora = false;
+            let shiftStartDate = new Date(dateObj.getTime());
+
+            // Verifica se a hora bate com o turno
+            if (sMins <= eMins) { // Ex: 07:00 às 19:00
+                isTrabalhandoHora = currentMins >= sMins && currentMins <= eMins;
+            } else { // Ex: 19:00 às 07:00 (Cruza meia-noite)
+                if (currentMins >= sMins) {
+                    isTrabalhandoHora = true; // Iniciou hoje
+                } else if (currentMins <= eMins) {
+                    isTrabalhandoHora = true; // Iniciou ontem
+                    shiftStartDate.setDate(shiftStartDate.getDate() - 1);
+                }
             }
 
-            const currentMins = now.getHours() * 60 + now.getMinutes();
-            const startParts = window.usuarioLogadoConfig.horaInicio.split(':');
-            const endParts = window.usuarioLogadoConfig.horaFim.split(':');
-            const startMins = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
-            const endMins = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+            if (!isTrabalhandoHora) return false; // Se a hora já não bate, reprova direto
 
-            if (startMins <= endMins) {
-                // Turno Diurno (ex: 07:00 as 19:00)
-                return currentMins >= startMins && currentMins <= endMins;
+            // Se for 12x36, calcula se é o dia certo de trabalhar baseando na Data Base
+            if (fConfig.escala === '12x36' && fConfig.dataBase12x36) {
+                // Força meia-noite para evitar bugs de fuso horário local ao subtrair os dias
+                const baseDate = new Date(fConfig.dataBase12x36 + "T00:00:00"); 
+                baseDate.setHours(0,0,0,0);
+                shiftStartDate.setHours(0,0,0,0);
+                
+                const diffTime = shiftStartDate.getTime() - baseDate.getTime();
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); // Usar Math.round protege contra horário de verão
+                
+                // Se a diferença de dias for ímpar, é dia de folga.
+                if (diffDays % 2 !== 0) return false;
+            }
+
+            return true;
+        }
+
+        window.verificarTurno = () => {
+            if (window.isMaster || window.isAdmin) return true; // Master/Admin sempre aprovados
+            return window.checarSeEstaTrabalhando(window.usuarioLogadoConfig, new Date());
+        };
+
+        // Função de controle de UI do form de Funcionário (Mostra/esconde a Data Base 12x36)
+        window.toggleDataBase = (selectEl, prefix) => {
+            const container = document.getElementById(`${prefix}-func-data-base-container`);
+            if (selectEl.value === '12x36') {
+                container.classList.remove('hidden');
+                document.getElementById(`${prefix}-func-data-base`).required = true;
             } else {
-                // Turno Noturno que vira a madrugada (ex: 19:00 as 07:00)
-                return currentMins >= startMins || currentMins <= endMins;
+                container.classList.add('hidden');
+                document.getElementById(`${prefix}-func-data-base`).required = false;
             }
         };
 
@@ -958,7 +1022,11 @@
                 const headerCondName = document.getElementById('nome-condominio-header');
                 if (headerCondName) headerCondName.innerText = window.condominioLogado.nome;
 
-                // NOVO: Busca as permissões de cargo no Firestore antes de assumir as strings do email
+                // Atualiza a visualização do domínio bloqueado no painel Admin Local
+                const spanDomainAdmin = document.getElementById('admin-func-email-domain');
+                if (spanDomainAdmin) spanDomainAdmin.innerText = `@${domainPart}`;
+
+                // Busca as permissões de cargo no Firestore antes de assumir as strings do email
                 const funcRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`, emailStr);
                 const funcSnap = await getDoc(funcRef);
                 
@@ -1165,6 +1233,7 @@
             document.getElementById('modal-baixa').classList.remove('hidden');
         }
         window.closeBaixaModal = () => { document.getElementById('modal-baixa').classList.add('hidden'); window.limparAssinatura(); };
+        
         window.confirmarBaixaReal = async () => {
             if (!window.verificarTurno()) { alert("⚠️ Ação Bloqueada: Seu turno encerrou!"); return; }
             if (!window.baixaTargetId) return;
@@ -1212,7 +1281,7 @@
         window.handleRegistrar = (e) => {
             e.preventDefault();
             if (!window.verificarTurno()) { 
-                alert("⚠️ AÇÃO BLOQUEADA!\n\nVocê está tentando registrar uma encomenda FORA do seu horário de trabalho estabelecido.\n\nSe o seu plantão atrasou a troca, solicite ao Síndico ou Administrador para 'Estender seu Turno' no painel de Gestão."); 
+                alert("⚠️ AÇÃO BLOQUEADA!\n\nVocê está tentando registrar uma encomenda FORA do seu horário de trabalho ou folga (12x36).\n\nSe o seu plantão atrasou, solicite ao Síndico para 'Estender seu Turno' no painel de Gestão."); 
                 return; 
             }
 
@@ -1328,7 +1397,7 @@
             try { await setDoc(moradorRef, { bloco, apto, nome }); document.getElementById(`${prefix}-morador-bloco`).value = ''; document.getElementById(`${prefix}-morador-apto`).value = ''; document.getElementById(`${prefix}-morador-nome`).value = ''; if (isMasterPanel) { window.carregarDadosMaster(tenantIdAlvo); } alert("Morador salvo!"); } catch (err) { alert("Erro ao salvar."); }
         };
 
-        // --- SISTEMA MÁGICO DE CADASTRO DE FUNCIONÁRIOS (Firebase Secondary App Trick) ---
+        // --- SISTEMA DE CADASTRO DE FUNCIONÁRIOS (Firebase Secondary App) ---
         window.cadastrarFuncionario = async (e, isMasterPanel) => {
             e.preventDefault();
             const prefix = isMasterPanel ? 'master' : 'admin';
@@ -1337,40 +1406,55 @@
             if (!tenantIdAlvo) { alert("Por favor, selecione um condomínio antes de cadastrar o funcionário."); return; }
 
             const nome = document.getElementById(`${prefix}-func-nome`).value.trim();
-            const email = document.getElementById(`${prefix}-func-email`).value.trim().toLowerCase();
+            
+            // Lógica Distinta de Email: Admin não pode escolher domínio. Master pode digitar tudo ou confiar.
+            let email = "";
+            if (isMasterPanel) {
+                email = document.getElementById(`${prefix}-func-email`).value.trim().toLowerCase();
+            } else {
+                const prefixoEmail = document.getElementById(`${prefix}-func-email-prefix`).value.trim().toLowerCase();
+                email = `${prefixoEmail}@${tenantIdAlvo}.com`; // Formação forçada e segura do email para o gestor
+            }
+
             const senha = document.getElementById(`${prefix}-func-senha`).value;
             const role = document.getElementById(`${prefix}-func-role`).value;
             const horaInicio = document.getElementById(`${prefix}-func-inicio`).value;
             const horaFim = document.getElementById(`${prefix}-func-fim`).value;
+            
+            const escala = document.getElementById(`${prefix}-func-escala`).value;
+            const dataBase12x36 = document.getElementById(`${prefix}-func-data-base`).value;
 
             try {
-                // 1. Cria a conta de Auth usando o App secundário para não deslogar o Admin
+                // Cria a conta usando o App secundário para não deslogar quem está a usar o sistema
                 const { getAuth: getAuthSecondary, createUserWithEmailAndPassword: createUserSecondary, signOut: signOutSecondary } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
                 const secAuth = getAuthSecondary(secondaryApp);
                 
                 await createUserSecondary(secAuth, email, senha);
-                await signOutSecondary(secAuth); // Desloga imediatamente da instância secundária
+                await signOutSecondary(secAuth); 
 
-                // 2. Salva as regras e perfil no banco de dados do condomínio
                 const funcRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, email);
                 await setDoc(funcRef, {
-                    nome, email, role, horaInicio, horaFim, ativo: true, overrideAte: null
+                    nome, email, role, horaInicio, horaFim, escala, dataBase12x36, ativo: true, overrideAte: null
                 });
 
-                alert(`✅ Funcionário ${nome} criado com sucesso e pronto para uso!`);
+                alert(`✅ Funcionário ${nome} (${email}) criado com sucesso e pronto para uso!`);
                 e.target.reset();
+                
+                // Reseta UI extra
+                const containerDate = document.getElementById(`${prefix}-func-data-base-container`);
+                if(containerDate) containerDate.classList.add('hidden');
+
                 if (isMasterPanel) window.carregarDadosMaster(tenantIdAlvo);
             } catch (error) {
                 console.error(error);
                 if (error.code === 'auth/email-already-in-use') {
-                    alert("Atenção: Este e-mail já existe no sistema global. Para aproveitá-lo, tente apenas salvar as regras dele para este condomínio.");
+                    alert("Atenção: Este e-mail já existe no sistema global. Para aproveitá-lo, tente criar um e-mail diferente.");
                 } else {
                     alert("Erro ao cadastrar funcionário na Nuvem: " + error.message);
                 }
             }
         };
 
-        // Renderiza Lista de Funcionários (Admin Local)
         window.renderAdminFuncionarios = () => {
             const container = document.getElementById('lista-funcionarios-admin');
             if(!container) return;
@@ -1381,24 +1465,24 @@
             }
 
             container.innerHTML = window.listaFuncionariosBD.map(f => {
-                let statusTurno = "Fechado";
-                let colorTurno = "text-slate-400";
+                const isTrabalhando = window.checarSeEstaTrabalhando(f, new Date());
+                let statusTurno = isTrabalhando ? "Trabalhando" : "Folga / Fechado";
+                let colorTurno = isTrabalhando ? "text-emerald-500 font-bold" : "text-slate-400";
                 
-                // Simulação simples para exibição
-                const now = new Date(); const currentMins = now.getHours() * 60 + now.getMinutes();
-                const sMins = parseInt(f.horaInicio.split(':')[0]) * 60 + parseInt(f.horaInicio.split(':')[1]);
-                const eMins = parseInt(f.horaFim.split(':')[0]) * 60 + parseInt(f.horaFim.split(':')[1]);
-                let isTrabalhando = (sMins <= eMins) ? (currentMins >= sMins && currentMins <= eMins) : (currentMins >= sMins || currentMins <= eMins);
-                
-                if (f.overrideAte && now.getTime() < f.overrideAte) { isTrabalhando = true; statusTurno = "Estendido"; colorTurno = "text-orange-500 font-black"; }
-                else if (isTrabalhando) { statusTurno = "Trabalhando"; colorTurno = "text-emerald-500 font-bold"; }
+                if (f.overrideAte && new Date().getTime() < f.overrideAte) { 
+                    statusTurno = "Estendido"; 
+                    colorTurno = "text-orange-500 font-black"; 
+                }
+
+                let infoEscala = f.escala === '12x36' && f.dataBase12x36 ? `12x36 (Início: ${f.dataBase12x36.split('-').reverse().join('/')})` : "Diária";
 
                 return `
-                <div class="flex flex-col p-3 bg-white rounded-lg border border-slate-100 shadow-sm mb-2">
+                <div class="flex flex-col p-3 bg-white rounded-lg border border-slate-100 shadow-sm mb-2 hover:bg-slate-50 transition-colors">
                     <div class="flex justify-between items-start mb-2">
                         <div>
                             <p class="text-[11px] font-bold text-slate-800">${f.nome} <span class="text-[9px] font-normal text-slate-400">(${f.email})</span></p>
-                            <p class="text-[9px] uppercase font-black tracking-widest text-indigo-600">${f.role} • ${f.horaInicio} às ${f.horaFim}</p>
+                            <p class="text-[9px] uppercase font-black tracking-widest text-indigo-600 mt-0.5">${f.role} • ${f.horaInicio} às ${f.horaFim}</p>
+                            <p class="text-[8px] uppercase font-bold text-slate-500 mt-0.5"><i data-lucide="calendar-clock" class="w-2.5 h-2.5 inline pb-0.5"></i> Escala: ${infoEscala}</p>
                         </div>
                         <span class="text-[9px] uppercase ${colorTurno} flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full ${isTrabalhando?'bg-emerald-500':'bg-slate-300'}"></span> ${statusTurno}</span>
                     </div>
@@ -1407,11 +1491,12 @@
                             + Estender Turno 2h
                         </button>
                         <button onclick="excluirFuncionarioAdmin('${f.id}')" class="py-1.5 text-[9px] font-bold uppercase bg-red-50 hover:bg-red-100 text-red-500 rounded-md transition-colors shadow-sm">
-                            Bloquear / Deletar
+                            Bloquear Acesso
                         </button>
                     </div>
                 </div>
             `}).join('');
+            lucide.createIcons();
         };
 
         window.estenderTurnoAdmin = async (emailId) => {
@@ -1426,8 +1511,6 @@
         window.excluirFuncionarioAdmin = async (emailId) => {
             if(confirm("⚠️ ATENÇÃO: Isso revogará imediatamente o acesso desta pessoa ao sistema. Confirmar bloqueio?")) {
                 const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${window.condominioLogado.id}`, emailId);
-                // Não excluímos do Auth (pois requer Admin SDK backend), mas setamos ativo=false. 
-                // O app verificará no onAuthStateChanged e deslogará a pessoa.
                 await setDoc(ref, { ativo: false }, { merge: true });
                 alert("Acesso bloqueado com sucesso!");
             }
@@ -1483,7 +1566,7 @@
                         <p class="text-[10px] font-bold text-slate-700">${f.nome}</p>
                         <p class="text-[8px] text-indigo-500 uppercase tracking-widest">${f.role} • ${f.horaInicio} - ${f.horaFim}</p>
                     </div>
-                    <button onclick="excluirFuncionarioMaster('${f.id}')" class="text-red-400 hover:text-red-600" title="Revogar"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    <button onclick="excluirFuncionarioMaster('${f.id}')" class="text-red-400 hover:text-red-600" title="Revogar Acesso"><i data-lucide="x" class="w-4 h-4"></i></button>
                 </div>
             `).join('');
             lucide.createIcons();
