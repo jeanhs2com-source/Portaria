@@ -1021,7 +1021,7 @@
                 if (recInput) recInput.value = window.nomeUsuarioLogado;
                 
                 // Controle de Abas
-                if (window.isAdmin) {
+                if (window.isAdmin || window.isMensageria) {
                     document.getElementById('tab-a').classList.remove('hidden');
                 } else {
                     document.getElementById('tab-a').classList.add('hidden');
@@ -1621,7 +1621,7 @@
 
         // FUNÇÕES DO PAINEL ADMIN (Gestão e Estatísticas)
         window.renderAdminStats = () => {
-            if(!window.isAdmin) return;
+            if(!window.isAdmin && !window.isMensageria) return;
             
             const mesAtual = new Date().toLocaleDateString('pt-PT', {month:'2-digit', year:'numeric'});
             let recebidosMes = 0;
@@ -1764,7 +1764,7 @@
             document.getElementById('tab-s').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='saidas'?ativo:inativo}`;
             document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='mensageria'?ativo:inativo}`;
             document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='entregues'?ativo:inativo}`;
-            document.getElementById('tab-a').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='admin'?admAtivo:admInativo} ${window.isAdmin?'':'hidden'}`;
+            document.getElementById('tab-a').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='admin'?admAtivo:admInativo} ${(window.isAdmin || window.isMensageria)?'':'hidden'}`;
             document.getElementById('tab-master').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='master'?masterAtivo:masterInativo} ${window.isMaster?'':'hidden'}`;
 
             if (t === 'admin') {
