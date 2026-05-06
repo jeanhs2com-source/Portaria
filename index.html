@@ -67,6 +67,38 @@
         </div>
     </div>
 
+    <!-- OVERLAY DE BLOQUEIO DE ESCALA / HORÁRIO -->
+    <div id="modal-bloqueio-escala" class="fixed inset-0 z-[190] bg-slate-900 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl animate-fade-in text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-red-500"></div>
+            <div class="flex justify-center mb-4 mt-2">
+                <div class="bg-red-100 p-4 rounded-full text-red-600">
+                    <i data-lucide="clock" class="w-10 h-10"></i>
+                </div>
+            </div>
+            <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight mb-2">Fora de Horário</h2>
+            <p class="text-xs font-medium text-slate-500 mb-6">
+                Seu turno de trabalho não está ativo neste momento ou hoje é seu dia de folga previsto na escala.
+            </p>
+            
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6 text-left">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Atraso da Troca de Turno?</p>
+                <p class="text-[10px] text-slate-600 leading-relaxed">
+                    Se o seu colega do próximo turno atrasou e você precisa continuar operando o sistema, solicite uma extensão de horário abaixo (A tolerância de 30 min já foi utilizada).
+                </p>
+            </div>
+
+            <div class="space-y-3">
+                <button type="button" id="btn-estender-turno" onclick="estenderTurno()" class="w-full bg-red-600 hover:bg-red-700 h-[45px] text-white font-black rounded-xl active:scale-95 transition-all uppercase text-[10px] shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Estender Turno (+4 Horas)
+                </button>
+                <button type="button" onclick="realizarLogout()" class="w-full bg-slate-100 hover:bg-slate-200 h-[45px] text-slate-600 font-black rounded-xl active:scale-95 transition-all uppercase text-[10px] flex items-center justify-center gap-2">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Sair do Sistema
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- CONTEÚDO PRINCIPAL DO APP -->
     <div id="app-content" class="hidden">
 
@@ -266,7 +298,6 @@
 
                 <div class="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto order-3 md:order-2 justify-start sm:justify-center overflow-x-auto no-scrollbar gap-1">
                     <button id="tab-p" onclick="switchTab('pendentes')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-active uppercase transition-all whitespace-nowrap">Portaria</button>
-                    <!-- NOVA ABA DE SAÍDAS ADICIONADA AQUI -->
                     <button id="tab-s" onclick="switchTab('saidas')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap">Saídas</button>
                     <button id="tab-m" onclick="switchTab('mensageria')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap">Mensageria</button>
                     <button id="tab-h" onclick="switchTab('entregues')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap">Histórico</button>
@@ -476,6 +507,112 @@
                     </div>
                 </div>
 
+                <!-- NOVA SECÇÃO: GESTÃO DE EQUIPE E ESCALAS (ADMIN) -->
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                        <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i data-lucide="contact" class="w-4 h-4"></i></div>
+                        <h3 class="font-black text-slate-800 uppercase text-xs">Gestão de Equipe & Escalas</h3>
+                    </div>
+                    
+                    <form onsubmit="cadastrarFuncionario(event, false)" class="space-y-3 mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-[9px] font-black uppercase text-slate-400 mb-2">Cadastrar Novo Colaborador</p>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nome Completo</label>
+                                <input id="func-nome" type="text" required class="input-field py-2 text-xs" placeholder="Ex: João Silva">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Prefixo do Login</label>
+                                <input id="func-login" type="text" required class="input-field py-2 text-xs lowercase" placeholder="Ex: joao.silva">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Senha Temporária</label>
+                                <input id="func-senha" type="text" required class="input-field py-2 text-xs" placeholder="Mínimo 6 dígitos">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Perfil de Acesso</label>
+                                <select id="func-perfil" class="input-field py-2 text-xs cursor-pointer bg-white">
+                                    <option value="porteiro">Porteiro (Padrão)</option>
+                                    <option value="mensageria">Mensageria</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-200 pt-3 mt-3">
+                            <p class="text-[9px] font-black uppercase text-slate-400 mb-2">Definição de Escala / Horário</p>
+                            
+                            <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Tipo de Escala</label>
+                            <select id="func-escala" class="input-field py-2 text-xs cursor-pointer bg-white mb-2" onchange="window.toggleScaleFields(this.value, false)">
+                                <option value="livre">Acesso Livre (Sem Restrição)</option>
+                                <option value="5x2">Escala 5x2 (Trabalha 5, Folga 2)</option>
+                                <option value="6x1">Escala 6x1 (Trabalha 6, Folga 1)</option>
+                                <option value="12x36">Escala 12x36 (Dia sim, Dia não)</option>
+                            </select>
+
+                            <!-- Campos dinâmicos de escala -->
+                            <div id="fields-horario-admin" class="grid grid-cols-2 gap-2 hidden">
+                                <div>
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Hora Início</label>
+                                    <input id="func-hora-ini" type="time" class="input-field py-2 text-xs">
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Hora Fim</label>
+                                    <input id="func-hora-fim" type="time" class="input-field py-2 text-xs">
+                                </div>
+                            </div>
+
+                            <div id="fields-folga-admin" class="hidden mt-2">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Dia de Folga Principal</label>
+                                <select id="func-dia-folga" class="input-field py-2 text-xs cursor-pointer bg-white mb-2">
+                                    <option value="0">Domingo</option>
+                                    <option value="1">Segunda-feira</option>
+                                    <option value="2">Terça-feira</option>
+                                    <option value="3">Quarta-feira</option>
+                                    <option value="4">Quinta-feira</option>
+                                    <option value="5">Sexta-feira</option>
+                                    <option value="6">Sábado</option>
+                                </select>
+                                
+                                <div id="fields-folga2-admin" class="hidden">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Segundo Dia de Folga (5x2)</label>
+                                    <select id="func-dia-folga2" class="input-field py-2 text-xs cursor-pointer bg-white">
+                                        <option value="6">Sábado</option>
+                                        <option value="0">Domingo</option>
+                                        <option value="1">Segunda-feira</option>
+                                        <option value="2">Terça-feira</option>
+                                        <option value="3">Quarta-feira</option>
+                                        <option value="4">Quinta-feira</option>
+                                        <option value="5">Sexta-feira</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="fields-database-admin" class="hidden mt-2">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Data Base (Último plantão feito)</label>
+                                <input id="func-data-base" type="date" class="input-field py-2 text-xs">
+                                <p class="text-[8px] text-slate-400 mt-1">Isso ajuda o sistema a calcular os dias pares/ímpares da escala 12x36.</p>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-slate-800 text-white font-black uppercase text-[10px] py-3 rounded-xl hover:bg-slate-900 transition-colors shadow-sm mt-2">
+                            <i data-lucide="user-check" class="w-3 h-3 inline pb-0.5"></i> Criar Conta & Aplicar Escala
+                        </button>
+                    </form>
+
+                    <div class="relative mb-3">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                        <input type="text" placeholder="Buscar colaborador..." oninput="filtrarFuncionarios(this.value, false)" class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs outline-none">
+                    </div>
+
+                    <div id="lista-funcionarios-admin" class="max-h-60 overflow-y-auto no-scrollbar space-y-2 border border-slate-100 rounded-xl bg-white p-2">
+                        <!-- Renderizado via JS -->
+                    </div>
+                </div>
+
                 <!-- NOVA SECÇÃO: CADASTRO DE MORADORES NO PAINEL ADMIN -->
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
                     <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
@@ -518,7 +655,7 @@
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in">
                     <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
                         <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i data-lucide="users" class="w-4 h-4"></i></div>
-                        <h3 class="font-black text-slate-800 uppercase text-xs">Auditoria de Equipe</h3>
+                        <h3 class="font-black text-slate-800 uppercase text-xs">Auditoria de Operação</h3>
                     </div>
                     
                     <p class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Selecione o Colaborador</p>
@@ -662,12 +799,47 @@
                     </div>
 
                     <p class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1">Selecione o Condomínio Alvo</p>
-                    <select id="master-select-condo" onchange="window.carregarDadosMaster(this.value)" class="input-field mb-4 bg-slate-50 cursor-pointer text-xs">
-                        <option value="">Selecione para carregar moradores...</option>
+                    <select id="master-select-condo" onchange="window.carregarDadosMaster(this.value)" class="input-field mb-4 bg-slate-50 cursor-pointer text-xs border-blue-500 ring-2 ring-blue-100">
+                        <option value="">Selecione para carregar funções...</option>
                         <!-- Injetado via JS -->
                     </select>
 
                     <div id="master-data-area" class="hidden space-y-6">
+
+                        <!-- Cadastro de Admin Local Master -->
+                        <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-200">
+                            <h4 class="text-[10px] font-black text-indigo-700 uppercase mb-3"><i data-lucide="shield" class="w-3 h-3 inline pb-0.5"></i> Inserir Administrador Local</h4>
+                            <p class="text-[10px] text-indigo-600 mb-3 leading-relaxed">
+                                Crie as credenciais para o Síndico ou Gestor Local. Ele terá acesso à aba "Gestão" para gerir porteiros e moradores do condomínio selecionado.
+                            </p>
+                            <form onsubmit="cadastrarFuncionario(event, true)" class="space-y-3">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input id="master-func-nome" type="text" required class="input-field py-2 text-xs" placeholder="Nome do Gestor">
+                                    <input id="master-func-login" type="text" required class="input-field py-2 text-xs lowercase" placeholder="Prefixo Ex: joao.sindico">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input id="master-func-senha" type="text" required class="input-field py-2 text-xs" placeholder="Senha Temporária">
+                                    <select id="master-func-perfil" class="input-field py-2 text-xs bg-white pointer-events-none opacity-80" readonly>
+                                        <option value="admin" selected>Administrador Local</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" id="master-func-escala" value="livre"> <!-- Adms tem acesso livre -->
+                                <button type="submit" class="w-full bg-indigo-600 text-white font-black uppercase text-[10px] py-2.5 rounded-xl hover:bg-indigo-700 transition-colors">
+                                    <i data-lucide="key" class="w-3 h-3 inline pb-0.5"></i> Criar Conta Admin
+                                </button>
+                            </form>
+
+                            <div class="mt-4 pt-4 border-t border-indigo-200">
+                                <h4 class="text-[9px] font-black text-indigo-500 uppercase mb-2">Funcionários / Admins Cadastrados</h4>
+                                <div class="relative mb-2">
+                                    <i data-lucide="search" class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3"></i>
+                                    <input type="text" placeholder="Buscar email..." oninput="filtrarFuncionarios(this.value, true)" class="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-200 text-[10px] outline-none bg-white">
+                                </div>
+                                <div id="lista-funcionarios-master" class="max-h-40 overflow-y-auto no-scrollbar space-y-1 bg-white border border-slate-100 rounded-lg p-1.5">
+                                    <!-- Renderizado via JS -->
+                                </div>
+                            </div>
+                        </div>
                         
                         <!-- Cadastro de Moradores Master -->
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
@@ -694,20 +866,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Cadastro de Funcionários (Aviso) -->
-                        <div class="bg-orange-50 p-4 rounded-2xl border border-orange-200 text-center">
-                            <i data-lucide="shield-alert" class="w-6 h-6 text-orange-500 mx-auto mb-2"></i>
-                            <h4 class="text-[10px] font-black text-orange-800 uppercase mb-1">Acessos de Funcionários</h4>
-                            <p class="text-[10px] text-orange-700 font-medium leading-tight">
-                                Para que um funcionário ou admin local entre no sistema, você deve criar o e-mail dele diretamente no <b>Console de Autenticação do Firebase</b>.
-                                <br><br>
-                                <b>Regras de E-mail:</b><br>
-                                • Portaria: <code>qualquer_nome@<b>dominio</b>.com</code><br>
-                                • Admin Local: <code>admin_nome@<b>dominio</b>.com</code><br>
-                                • Mensageria: <code>mensageria_nome@<b>dominio</b>.com</code>
-                            </p>
-                        </div>
                     </div>
                 </div>
 
@@ -719,8 +877,8 @@
     <!-- Firebase + Lógica Principal Unificada -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, writeBatch, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAd3RY1xWBfJJwNNHTbUB50xXPkcB-2b08",
@@ -733,8 +891,11 @@
         };
 
         let app;
+        let secondaryApp;
         try {
             app = initializeApp(firebaseConfig);
+            // App secundário para criar usuários (Funcionários/Admins) sem deslogar quem está usando.
+            secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
         } catch(e) {
             console.error("Erro ao inicializar Firebase", e);
             document.getElementById('login-error').innerHTML = `Erro de Configuração:<br><span class="text-[9px] font-normal text-red-400">${e.message}</span>`;
@@ -742,6 +903,7 @@
         }
 
         const auth = getAuth(app);
+        const secondaryAuth = getAuth(secondaryApp);
         
         // Inicializando o Firestore COM cache local ativado para funcionar 100% offline
         const dbFS = initializeFirestore(app, {
@@ -771,11 +933,10 @@
                 canvas.height = canvas.offsetHeight;
                 ctx.lineWidth = 3;
                 ctx.lineCap = 'round';
-                ctx.strokeStyle = '#0f172a'; // Cor escura (slate-900)
+                ctx.strokeStyle = '#0f172a'; 
             }
         }
         
-        // Listener ajustado no resize da janela
         window.addEventListener('resize', resizeCanvas);
 
         function startDrawing(e) {
@@ -789,7 +950,7 @@
         }
         function draw(e) {
             if (!isDrawing) return;
-            e.preventDefault(); // Impede rolagem no celular enquanto assina
+            e.preventDefault(); 
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -836,20 +997,16 @@
         // LÓGICA DO SCANNER DE CÓDIGO DE BARRAS
         let html5QrCode = null;
 
-        // Extração Inteligente de Dados da Etiqueta
         window.parseBarcodeData = (text) => {
-            // Retorna o texto original como NF, e tenta extrair outras coisas
             let data = { nf: text, empresa: "", unidade: "" };
             let upperText = text.toUpperCase();
 
-            // Padrões de Empresa Comuns
             if (upperText.includes("MERCADO LIVRE") || upperText.includes("MELI")) data.empresa = "Mercado Livre";
             else if (upperText.includes("AMAZON")) data.empresa = "Amazon";
             else if (upperText.includes("LOGGI")) data.empresa = "Loggi";
             else if (upperText.includes("SHOPEE")) data.empresa = "Shopee";
             else if (upperText.includes("CORREIOS") || /^[A-Z]{2}\d{9}[A-Z]{2}$/.test(upperText)) data.empresa = "Correios";
 
-            // Tentativa de achar Unidade Genérica - Números seguidos de Letras
             const unidadeMatch = upperText.match(/\b(\d{1,3}[A-Z]+)\b/);
             if (unidadeMatch) {
                 data.unidade = unidadeMatch[1];
@@ -866,13 +1023,12 @@
             }
             
             html5QrCode.start(
-                { facingMode: "environment" }, // Força a abertura direta da câmera traseira
+                { facingMode: "environment" }, 
                 {
                     fps: 10,
                     qrbox: { width: 250, height: 150 }
                 },
                 (decodedText) => {
-                    // Ao ler com sucesso, aplica a inteligência de extração
                     const extraido = window.parseBarcodeData(decodedText);
                     
                     document.getElementById('input-nf').value = extraido.nf;
@@ -884,20 +1040,16 @@
                     if (extraido.unidade) {
                         const inputUnidade = document.getElementById('input-unidade');
                         inputUnidade.value = extraido.unidade;
-                        window.validarInput(inputUnidade); // Valida automaticamente
+                        window.validarInput(inputUnidade);
                     }
 
-                    // Foca no campo morador para facilitar a edição rápida
                     document.getElementById('input-morador').focus();
-
                     window.stopScanner();
                 },
-                (errorMessage) => {
-                    // Falhas de leitura em tempo real (ignorar para não poluir console)
-                }
+                (errorMessage) => { }
             ).catch((err) => {
-                console.error("Erro ao iniciar a câmera para o scanner", err);
-                alert("Não foi possível acessar a câmera. Verifique as permissões do seu navegador.");
+                console.error("Erro ao iniciar a câmera", err);
+                alert("Não foi possível acessar a câmera.");
                 window.stopScanner();
             });
         };
@@ -913,7 +1065,7 @@
             document.getElementById('modal-scanner').classList.add('hidden');
         };
 
-        // LÓGICA DO INDICADOR DE STATUS (Online / Offline / Sincronizando)
+        // LÓGICA DO INDICADOR DE STATUS 
         window.updateStatusUI = (isOnline, isSyncing) => {
             const statusDiv = document.getElementById('sync-status');
             const statusDot = document.getElementById('status-dot');
@@ -959,21 +1111,26 @@
         window.pendingConfirmationId = null;
         window.pendingConfirmationType = null;
         
-        window.isAdmin = false; // Controle de acesso do Painel Admin
-        window.isMensageria = false; // Controle de acesso para registrar na Mensageria
-        window.isMaster = false; // Controle de acesso do Painel Master
+        window.isAdmin = false; 
+        window.isMensageria = false; 
+        window.isMaster = false; 
         window.nomeUsuarioLogado = "Colaborador"; 
+        window.currentUserEmail = null;
         
-        // ESTADO SaaS e MORADORES
         window.condominioLogado = { id: 'default', nome: 'Condomínio (Produção)' };
         window.regrasCondominio = null; 
-        window.bancoMoradoresFake = {}; // Será preenchido pelo Firestore
-        window.listaMoradoresBD = []; // Usado para gerenciar na aba admin/master
+        window.bancoMoradoresFake = {}; 
+        window.listaMoradoresBD = []; 
+        window.listaFuncionariosBD = [];
 
         let unsubscribeSnapshot = null;
         let unsubscribeMoradores = null;
+        let unsubFuncionarioSessao = null;
+        let unsubListaFuncionarios = null;
+        let unsubMasterMoradores = null;
+        let unsubMasterFuncionarios = null;
+        let intervalEscala = null;
 
-        // CARREGAR REGRAS DINÂMICAS DO CONDOMÍNIO
         window.carregarRegrasSaaS = async (tenantId) => {
             try {
                 const configRef = doc(dbFS, 'artifacts', appId, 'public', 'data', 'condominios', tenantId);
@@ -983,62 +1140,132 @@
                     window.regrasCondominio = docSnap.data();
                     window.condominioLogado = { id: tenantId, nome: window.regrasCondominio.nome || tenantId };
                 } else {
-                    // Fallback para produção atual
                     window.condominioLogado = { id: 'default', nome: 'Condomínio (Produção)' };
-                    window.regrasCondominio = {
-                        blocosPermitidos: ['J', 'P'],
-                        aptoMin: 11,
-                        aptoMax: 181,
-                        terminacaoObrigatoria: 1 
-                    };
+                    window.regrasCondominio = { blocosPermitidos: ['J', 'P'], aptoMin: 11, aptoMax: 181, terminacaoObrigatoria: 1 };
                 }
             } catch(e) {
-                console.error("Erro ao carregar regras SaaS", e);
                 window.condominioLogado = { id: 'default', nome: 'Condomínio (Offline)' };
                 window.regrasCondominio = { blocosPermitidos: ['J', 'P'], aptoMin: 11, aptoMax: 181, terminacaoObrigatoria: 1 };
             }
         };
 
-        // Ouvinte de Autenticação Firebase
+        // --- SISTEMA DE VERIFICAÇÃO DE ESCALA E HORÁRIOS ---
+        window.isWorkDay = (func, now) => {
+            if(!func.escala || func.escala === 'livre') return true;
+
+            if(func.escala === '12x36') {
+                if(!func.dataBase) return true; // Se esqueceu de preencher, libera.
+                // Tratar fuso horário corretamente
+                const parts = func.dataBase.split('-');
+                const ref = new Date(parts[0], parts[1]-1, parts[2]);
+                ref.setHours(0,0,0,0);
+                const today = new Date(now);
+                today.setHours(0,0,0,0);
+                const diffTime = Math.abs(today - ref);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays % 2 === 0; // Trabalha dia sim, dia não (dias pares na diff)
+            } else { 
+                const dayOfWeek = now.getDay(); 
+                if(func.diaFolga == dayOfWeek) return false;
+                if(func.escala === '5x2' && func.diaFolga2 == dayOfWeek) return false;
+                return true;
+            }
+        };
+
+        window.hasAccess = (func) => {
+            if (!func || !func.horaInicio || !func.horaFim || func.escala === 'livre') return true; 
+
+            const now = new Date();
+            // Se o turno foi estendido, passa direto pela checagem
+            if (func.turnoEstendidoAte && new Date(func.turnoEstendidoAte) > now) return true;
+
+            const [sh, sm] = func.horaInicio.split(':').map(Number);
+            const [eh, em] = func.horaFim.split(':').map(Number);
+            const startMin = sh * 60 + sm;
+            let endMin = eh * 60 + em + 30; // 30 minutos de tolerância na saída
+
+            const currMin = now.getHours() * 60 + now.getMinutes();
+            const crossesMidnight = startMin > (eh * 60 + em);
+
+            let todayWork = window.isWorkDay(func, now);
+
+            if (!crossesMidnight) {
+                return todayWork && (currMin >= startMin && currMin <= endMin);
+            } else {
+                if (currMin >= startMin) {
+                    return todayWork; // É o dia de trabalho dele, e começou o turno de noite.
+                } else if (currMin <= endMin) {
+                    // Passou da meia noite. Tem que ver se ontem foi dia de trabalho.
+                    const yesterday = new Date(now);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    return window.isWorkDay(func, yesterday);
+                }
+                return false;
+            }
+        };
+
+        window.estenderTurno = async () => {
+            if(!window.currentUserEmail) return;
+            const btn = document.getElementById('btn-estender-turno');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Estendendo...`;
+            
+            const tenantId = window.condominioLogado.id;
+            const funcRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`, window.currentUserEmail);
+
+            const limit = new Date();
+            limit.setHours(limit.getHours() + 4); // Concede +4 horas extras de acesso
+            
+            try {
+                // A atualização desse doc dispara o onSnapshot e tira a tela preta de bloqueio na hora.
+                await updateDoc(funcRef, { turnoEstendidoAte: limit.toISOString() });
+            } catch (e) {
+                console.error("Erro ao estender", e);
+                alert("Erro ao solicitar extensão. O Administrador precisa conferir seu cadastro.");
+            } finally {
+                btn.innerHTML = originalText;
+                if(window.lucide) lucide.createIcons();
+            }
+        };
+
+        // Ouvinte de Autenticação Firebase Principal
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 loginOverlay.classList.add('hidden');
-                appContent.classList.remove('hidden');
                 
                 const emailStr = user.email ? user.email.toLowerCase() : '';
-                
-                // DETECÇÃO DE PERFIS
+                window.currentUserEmail = emailStr;
+
                 window.isMaster = emailStr.includes('master@') || emailStr.includes('trackeasy');
                 window.isAdmin = window.isMaster || emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin');
                 window.isMensageria = window.isAdmin || emailStr.includes('mensageria');
                 
-                // Extrai o nome antes do @ e formata (ex: joao.silva@ -> Joao Silva)
                 const prefix = emailStr.split('@')[0];
                 window.nomeUsuarioLogado = prefix.split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 
-                // Preenche automaticamente o campo recebedor
                 const recInput = document.getElementById('input-recebedor');
                 if (recInput) recInput.value = window.nomeUsuarioLogado;
                 
-                // Controle de Abas
                 const tabA = document.getElementById('tab-a');
                 if (window.isAdmin || window.isMensageria) {
                     tabA.classList.remove('hidden');
+                    tabA.classList.add('inline-block');
                 } else {
                     tabA.classList.add('hidden');
+                    tabA.classList.remove('inline-block');
                 }
 
                 if (window.isMaster) {
                     document.getElementById('tab-master').classList.remove('hidden');
+                    document.getElementById('tab-master').classList.add('inline-block');
                 } else {
                     document.getElementById('tab-master').classList.add('hidden');
+                    document.getElementById('tab-master').classList.remove('inline-block');
                 }
 
-                // Identifica o Condomínio pelo domínio do email
                 const domainPart = emailStr.split('@')[1] || '';
                 const tenantId = domainPart.split('.')[0] || 'default';
 
-                // Carrega as regras e configurações
                 await window.carregarRegrasSaaS(tenantId);
 
                 const headerCondName = document.getElementById('nome-condominio-header');
@@ -1047,10 +1274,52 @@
                 const collectionName = window.condominioLogado.id === 'default' ? 'encomendas' : `encomendas_${window.condominioLogado.id}`;
                 window.encomendasRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', collectionName);
 
-                // OUVINTE PARA A BASE DE DADOS DE MORADORES
+                // CONTROLE DE ACESSO POR ESCALA EM TEMPO REAL
+                if (!window.isAdmin && !window.isMaster) {
+                    if (unsubFuncionarioSessao) unsubFuncionarioSessao();
+                    if (intervalEscala) clearInterval(intervalEscala);
+                    
+                    const meRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`, window.currentUserEmail);
+                    let currentFuncData = null;
+
+                    unsubFuncionarioSessao = onSnapshot(meRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            currentFuncData = docSnap.data();
+                            checkAccessRealtime();
+                        } else {
+                            currentFuncData = null; 
+                            checkAccessRealtime();
+                        }
+                    });
+
+                    const checkAccessRealtime = () => {
+                        if (currentFuncData) {
+                            if (!window.hasAccess(currentFuncData)) {
+                                document.getElementById('app-content').classList.add('hidden');
+                                document.getElementById('modal-bloqueio-escala').classList.remove('hidden');
+                            } else {
+                                document.getElementById('modal-bloqueio-escala').classList.add('hidden');
+                                document.getElementById('app-content').classList.remove('hidden');
+                            }
+                        } else {
+                            // Legado: Se o admin não criou a regra pra esse e-mail na gestão, libera.
+                            document.getElementById('modal-bloqueio-escala').classList.add('hidden');
+                            document.getElementById('app-content').classList.remove('hidden');
+                        }
+                    };
+
+                    // Verifica a escala ativamente a cada 1 minuto (Não permite que ele burle deixando a tela ligada)
+                    intervalEscala = setInterval(checkAccessRealtime, 60000); 
+
+                } else {
+                    if (intervalEscala) clearInterval(intervalEscala);
+                    document.getElementById('modal-bloqueio-escala').classList.add('hidden');
+                    document.getElementById('app-content').classList.remove('hidden');
+                }
+
+                // OUVINTES (MORADORES, FUNCIONÁRIOS E ENCOMENDAS)
                 if (unsubscribeMoradores) unsubscribeMoradores();
-                const moradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${window.condominioLogado.id}`);
-                
+                const moradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantId}`);
                 unsubscribeMoradores = onSnapshot(moradoresRef, (snap) => {
                     window.bancoMoradoresFake = {};
                     window.listaMoradoresBD = [];
@@ -1068,7 +1337,16 @@
                     if(window.abaAtiva === 'admin') window.renderAdminMoradores();
                 });
 
-                // OUVINTE PARA AS ENCOMENDAS
+                if (window.isAdmin || window.isMensageria) {
+                    if (unsubListaFuncionarios) unsubListaFuncionarios();
+                    const funcsRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`);
+                    unsubListaFuncionarios = onSnapshot(funcsRef, (snap) => {
+                        window.listaFuncionariosBD = [];
+                        snap.forEach(doc => window.listaFuncionariosBD.push({id: doc.id, ...doc.data()}));
+                        if(window.abaAtiva === 'admin') window.renderFuncionariosAdmin();
+                    });
+                }
+
                 if (unsubscribeSnapshot) unsubscribeSnapshot();
                 unsubscribeSnapshot = onSnapshot(window.encomendasRefAtiva, { includeMetadataChanges: true }, (snapshot) => {
                     const hasPendingWrites = snapshot.metadata.hasPendingWrites;
@@ -1077,7 +1355,6 @@
                     window.db = snapshot.docs.map(doc => {
                         const data = doc.data();
                         data.isOffline = doc.metadata.hasPendingWrites; 
-                        // Compatibilidade retroativa para encomendas sem tipo
                         if(!data.tipo) data.tipo = 'entrada';
                         return data;
                     });
@@ -1088,7 +1365,6 @@
                     console.error("Erro no Sync Firestore:", error);
                 });
 
-                // Se for Master, carrega todos os condomínios no Select do painel Master
                 if (window.isMaster) {
                     const condosRef = collection(dbFS, 'artifacts', appId, 'public', 'data', 'condominios');
                     onSnapshot(condosRef, (snap) => {
@@ -1104,8 +1380,12 @@
             } else {
                 loginOverlay.classList.remove('hidden');
                 appContent.classList.add('hidden');
+                document.getElementById('modal-bloqueio-escala').classList.add('hidden');
                 if (unsubscribeSnapshot) unsubscribeSnapshot();
                 if (unsubscribeMoradores) unsubscribeMoradores();
+                if (unsubFuncionarioSessao) unsubFuncionarioSessao();
+                if (unsubListaFuncionarios) unsubListaFuncionarios();
+                if (intervalEscala) clearInterval(intervalEscala);
                 window.db = [];
                 window.render();
             }
@@ -1779,6 +2059,7 @@
                 document.getElementById('area-admin').style.display = 'block';
                 window.renderAdminStats();
                 window.renderAdminMoradores();
+                window.renderFuncionariosAdmin();
             } else if (t === 'master') {
                 document.getElementById('area-operacional').style.display = 'none';
                 document.getElementById('area-admin').style.display = 'none';
@@ -2085,7 +2366,202 @@
             }
         }
 
-        // --- GESTÃO DE MORADORES (ADMIN) E CONDOMÍNIOS (MASTER) ---
+        // --- GESTÃO DE FUNCIONÁRIOS E MORADORES ---
+        window.toggleScaleFields = (escala, isMaster) => {
+            const suffix = isMaster ? '-master' : '-admin';
+            const gridHora = document.getElementById(`fields-horario${suffix}`);
+            const divFolga = document.getElementById(`fields-folga${suffix}`);
+            const divFolga2 = document.getElementById(`fields-folga2${suffix}`);
+            const divDataB = document.getElementById(`fields-database${suffix}`);
+
+            if(!gridHora) return;
+
+            gridHora.classList.add('hidden');
+            divFolga.classList.add('hidden');
+            divFolga2.classList.add('hidden');
+            divDataB.classList.add('hidden');
+
+            if (escala === '5x2') {
+                gridHora.classList.remove('hidden');
+                divFolga.classList.remove('hidden');
+                divFolga2.classList.remove('hidden');
+            } else if (escala === '6x1') {
+                gridHora.classList.remove('hidden');
+                divFolga.classList.remove('hidden');
+            } else if (escala === '12x36') {
+                gridHora.classList.remove('hidden');
+                divDataB.classList.remove('hidden');
+            }
+        };
+
+        window.cadastrarFuncionario = async (e, isMasterPanel) => {
+            e.preventDefault();
+            const prefixId = isMasterPanel ? 'master-func' : 'func';
+            
+            const nome = document.getElementById(`${prefixId}-nome`).value.trim();
+            const prefixoEmail = document.getElementById(`${prefixId}-login`).value.trim().toLowerCase().replace(/\s+/g, '');
+            const senha = document.getElementById(`${prefixId}-senha`).value;
+            const perfil = document.getElementById(`${prefixId}-perfil`).value;
+            const escala = document.getElementById(`${prefixId}-escala`).value;
+            
+            if (senha.length < 6) {
+                alert("A senha deve ter no mínimo 6 caracteres.");
+                return;
+            }
+
+            let tenantIdAlvo = window.condominioLogado.id;
+            if (isMasterPanel) {
+                tenantIdAlvo = document.getElementById('master-select-condo').value;
+                if (!tenantIdAlvo) { alert("Selecione um condomínio no select acima primeiro."); return; }
+            }
+
+            // Construir Email Padrão
+            let finalEmail = prefixoEmail;
+            if (perfil === 'mensageria' && !finalEmail.includes('mensageria')) finalEmail = `mensageria_${finalEmail}`;
+            if (perfil === 'admin' && !finalEmail.includes('admin')) finalEmail = `admin_${finalEmail}`;
+            finalEmail += `@${tenantIdAlvo}.com`;
+
+            // Coletar dados de escala
+            let horaInicio = null, horaFim = null, diaFolga = null, diaFolga2 = null, dataBase = null;
+            if (escala !== 'livre') {
+                horaInicio = document.getElementById(isMasterPanel ? 'func-hora-ini-master' : 'func-hora-ini')?.value;
+                horaFim = document.getElementById(isMasterPanel ? 'func-hora-fim-master' : 'func-hora-fim')?.value;
+                if(!horaInicio || !horaFim) { alert("Preencha Hora Início e Fim da Escala!"); return; }
+                
+                if (escala === '12x36') {
+                    dataBase = document.getElementById(isMasterPanel ? 'func-data-base-master' : 'func-data-base')?.value;
+                    if(!dataBase) { alert("Para 12x36 defina a Data Base do último plantão."); return; }
+                } else if (escala === '5x2') {
+                    diaFolga = parseInt(document.getElementById(isMasterPanel ? 'func-dia-folga-master' : 'func-dia-folga')?.value);
+                    diaFolga2 = parseInt(document.getElementById(isMasterPanel ? 'func-dia-folga2-master' : 'func-dia-folga2')?.value);
+                } else if (escala === '6x1') {
+                    diaFolga = parseInt(document.getElementById(isMasterPanel ? 'func-dia-folga-master' : 'func-dia-folga')?.value);
+                }
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-3 h-3 inline pb-0.5 animate-spin"></i> Criando...`;
+            btn.disabled = true;
+
+            try {
+                // 1. Cria usuário no Auth Secundário (não desloga o Admin atual)
+                await createUserWithEmailAndPassword(secondaryAuth, finalEmail, senha);
+                await signOut(secondaryAuth);
+
+                // 2. Grava Regras e Escalas no Firestore
+                const funcRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, finalEmail);
+                await setDoc(funcRef, {
+                    nome, email: finalEmail, perfil, escala,
+                    horaInicio: horaInicio || null, 
+                    horaFim: horaFim || null,
+                    diaFolga: diaFolga !== null ? diaFolga : null,
+                    diaFolga2: diaFolga2 !== null ? diaFolga2 : null,
+                    dataBase: dataBase || null,
+                    criadoEm: new Date().toISOString()
+                });
+
+                alert(`Conta ${finalEmail} criada com sucesso! Acesso liberado conforme a escala.`);
+                e.target.reset();
+                window.toggleScaleFields('livre', isMasterPanel);
+            } catch(err) {
+                console.error(err);
+                if (err.code === 'auth/email-already-in-use') {
+                    alert(`O email ${finalEmail} já existe no sistema!`);
+                } else {
+                    alert("Erro ao criar funcionário. Detalhes no console.");
+                }
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        };
+
+        window.renderFuncionariosAdmin = (termo = '') => {
+            const container = document.getElementById('lista-funcionarios-admin');
+            if(!container) return;
+            
+            const txt = termo.toLowerCase().trim();
+            const filtrados = window.listaFuncionariosBD.filter(f => {
+                if(!txt) return true;
+                return `${f.nome} ${f.email} ${f.escala}`.toLowerCase().includes(txt);
+            });
+
+            if(filtrados.length === 0) {
+                container.innerHTML = '<p class="text-[10px] text-slate-400 text-center font-bold uppercase p-2">Nenhum colaborador encontrado.</p>';
+                return;
+            }
+
+            container.innerHTML = filtrados.map(f => {
+                let textEscala = 'Sem Restrição';
+                if(f.escala !== 'livre') {
+                    textEscala = `${f.escala} (${f.horaInicio} às ${f.horaFim})`;
+                }
+                return `
+                <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors">
+                    <div>
+                        <span class="text-[9px] font-black uppercase text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">${f.perfil}</span>
+                        <p class="text-[11px] font-bold text-slate-700 mt-1">${f.nome}</p>
+                        <p class="text-[9px] font-medium text-slate-500">${f.email}</p>
+                        <p class="text-[8px] font-black uppercase text-blue-500 mt-1"><i data-lucide="clock" class="w-3 h-3 inline pb-0.5"></i> Escala: ${textEscala}</p>
+                    </div>
+                    <button onclick="excluirFuncionario('${f.id}')" class="p-1.5 text-red-400 hover:bg-red-100 rounded-lg transition-colors" title="Revogar Escala (Não apaga auth)">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            `}).join('');
+            lucide.createIcons();
+        };
+
+        window.renderFuncionariosMaster = (termo = '') => {
+            const container = document.getElementById('lista-funcionarios-master');
+            if(!container) return;
+            
+            const txt = termo.toLowerCase().trim();
+            const filtrados = window.listaFuncionariosMasterLocal.filter(f => {
+                if(!txt) return true; 
+                return `${f.nome} ${f.email} ${f.perfil}`.toLowerCase().includes(txt);
+            });
+
+            if(filtrados.length === 0) { 
+                container.innerHTML = '<p class="text-[9px] text-slate-400 text-center font-bold p-2">Vazio</p>'; 
+                return; 
+            }
+
+            container.innerHTML = filtrados.map(f => `
+                <div class="flex justify-between items-center p-1.5 hover:bg-slate-50 border-b border-slate-100 last:border-0">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-700 uppercase"><span class="text-indigo-500 mr-1">${f.perfil}</span> ${f.nome}</p>
+                        <p class="text-[8px] font-medium text-slate-500 lowercase">${f.email}</p>
+                    </div>
+                    <button onclick="excluirFuncionarioMaster('${f.id}')" class="text-red-400 hover:text-red-600"><i data-lucide="x" class="w-3 h-3"></i></button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        };
+
+        window.filtrarFuncionarios = (t, isMaster) => {
+            if(isMaster) window.renderFuncionariosMaster(t);
+            else window.renderFuncionariosAdmin(t);
+        };
+
+        window.excluirFuncionario = async (emailId) => {
+            if(confirm("Remover este colaborador? (Isto irá revogar o acesso via sistema de escalas)")) {
+                const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${window.condominioLogado.id}`, emailId);
+                deleteDoc(ref).catch(e => alert("Erro ao deletar"));
+            }
+        };
+
+        window.excluirFuncionarioMaster = async (emailId) => {
+            const tenantIdAlvo = document.getElementById('master-select-condo').value;
+            if(!tenantIdAlvo) return;
+            if(confirm("Remover este colaborador/admin?")) {
+                const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, emailId);
+                deleteDoc(ref).catch(e => alert("Erro ao deletar"));
+            }
+        };
+
         window.renderAdminMoradores = (termo = '') => {
             const container = document.getElementById('lista-moradores-admin');
             if(!container) return;
@@ -2193,14 +2669,15 @@
             }
         };
 
-        let unsubMasterMoradores = null;
         window.listaMoradoresMasterLocal = []; 
+        window.listaFuncionariosMasterLocal = [];
 
         window.carregarDadosMaster = (tenantId) => {
             const dataArea = document.getElementById('master-data-area');
             if (!tenantId) { 
                 dataArea.classList.add('hidden'); 
                 if(unsubMasterMoradores) unsubMasterMoradores(); 
+                if(unsubMasterFuncionarios) unsubMasterFuncionarios();
                 return; 
             }
             
@@ -2208,12 +2685,19 @@
             
             if(unsubMasterMoradores) unsubMasterMoradores();
             const moradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantId}`);
-            
             unsubMasterMoradores = onSnapshot(moradoresRef, (snap) => {
                 window.listaMoradoresMasterLocal = [];
                 snap.forEach(doc => window.listaMoradoresMasterLocal.push({id: doc.id, ...doc.data()}));
                 document.getElementById('master-count-moradores').innerText = window.listaMoradoresMasterLocal.length;
                 window.renderMasterMoradores('');
+            });
+
+            if(unsubMasterFuncionarios) unsubMasterFuncionarios();
+            const funcRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`);
+            unsubMasterFuncionarios = onSnapshot(funcRef, (snap) => {
+                window.listaFuncionariosMasterLocal = [];
+                snap.forEach(doc => window.listaFuncionariosMasterLocal.push({id: doc.id, ...doc.data()}));
+                window.renderFuncionariosMaster('');
             });
         };
 
