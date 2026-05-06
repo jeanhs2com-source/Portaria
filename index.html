@@ -1021,10 +1021,11 @@
                 if (recInput) recInput.value = window.nomeUsuarioLogado;
                 
                 // Controle de Abas
+                const tabA = document.getElementById('tab-a');
                 if (window.isAdmin || window.isMensageria) {
-                    document.getElementById('tab-a').classList.remove('hidden');
+                    tabA.classList.remove('hidden');
                 } else {
-                    document.getElementById('tab-a').classList.add('hidden');
+                    tabA.classList.add('hidden');
                 }
 
                 if (window.isMaster) {
@@ -1760,12 +1761,17 @@
             const masterAtivo = "bg-red-600 text-white shadow-sm";
             const masterInativo = "text-red-600 hover:bg-red-100";
             
+            const baseTabA = "px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap";
+            
             document.getElementById('tab-p').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='pendentes'?ativo:inativo}`;
             document.getElementById('tab-s').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='saidas'?ativo:inativo}`;
             document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='mensageria'?ativo:inativo}`;
             document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='entregues'?ativo:inativo}`;
-            document.getElementById('tab-a').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='admin'?admAtivo:admInativo} ${(window.isAdmin || window.isMensageria)?'':'hidden'}`;
-            document.getElementById('tab-master').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='master'?masterAtivo:masterInativo} ${window.isMaster?'':'hidden'}`;
+            
+            // Garantindo que a aba admin aparece (usando block/inline-block em vez de ocultar)
+            document.getElementById('tab-a').className = `${baseTabA} ${t==='admin'?admAtivo:admInativo} ${(window.isAdmin || window.isMensageria) ? 'inline-block' : 'hidden'}`;
+            
+            document.getElementById('tab-master').className = `${baseTabA} ${t==='master'?masterAtivo:masterInativo} ${window.isMaster ? 'inline-block' : 'hidden'}`;
 
             if (t === 'admin') {
                 document.getElementById('area-operacional').style.display = 'none';
