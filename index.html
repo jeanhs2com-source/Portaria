@@ -210,7 +210,6 @@
                             <input id="edit-nf" type="text" class="input-field">
                         </div>
                         <div>
-                            <!-- CAMPO DE RECEBEDOR DESBLOQUEADO AQUI TAMBÉM -->
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Recebedor</label>
                             <input id="edit-recebedor" type="text" class="input-field">
                         </div>
@@ -1670,7 +1669,7 @@
         }
 
         window.compartilharRelatorioMensageria = () => {
-            const itensMensageria = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria' && d.tipo !== 'saida');
+            const itensMensageria = window.db.filter(d => d.status === 'entregue' && d.destino === 'mensageria');
             if (itensMensageria.length === 0) {
                 alert("A Mensageria está vazia no momento.");
                 return;
@@ -2432,7 +2431,8 @@
             const prefixId = isMasterPanel ? 'master-func' : 'func';
             
             const nome = document.getElementById(`${prefixId}-nome`).value.trim();
-            const prefixoEmail = document.getElementById(`${prefixId}-login`).value.trim().toLowerCase().replace(/\s+/g, '');
+            // Sanitização forçada: Remove qualquer espaço ou caractere especial do login
+            const prefixoEmail = document.getElementById(`${prefixId}-login`).value.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, '');
             const senha = document.getElementById(`${prefixId}-senha`).value;
             const perfil = document.getElementById(`${prefixId}-perfil`).value;
             const escala = document.getElementById(`${prefixId}-escala`).value;
@@ -2448,11 +2448,21 @@
                 if (!tenantIdAlvo) { alert("Selecione um condomínio no select acima primeiro."); return; }
             }
 
-            // Construir Email Padrão
+            // Construir Email Padrão e Sanitizado
             let finalEmail = prefixoEmail;
             if (perfil === 'mensageria' && !finalEmail.includes('mensageria')) finalEmail = `mensageria_${finalEmail}`;
             if (perfil === 'admin' && !finalEmail.includes('admin')) finalEmail = `admin_${finalEmail}`;
-            finalEmail += `@${tenantIdAlvo}.com`;
+            
+            // Sanitização do Domínio
+            const safeDomain = tenantIdAlvo.replace(/[^a-z0-9-]/g, '');
+            finalEmail += `@${safeDomain}.com`;
+
+            // Verificação Final do E-mail
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(finalEmail)) {
+                alert(`O email gerado é inválido: ${finalEmail}\nVerifique se não usou caracteres especiais no prefixo.`);
+                return;
+            }
 
             // Coletar dados de escala
             let horaInicio = null, horaFim = null, diaFolga = null, diaFolga2 = null, dataBase = null;
@@ -2544,7 +2554,7 @@
                         <p class="text-[9px] font-medium text-slate-500">${f.email}</p>
                         <p class="text-[8px] font-black uppercase text-blue-500 mt-1"><i data-lucide="clock" class="w-3 h-3 inline pb-0.5"></i> Escala: ${textEscala}</p>
                     </div>
-                    <button onclick="excluirFuncionario('${f.id}')" class="p-1.5 text-red-400 hover:bg-red-100 rounded-lg transition-colors" title="Revogar Escala (Não apaga auth)">
+                    <button onclick="excluirFuncionario('${f.id}')" class="p-1.5 text-red-400 hover:bg-red-100 rounded-lg transition-colors" title="Revogar Acesso (Exclusão Lógica)">
                         <i data-lucide="trash-2" class="w-3 h-3"></i>
                     </button>
                 </div>
@@ -2573,7 +2583,7 @@
                         <p class="text-[10px] font-bold text-slate-700 uppercase"><span class="text-indigo-500 mr-1">${f.perfil}</span> ${f.nome}</p>
                         <p class="text-[8px] font-medium text-slate-500 lowercase">${f.email}</p>
                     </div>
-                    <button onclick="excluirFuncionarioMaster('${f.id}')" class="text-red-400 hover:text-red-600"><i data-lucide="x" class="w-3 h-3"></i></button>
+                    <button onclick="excluirFuncionarioMaster('${f.id}')" class="text-red-400 hover:text-red-600" title="Revogar Acesso (Exclusão Lógica)"><i data-lucide="x" class="w-3 h-3"></i></button>
                 </div>
             `).join('');
             lucide.createIcons();
@@ -2677,14 +2687,18 @@
         // EXCLUSIVAS DO MASTER
         window.cadastrarCondominio = async (e) => {
             e.preventDefault();
-            const idDomain = document.getElementById('master-condo-id').value.trim().toLowerCase();
+            const rawId = document.getElementById('master-condo-id').value.trim().toLowerCase();
+            const idDomain = rawId.replace(/[^a-z0-9-]/g, ''); // Sanitização do ID
             const nome = document.getElementById('master-condo-nome').value.trim();
             const blocosStr = document.getElementById('master-condo-blocos').value.toUpperCase();
             const min = document.getElementById('master-condo-min').value;
             const max = document.getElementById('master-condo-max').value;
             const term = document.getElementById('master-condo-term').value;
 
-            if (!idDomain) return;
+            if (!idDomain) {
+                alert("ID do condomínio inválido. Use apenas letras e números, sem espaços.");
+                return;
+            }
 
             const blocosPermitidos = blocosStr.split(',').map(b => b.trim()).filter(b => b);
             
