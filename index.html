@@ -883,7 +883,7 @@
 
     <!-- Firebase + Lógica Principal Unificada -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, writeBatch, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -900,9 +900,17 @@
         let app;
         let secondaryApp;
         try {
-            app = initializeApp(firebaseConfig);
-            // App secundário para criar usuários (Funcionários/Admins) sem deslogar quem está usando.
-            secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+            if (getApps().length === 0) {
+                app = initializeApp(firebaseConfig);
+            } else {
+                app = getApp();
+            }
+            
+            try {
+                secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+            } catch(e) {
+                secondaryApp = getApp("SecondaryApp");
+            }
         } catch(e) {
             console.error("Erro ao inicializar Firebase", e);
             document.getElementById('login-error').innerHTML = `Erro de Configuração:<br><span class="text-[9px] font-normal text-red-400">${e.message}</span>`;
@@ -1302,9 +1310,18 @@
 
                     const checkAccessRealtime = () => {
                         if (currentFuncData) {
-                            if (!window.hasAccess(currentFuncData)) {
+                            if (currentFuncData.excluido) {
                                 document.getElementById('app-content').classList.add('hidden');
                                 document.getElementById('modal-bloqueio-escala').classList.remove('hidden');
+                                document.querySelector('#modal-bloqueio-escala h2').innerText = "Acesso Revogado";
+                                document.querySelector('#modal-bloqueio-escala p').innerText = "Sua conta foi desativada ou excluída pelo Administrador.";
+                                document.getElementById('btn-estender-turno').classList.add('hidden');
+                            } else if (!window.hasAccess(currentFuncData)) {
+                                document.getElementById('app-content').classList.add('hidden');
+                                document.getElementById('modal-bloqueio-escala').classList.remove('hidden');
+                                document.querySelector('#modal-bloqueio-escala h2').innerText = "Fora de Horário";
+                                document.querySelector('#modal-bloqueio-escala p').innerText = "Seu turno de trabalho não está ativo neste momento ou hoje é seu dia de folga previsto na escala.";
+                                document.getElementById('btn-estender-turno').classList.remove('hidden');
                             } else {
                                 document.getElementById('modal-bloqueio-escala').classList.add('hidden');
                                 document.getElementById('app-content').classList.remove('hidden');
@@ -1350,7 +1367,12 @@
                     const funcsRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`);
                     unsubListaFuncionarios = onSnapshot(funcsRef, (snap) => {
                         window.listaFuncionariosBD = [];
-                        snap.forEach(doc => window.listaFuncionariosBD.push({id: doc.id, ...doc.data()}));
+                        snap.forEach(doc => {
+                            const data = doc.data();
+                            if (!data.excluido) {
+                                window.listaFuncionariosBD.push({id: doc.id, ...data});
+                            }
+                        });
                         if(window.abaAtiva === 'admin') window.renderFuncionariosAdmin();
                     });
                 }
@@ -2457,8 +2479,16 @@
 
             try {
                 // 1. Cria usuário no Auth Secundário (não desloga o Admin atual)
-                await createUserWithEmailAndPassword(secondaryAuth, finalEmail, senha);
-                await signOut(secondaryAuth);
+                try {
+                    await createUserWithEmailAndPassword(secondaryAuth, finalEmail, senha);
+                    await signOut(secondaryAuth);
+                } catch (authErr) {
+                    if (authErr.code === 'auth/email-already-in-use') {
+                        console.log("Email já existe, atualizando regras e reativando conta...");
+                    } else {
+                        throw authErr;
+                    }
+                }
 
                 // 2. Grava Regras e Escalas no Firestore
                 const funcRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, finalEmail);
@@ -2469,19 +2499,16 @@
                     diaFolga: diaFolga !== null ? diaFolga : null,
                     diaFolga2: diaFolga2 !== null ? diaFolga2 : null,
                     dataBase: dataBase || null,
-                    criadoEm: new Date().toISOString()
+                    criadoEm: new Date().toISOString(),
+                    excluido: false // Garante reativação caso estivesse excluído
                 });
 
-                alert(`Conta de acesso criada com Sucesso direto no banco do Firebase!\n\nEmail: ${finalEmail}\nO colaborador já pode fazer login no sistema e o acesso será validado pela escala.`);
+                alert(`Conta de acesso criada/atualizada com Sucesso!\n\nEmail: ${finalEmail}\nO colaborador já pode fazer login no sistema.`);
                 e.target.reset();
                 window.toggleScaleFields('livre', isMasterPanel);
             } catch(err) {
                 console.error(err);
-                if (err.code === 'auth/email-already-in-use') {
-                    alert(`O email ${finalEmail} já existe no sistema!`);
-                } else {
-                    alert("Erro ao criar funcionário. Detalhes no console.");
-                }
+                alert("Erro ao criar funcionário: " + (err.message || "Verifique o console"));
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -2558,18 +2585,18 @@
         };
 
         window.excluirFuncionario = async (emailId) => {
-            if(confirm("Remover este colaborador? (Isto irá revogar o acesso via sistema de escalas)")) {
+            if(confirm("Remover este colaborador? (A conta será permanentemente inativada)")) {
                 const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${window.condominioLogado.id}`, emailId);
-                deleteDoc(ref).catch(e => alert("Erro ao deletar"));
+                await updateDoc(ref, { excluido: true }).catch(e => alert("Erro ao desativar conta"));
             }
         };
 
         window.excluirFuncionarioMaster = async (emailId) => {
             const tenantIdAlvo = document.getElementById('master-select-condo').value;
             if(!tenantIdAlvo) return;
-            if(confirm("Remover este colaborador/admin?")) {
+            if(confirm("Remover este colaborador/admin? (A conta será permanentemente inativada)")) {
                 const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, emailId);
-                deleteDoc(ref).catch(e => alert("Erro ao deletar"));
+                await updateDoc(ref, { excluido: true }).catch(e => alert("Erro ao desativar conta"));
             }
         };
 
@@ -2750,7 +2777,12 @@
             const funcRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`);
             unsubMasterFuncionarios = onSnapshot(funcRef, (snap) => {
                 window.listaFuncionariosMasterLocal = [];
-                snap.forEach(doc => window.listaFuncionariosMasterLocal.push({id: doc.id, ...doc.data()}));
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if (!data.excluido) {
+                        window.listaFuncionariosMasterLocal.push({id: doc.id, ...data});
+                    }
+                });
                 window.renderFuncionariosMaster('');
             });
         };
