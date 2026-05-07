@@ -76,18 +76,11 @@
                     <i data-lucide="clock" class="w-10 h-10"></i>
                 </div>
             </div>
-            <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight mb-2">Fora de Horário</h2>
-            <p class="text-xs font-medium text-slate-500 mb-6">
+            <h2 id="titulo-bloqueio" class="text-xl font-black text-slate-800 uppercase tracking-tight mb-2">Fora de Horário</h2>
+            <p id="texto-bloqueio" class="text-xs font-medium text-slate-500 mb-6">
                 Seu turno de trabalho não está ativo neste momento ou hoje é seu dia de folga previsto na escala.
             </p>
             
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6 text-left">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Atraso da Troca de Turno?</p>
-                <p class="text-[10px] text-slate-600 leading-relaxed">
-                    Se o seu colega do próximo turno atrasou e você precisa continuar operando o sistema, solicite uma extensão de horário abaixo (A tolerância de 30 min já foi utilizada).
-                </p>
-            </div>
-
             <div class="space-y-3">
                 <button type="button" id="btn-estender-turno" onclick="solicitarExtensao()" class="w-full bg-red-600 hover:bg-red-700 h-[45px] text-white font-black rounded-xl active:scale-95 transition-all uppercase text-[10px] shadow-lg flex items-center justify-center gap-2">
                     <i data-lucide="plus-circle" class="w-4 h-4"></i> Solicitar Extensão ao Admin
@@ -128,14 +121,14 @@
 
         <!-- MODAL WHATSAPP ESCOLHA -->
         <div id="modal-whatsapp" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 modal-overlay">
-            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in text-center">
                 <div class="flex justify-center mb-2">
                     <div class="bg-green-100 p-3 rounded-2xl text-green-600">
                         <i data-lucide="message-circle" class="w-8 h-8"></i>
                     </div>
                 </div>
-                <h3 class="font-black text-slate-800 uppercase text-center text-sm">Notificar via WhatsApp</h3>
-                <p class="text-xs text-slate-500 text-center font-medium">Como deseja abrir o WhatsApp no seu computador?</p>
+                <h3 class="font-black text-slate-800 uppercase text-sm">Notificar via WhatsApp</h3>
+                <p class="text-xs text-slate-500 font-medium">Como deseja abrir o WhatsApp no seu computador?</p>
                 <div class="flex flex-col gap-3 pt-2">
                     <button onclick="openWhatsApp('web')" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-xl text-[10px] uppercase transition-colors flex items-center justify-center gap-2 shadow-sm">
                         <i data-lucide="globe" class="w-4 h-4"></i> WhatsApp Web (Navegador)
@@ -210,7 +203,6 @@
                             <input id="edit-nf" type="text" class="input-field">
                         </div>
                         <div>
-                            <!-- CAMPO DE RECEBEDOR BLOQUEADO -->
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Recebedor</label>
                             <input id="edit-recebedor" type="text" class="input-field bg-slate-100 text-slate-500 cursor-not-allowed" readonly>
                         </div>
@@ -1171,7 +1163,6 @@
 
             if(func.escala === '12x36') {
                 if(!func.dataBase) return true; // Se esqueceu de preencher, libera.
-                // Tratar fuso horário corretamente
                 const parts = func.dataBase.split('-');
                 const ref = new Date(parts[0], parts[1]-1, parts[2]);
                 ref.setHours(0,0,0,0);
@@ -1179,7 +1170,7 @@
                 today.setHours(0,0,0,0);
                 const diffTime = Math.abs(today - ref);
                 const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                return diffDays % 2 === 0; // Trabalha dia sim, dia não (dias pares na diff)
+                return diffDays % 2 === 0; 
             } else { 
                 const dayOfWeek = now.getDay(); 
                 if(func.diaFolga == dayOfWeek) return false;
@@ -1192,7 +1183,6 @@
             if (!func || !func.horaInicio || !func.horaFim || func.escala === 'livre') return true; 
 
             const now = new Date();
-            // Se o turno foi estendido, passa direto pela checagem
             if (func.turnoEstendidoAte && new Date(func.turnoEstendidoAte) > now) return true;
 
             const [sh, sm] = func.horaInicio.split(':').map(Number);
@@ -1209,9 +1199,8 @@
                 return todayWork && (currMin >= startMin && currMin <= endMin);
             } else {
                 if (currMin >= startMin) {
-                    return todayWork; // É o dia de trabalho dele, e começou o turno de noite.
+                    return todayWork; 
                 } else if (currMin <= endMin) {
-                    // Passou da meia noite. Tem que ver se ontem foi dia de trabalho.
                     const yesterday = new Date(now);
                     yesterday.setDate(yesterday.getDate() - 1);
                     return window.isWorkDay(func, yesterday);
@@ -1257,9 +1246,34 @@
             }
         };
 
+        window.showBlockScreen = (title, message, showExtendBtn) => {
+            document.getElementById('app-content').classList.add('hidden');
+            const modal = document.getElementById('modal-bloqueio-escala');
+            modal.classList.remove('hidden');
+            document.getElementById('titulo-bloqueio').innerText = title;
+            document.getElementById('texto-bloqueio').innerText = message;
+            
+            const btnExtend = document.getElementById('btn-estender-turno');
+            if (showExtendBtn) {
+                btnExtend.classList.remove('hidden');
+                btnExtend.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4"></i> Solicitar Extensão ao Admin';
+            } else {
+                btnExtend.classList.add('hidden');
+            }
+            if(window.lucide) lucide.createIcons();
+        };
+
+        window.hideBlockScreen = () => {
+            document.getElementById('modal-bloqueio-escala').classList.add('hidden');
+            document.getElementById('app-content').classList.remove('hidden');
+        };
+
         // Ouvinte de Autenticação Firebase Principal
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // Esconde a tela de login imediatamente para não dar glitch visual
+                loginOverlay.classList.add('hidden');
+                
                 const emailStr = user.email ? user.email.toLowerCase() : '';
                 window.currentUserEmail = emailStr;
 
@@ -1268,44 +1282,15 @@
 
                 window.isMaster = emailStr.includes('master@') || emailStr.includes('trackeasy');
                 
-                // Busca o perfil real no banco para não depender do prefixo no email
-                let perfilDB = null;
-                if (!window.isMaster) {
-                    try {
-                        const myRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`, emailStr);
-                        const mySnap = await getDoc(myRef);
-                        if (mySnap.exists()) {
-                            perfilDB = mySnap.data().perfil;
-                        }
-                    } catch(err) { console.error("Erro perfil:", err); }
-                }
-
-                // RESTAURAÇÃO LEGADO: Se não achar na tabela nova, usa a regra do nome do e-mail
-                window.isAdmin = window.isMaster || perfilDB === 'admin' || (!perfilDB && (emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin')));
-                window.isMensageria = window.isAdmin || perfilDB === 'mensageria' || (!perfilDB && emailStr.includes('mensageria'));
+                // Variáveis baseadas em Legacy que serão sobrescritas se acharem doc
+                window.isAdmin = window.isMaster || emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin');
+                window.isMensageria = window.isAdmin || emailStr.includes('mensageria');
                 
                 const prefix = emailStr.split('@')[0];
                 window.nomeUsuarioLogado = prefix.split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 
                 const recInput = document.getElementById('input-recebedor');
                 if (recInput) recInput.value = window.nomeUsuarioLogado;
-                
-                const tabA = document.getElementById('tab-a');
-                if (window.isAdmin || window.isMensageria) {
-                    tabA.classList.remove('hidden');
-                    tabA.classList.add('inline-block');
-                } else {
-                    tabA.classList.add('hidden');
-                    tabA.classList.remove('inline-block');
-                }
-
-                if (window.isMaster) {
-                    document.getElementById('tab-master').classList.remove('hidden');
-                    document.getElementById('tab-master').classList.add('inline-block');
-                } else {
-                    document.getElementById('tab-master').classList.add('hidden');
-                    document.getElementById('tab-master').classList.remove('inline-block');
-                }
 
                 await window.carregarRegrasSaaS(tenantId);
 
@@ -1315,71 +1300,72 @@
                 const collectionName = window.condominioLogado.id === 'default' ? 'encomendas' : `encomendas_${window.condominioLogado.id}`;
                 window.encomendasRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', collectionName);
 
-                // Oculta a tela de Login apenas DEPOIS de carregar os dados
-                loginOverlay.classList.add('hidden');
+                // CONTROLE DE ACESSO POR ESCALA EM TEMPO REAL E LEITURA DE PERFIS
+                if (unsubFuncionarioSessao) unsubFuncionarioSessao();
+                if (intervalEscala) clearInterval(intervalEscala);
+                
+                const meRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`, window.currentUserEmail);
+                let currentFuncData = null;
 
-                // CONTROLE DE ACESSO POR ESCALA EM TEMPO REAL
-                if (!window.isAdmin && !window.isMaster) {
-                    if (unsubFuncionarioSessao) unsubFuncionarioSessao();
-                    if (intervalEscala) clearInterval(intervalEscala);
-                    
-                    const meRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`, window.currentUserEmail);
-                    let currentFuncData = null;
-
-                    unsubFuncionarioSessao = onSnapshot(meRef, (docSnap) => {
-                        if (docSnap.exists()) {
-                            currentFuncData = docSnap.data();
-                            checkAccessRealtime();
-                        } else {
-                            currentFuncData = null; 
-                            checkAccessRealtime();
+                unsubFuncionarioSessao = onSnapshot(meRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        currentFuncData = docSnap.data();
+                        
+                        // Sobrescreve permissões usando o banco de dados oficial
+                        if (!window.isMaster) {
+                            window.isAdmin = currentFuncData.perfil === 'admin';
+                            window.isMensageria = window.isAdmin || currentFuncData.perfil === 'mensageria';
                         }
-                    }, (err) => {
-                        console.error("Erro escala:", err);
-                        document.getElementById('modal-bloqueio-escala').classList.add('hidden');
-                        document.getElementById('app-content').classList.remove('hidden');
-                    });
+                        
+                        checkAccessRealtime();
+                        atualizarTabsVisibilidade();
+                    } else {
+                        // LEGADO: Doc não existe. Libera usando a regra do nome do email.
+                        currentFuncData = null; 
+                        window.hideBlockScreen();
+                        atualizarTabsVisibilidade();
+                    }
+                }, (err) => {
+                    console.error("Erro ao ler credenciais do funcionário:", err);
+                    window.hideBlockScreen(); // Em caso de erro de rede, não trava quem já tá logado
+                    atualizarTabsVisibilidade();
+                });
 
-                    const checkAccessRealtime = () => {
-                        if (currentFuncData) {
-                            if (currentFuncData.excluido) {
-                                document.getElementById('app-content').classList.add('hidden');
-                                document.getElementById('modal-bloqueio-escala').classList.remove('hidden');
-                                document.querySelector('#modal-bloqueio-escala h2').innerText = "Acesso Revogado";
-                                document.querySelector('#modal-bloqueio-escala p').innerText = "Sua conta foi desativada ou excluída pelo Administrador.";
-                                document.getElementById('btn-estender-turno').classList.add('hidden');
-                            } else if (currentFuncData.pedidoExtensao) {
-                                document.getElementById('app-content').classList.add('hidden');
-                                document.getElementById('modal-bloqueio-escala').classList.remove('hidden');
-                                document.querySelector('#modal-bloqueio-escala h2').innerText = "Aguardando Liberação";
-                                document.querySelector('#modal-bloqueio-escala p').innerText = "Você solicitou horas extras. Aguarde a aprovação do Administrador para desbloquear o sistema.";
-                                document.getElementById('btn-estender-turno').classList.add('hidden');
-                            } else if (!window.hasAccess(currentFuncData)) {
-                                document.getElementById('app-content').classList.add('hidden');
-                                document.getElementById('modal-bloqueio-escala').classList.remove('hidden');
-                                document.querySelector('#modal-bloqueio-escala h2').innerText = "Fora de Horário";
-                                document.querySelector('#modal-bloqueio-escala p').innerText = "Seu turno de trabalho não está ativo neste momento ou hoje é seu dia de folga previsto na escala.";
-                                document.getElementById('btn-estender-turno').classList.remove('hidden');
-                                document.getElementById('btn-estender-turno').innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4"></i> Solicitar Extensão ao Admin';
-                            } else {
-                                document.getElementById('modal-bloqueio-escala').classList.add('hidden');
-                                document.getElementById('app-content').classList.remove('hidden');
-                            }
+                const checkAccessRealtime = () => {
+                    if (currentFuncData) {
+                        if (currentFuncData.excluido) {
+                            window.showBlockScreen("Acesso Revogado", "Sua conta foi desativada ou excluída pelo Administrador.", false);
+                        } else if (currentFuncData.pedidoExtensao) {
+                            window.showBlockScreen("Aguardando Liberação", "Você solicitou horas extras. Aguarde a aprovação do Administrador.", false);
+                        } else if (!window.isAdmin && !window.isMaster && !window.hasAccess(currentFuncData)) {
+                            window.showBlockScreen("Fora de Horário", "Seu turno de trabalho não está ativo neste momento ou hoje é seu dia de folga previsto na escala.", true);
                         } else {
-                            // Legado: Conta criada direto no Firebase Auth, libera o acesso livremente
-                            document.getElementById('modal-bloqueio-escala').classList.add('hidden');
-                            document.getElementById('app-content').classList.remove('hidden');
+                            window.hideBlockScreen();
                         }
-                    };
+                    }
+                };
 
-                    // Verifica a escala ativamente a cada 1 minuto (Não permite que ele burle deixando a tela ligada)
-                    intervalEscala = setInterval(checkAccessRealtime, 60000); 
+                intervalEscala = setInterval(checkAccessRealtime, 60000);
 
-                } else {
-                    if (intervalEscala) clearInterval(intervalEscala);
-                    document.getElementById('modal-bloqueio-escala').classList.add('hidden');
-                    document.getElementById('app-content').classList.remove('hidden');
-                }
+                const atualizarTabsVisibilidade = () => {
+                    const tabA = document.getElementById('tab-a');
+                    if (window.isAdmin || window.isMensageria) {
+                        tabA.classList.remove('hidden');
+                        tabA.classList.add('inline-block');
+                    } else {
+                        tabA.classList.add('hidden');
+                        tabA.classList.remove('inline-block');
+                    }
+
+                    const tabMaster = document.getElementById('tab-master');
+                    if (window.isMaster) {
+                        tabMaster.classList.remove('hidden');
+                        tabMaster.classList.add('inline-block');
+                    } else {
+                        tabMaster.classList.add('hidden');
+                        tabMaster.classList.remove('inline-block');
+                    }
+                };
 
                 // OUVINTES (MORADORES, FUNCIONÁRIOS E ENCOMENDAS)
                 if (unsubscribeMoradores) unsubscribeMoradores();
@@ -1401,8 +1387,9 @@
                     if(window.abaAtiva === 'admin') window.renderAdminMoradores();
                 });
 
-                if (window.isAdmin || window.isMensageria) {
-                    if (unsubListaFuncionarios) unsubListaFuncionarios();
+                // Este OUVINTE SÓ PODE RODAR SE FOR ADMIN OU MASTER para evitar erros de permissão no Firestore
+                if (unsubListaFuncionarios) unsubListaFuncionarios();
+                if (window.isAdmin || window.isMensageria || window.isMaster) {
                     const funcsRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`);
                     unsubListaFuncionarios = onSnapshot(funcsRef, (snap) => {
                         window.listaFuncionariosBD = [];
@@ -1413,7 +1400,7 @@
                             }
                         });
                         if(window.abaAtiva === 'admin') window.renderFuncionariosAdmin();
-                    });
+                    }, (err) => { console.log("Ouvinte funcionarios sem permissão", err); });
                 }
 
                 if (unsubscribeSnapshot) unsubscribeSnapshot();
@@ -1467,7 +1454,7 @@
         const executarLogin = async () => {
             const emailInput = document.getElementById('login-email');
             const passwordInput = document.getElementById('login-password');
-            const email = emailInput.value;
+            const email = emailInput.value.trim().toLowerCase();
             const password = passwordInput.value;
             
             if (!email || !password) {
@@ -2472,7 +2459,8 @@
             
             const nome = document.getElementById(`${prefixId}-nome`).value.trim();
             // Sanitização forçada: Remove qualquer espaço ou caractere especial do login
-            const prefixoEmail = document.getElementById(`${prefixId}-login`).value.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+            const rawPrefix = document.getElementById(`${prefixId}-login`).value.trim().toLowerCase();
+            const prefixoEmail = rawPrefix.replace(/[^a-z0-9_.-]/g, '');
             const senha = document.getElementById(`${prefixId}-senha`).value;
             const perfil = document.getElementById(`${prefixId}-perfil`).value;
             const escala = document.getElementById(`${prefixId}-escala`).value;
@@ -2488,7 +2476,7 @@
                 if (!tenantIdAlvo) { alert("Selecione um condomínio no select acima primeiro."); return; }
             }
 
-            // Sanitização do Domínio sem forçar prefixo admin_ ou mensageria_
+            // Sanitização do Domínio sem forçar prefixo
             const safeDomain = tenantIdAlvo.replace(/[^a-z0-9-]/g, '');
             const finalEmail = `${prefixoEmail}@${safeDomain}.com`;
 
@@ -2582,6 +2570,7 @@
                 if(f.escala !== 'livre') {
                     textEscala = `${f.escala} (${f.horaInicio} às ${f.horaFim})`;
                 }
+                
                 let btnAprovar = f.pedidoExtensao ? 
                     `<button onclick="aprovarExtensao('${f.id}', false)" class="mt-2 w-full bg-red-500 hover:bg-red-600 text-white py-1.5 rounded-lg text-[9px] uppercase font-black animate-pulse flex items-center justify-center gap-1 shadow-md"><i data-lucide="check-circle" class="w-3 h-3"></i> Aprovar Extensão de Turno</button>` : '';
 
