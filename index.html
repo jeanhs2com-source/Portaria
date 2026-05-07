@@ -359,6 +359,83 @@
             </div>
         </div>
 
+        <!-- MODAL EDIÇÃO DE FUNCIONÁRIO -->
+        <div id="modal-edit-func" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="font-black text-slate-800 uppercase text-sm">Editar Escala</h3>
+                    <button type="button" onclick="fecharModalEdicaoFunc()" class="text-slate-400 p-2"><i data-lucide="x"></i></button>
+                </div>
+                <form onsubmit="salvarEdicaoFunc(event)" class="space-y-4 pt-2">
+                    <input type="hidden" id="edit-func-email">
+                    <input type="hidden" id="edit-func-ismaster">
+                    
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Colaborador</p>
+                        <p id="edit-func-nome-display" class="text-xs font-black text-slate-800 uppercase"></p>
+                        <p id="edit-func-email-display" class="text-[9px] text-slate-400"></p>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Tipo de Escala</label>
+                        <select id="edit-func-escala" class="input-field py-2 text-xs cursor-pointer bg-white" onchange="window.toggleScaleFieldsEdit(this.value)">
+                            <option value="livre">Acesso Livre (Sem Restrição)</option>
+                            <option value="5x2">Escala 5x2 (Trabalha 5, Folga 2)</option>
+                            <option value="6x1">Escala 6x1 (Trabalha 6, Folga 1)</option>
+                            <option value="12x36">Escala 12x36 (Dia sim, Dia não)</option>
+                        </select>
+                    </div>
+
+                    <div id="edit-fields-horario" class="grid grid-cols-2 gap-2 hidden">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Hora Início</label>
+                            <input id="edit-func-hora-ini" type="time" class="input-field py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Hora Fim</label>
+                            <input id="edit-func-hora-fim" type="time" class="input-field py-2 text-xs">
+                        </div>
+                    </div>
+
+                    <div id="edit-fields-folga" class="hidden mt-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Dia de Folga Principal</label>
+                        <select id="edit-func-dia-folga" class="input-field py-2 text-xs cursor-pointer bg-white mb-2">
+                            <option value="0">Domingo</option>
+                            <option value="1">Segunda-feira</option>
+                            <option value="2">Terça-feira</option>
+                            <option value="3">Quarta-feira</option>
+                            <option value="4">Quinta-feira</option>
+                            <option value="5">Sexta-feira</option>
+                            <option value="6">Sábado</option>
+                        </select>
+                        
+                        <div id="edit-fields-folga2" class="hidden">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Segundo Dia de Folga (5x2)</label>
+                            <select id="edit-func-dia-folga2" class="input-field py-2 text-xs cursor-pointer bg-white">
+                                <option value="6">Sábado</option>
+                                <option value="0">Domingo</option>
+                                <option value="1">Segunda-feira</option>
+                                <option value="2">Terça-feira</option>
+                                <option value="3">Quarta-feira</option>
+                                <option value="4">Quinta-feira</option>
+                                <option value="5">Sexta-feira</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="edit-fields-database" class="hidden mt-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Data Base (12x36)</label>
+                        <input id="edit-func-data-base" type="date" class="input-field py-2 text-xs">
+                    </div>
+
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" onclick="fecharModalEdicaoFunc()" class="flex-1 py-3 bg-slate-100 text-slate-500 font-black rounded-xl text-[10px] uppercase transition-colors">Cancelar</button>
+                        <button type="submit" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-[10px] uppercase shadow-lg transition-colors">Salvar Escala</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="bg-white border-b border-slate-200 sticky top-0 z-50 no-print">
             <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
@@ -3000,9 +3077,14 @@
                             <p class="text-[9px] font-medium text-slate-500">${f.email}</p>
                             <p class="text-[8px] font-black uppercase text-blue-500 mt-1"><i data-lucide="clock" class="w-3 h-3 inline pb-0.5"></i> Escala: ${textEscala}</p>
                         </div>
-                        <button onclick="excluirFuncionario('${f.id}')" class="p-1.5 text-red-400 hover:bg-red-100 rounded-lg transition-colors" title="Revogar Acesso (Exclusão Lógica)">
-                            <i data-lucide="trash-2" class="w-3 h-3"></i>
-                        </button>
+                        <div class="flex gap-1">
+                            <button onclick="abrirModalEdicaoFunc('${f.id}', false)" class="p-1.5 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors" title="Editar Escala/Horários">
+                                <i data-lucide="edit-3" class="w-3 h-3"></i>
+                            </button>
+                            <button onclick="excluirFuncionario('${f.id}')" class="p-1.5 text-red-400 hover:bg-red-100 rounded-lg transition-colors" title="Revogar Acesso (Exclusão Lógica)">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                            </button>
+                        </div>
                     </div>
                     ${btnAprovar}
                 </div>
@@ -3036,7 +3118,10 @@
                             <p class="text-[10px] font-bold text-slate-700 uppercase"><span class="text-indigo-500 mr-1">${f.perfil}</span> ${f.nome}</p>
                             <p class="text-[8px] font-medium text-slate-500 lowercase">${f.email}</p>
                         </div>
-                        <button onclick="excluirFuncionarioMaster('${f.id}')" class="text-red-400 hover:text-red-600" title="Revogar Acesso (Exclusão Lógica)"><i data-lucide="x" class="w-3 h-3"></i></button>
+                        <div class="flex gap-1">
+                            <button onclick="abrirModalEdicaoFunc('${f.id}', true)" class="text-blue-500 hover:text-blue-700" title="Editar Escala/Horários"><i data-lucide="edit-3" class="w-3 h-3"></i></button>
+                            <button onclick="excluirFuncionarioMaster('${f.id}')" class="text-red-400 hover:text-red-600" title="Revogar Acesso (Exclusão Lógica)"><i data-lucide="x" class="w-3 h-3"></i></button>
+                        </div>
                     </div>
                     ${btnAprovar}
                 </div>
@@ -3062,6 +3147,117 @@
             if(confirm("Remover este colaborador/admin? (A conta será permanentemente inativada)")) {
                 const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, emailId);
                 await updateDoc(ref, { excluido: true }).catch(e => alert("Erro ao desativar conta"));
+            }
+        };
+
+        // --- EDIÇÃO DE ESCALA DE FUNCIONÁRIOS ---
+        window.toggleScaleFieldsEdit = (escala) => {
+            const gridHora = document.getElementById('edit-fields-horario');
+            const divFolga = document.getElementById('edit-fields-folga');
+            const divFolga2 = document.getElementById('edit-fields-folga2');
+            const divDataB = document.getElementById('edit-fields-database');
+
+            gridHora.classList.add('hidden');
+            divFolga.classList.add('hidden');
+            divFolga2.classList.add('hidden');
+            divDataB.classList.add('hidden');
+
+            if (escala === '5x2') {
+                gridHora.classList.remove('hidden');
+                divFolga.classList.remove('hidden');
+                divFolga2.classList.remove('hidden');
+            } else if (escala === '6x1') {
+                gridHora.classList.remove('hidden');
+                divFolga.classList.remove('hidden');
+            } else if (escala === '12x36') {
+                gridHora.classList.remove('hidden');
+                divDataB.classList.remove('hidden');
+            }
+        };
+
+        window.abrirModalEdicaoFunc = (emailId, isMasterPanel) => {
+            let lista = isMasterPanel ? window.listaFuncionariosMasterLocal : window.listaFuncionariosBD;
+            const func = lista.find(f => f.id === emailId);
+            if (!func) return;
+
+            document.getElementById('edit-func-email').value = emailId;
+            document.getElementById('edit-func-ismaster').value = isMasterPanel ? 'true' : 'false';
+            document.getElementById('edit-func-nome-display').innerText = func.nome;
+            document.getElementById('edit-func-email-display').innerText = func.email;
+
+            document.getElementById('edit-func-escala').value = func.escala || 'livre';
+            window.toggleScaleFieldsEdit(func.escala || 'livre');
+
+            document.getElementById('edit-func-hora-ini').value = func.horaInicio || '';
+            document.getElementById('edit-func-hora-fim').value = func.horaFim || '';
+            
+            if (func.diaFolga !== null && func.diaFolga !== undefined) document.getElementById('edit-func-dia-folga').value = func.diaFolga;
+            if (func.diaFolga2 !== null && func.diaFolga2 !== undefined) document.getElementById('edit-func-dia-folga2').value = func.diaFolga2;
+            if (func.dataBase) document.getElementById('edit-func-data-base').value = func.dataBase;
+
+            document.getElementById('modal-edit-func').classList.remove('hidden');
+        };
+
+        window.fecharModalEdicaoFunc = () => {
+            document.getElementById('modal-edit-func').classList.add('hidden');
+        };
+
+        window.salvarEdicaoFunc = async (e) => {
+            e.preventDefault();
+            const emailId = document.getElementById('edit-func-email').value;
+            const isMasterPanel = document.getElementById('edit-func-ismaster').value === 'true';
+            
+            let tenantIdAlvo = window.condominioLogado.id;
+            if (isMasterPanel) {
+                tenantIdAlvo = document.getElementById('master-select-condo').value;
+                if(!tenantIdAlvo) return;
+            }
+
+            const escala = document.getElementById('edit-func-escala').value;
+            let horaInicio = null, horaFim = null, diaFolga = null, diaFolga2 = null, dataBase = null;
+
+            if (escala !== 'livre') {
+                horaInicio = document.getElementById('edit-func-hora-ini').value;
+                horaFim = document.getElementById('edit-func-hora-fim').value;
+                if(!horaInicio || !horaFim) { alert("Preencha Hora Início e Fim da Escala!"); return; }
+                
+                if (escala === '12x36') {
+                    dataBase = document.getElementById('edit-func-data-base').value;
+                    if(!dataBase) { alert("Para 12x36 defina a Data Base do último plantão."); return; }
+                } else if (escala === '5x2') {
+                    diaFolga = parseInt(document.getElementById('edit-func-dia-folga').value);
+                    diaFolga2 = parseInt(document.getElementById('edit-func-dia-folga2').value);
+                } else if (escala === '6x1') {
+                    diaFolga = parseInt(document.getElementById('edit-func-dia-folga').value);
+                }
+            }
+
+            const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, emailId);
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Salvando...';
+            btn.disabled = true;
+
+            try {
+                await updateDoc(ref, {
+                    escala,
+                    horaInicio,
+                    horaFim,
+                    diaFolga,
+                    diaFolga2,
+                    dataBase,
+                    pedidoExtensao: false, // Limpa o estado se estivesse bloqueado
+                    turnoEstendidoAte: null // Remove extensão anterior para aplicar a nova escala
+                });
+                alert("Escala/Horário atualizado com sucesso!");
+                window.fecharModalEdicaoFunc();
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao atualizar escala.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         };
 
@@ -3331,10 +3527,11 @@
 
                             return `
                             <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm animate-fade-in relative overflow-hidden">
+                                ${it.isOffline ? `<div class="absolute top-0 left-0 bg-orange-500 text-white px-2 py-0.5 rounded-br-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm z-10"><i data-lucide="wifi-off" class="w-2 h-2"></i> SYNC</div>` : ''}
                                 ${((window.abaAtiva==='pendentes'&&it.notificadoPortariaMorador)||(window.abaAtiva!=='pendentes'&&it.notificadoMensageria)) ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-2 h-2"></i> Mensagem Enviada</div>` : ''}
                                 ${it.tipo === 'saida' && window.abaAtiva !== 'saidas' ? `<div class="absolute top-0 right-0 bg-purple-600 text-white px-2 py-0.5 rounded-bl-lg text-[7px] font-black uppercase flex items-center gap-1 shadow-sm"><i data-lucide="arrow-up-right" class="w-2 h-2"></i> SAÍDA</div>` : ''}
                                 
-                                <div class="flex gap-4 mb-4">
+                                <div class="flex gap-4 mb-4 mt-2">
                                     <div class="relative">
                                         ${it.foto ? `<img src="${it.foto}" class="w-20 h-20 rounded-lg object-cover border border-slate-200 cursor-pointer hover:opacity-80 transition-opacity" onclick="openPhotoViewer(this.src)" title="Ver Foto">` : `
                                             <label class="w-20 h-20 bg-slate-100 rounded-lg flex flex-col items-center justify-center text-blue-500 cursor-pointer no-print">
@@ -3490,161 +3687,129 @@
                 return; 
             }
 
-            const historyData = {};
+            const groupedData = { Portaria: {}, Mensageria: {}, Saída: {} };
             
             window.listaVisivel.forEach(d => {
-                let dateStr, timestamp, typeStr;
-                
-                if (d.isOffline) {
-                    dateStr = '🔄 OFFLINE - AGUARDANDO SINCRONIZAÇÃO'; 
-                    timestamp = 9999999999999;
-                    if (window.abaAtiva === 'entregues') {
-                        typeStr = (d.destino === 'entregue_mensageria' ? 'Mensageria' : (d.tipo === 'saida' ? 'Saída' : 'Portaria'));
-                    } else if (window.abaAtiva === 'mensageria') {
-                        typeStr = 'Mensageria'; 
-                    } else if (window.abaAtiva === 'saidas') {
-                        typeStr = 'Saída';
-                    } else {
-                        typeStr = 'Portaria';
-                    }
+                let typeStr;
+                if (window.abaAtiva === 'entregues') {
+                    typeStr = (d.destino === 'entregue_mensageria' ? 'Mensageria' : (d.tipo === 'saida' ? 'Saída' : 'Portaria'));
+                } else if (window.abaAtiva === 'mensageria') {
+                    typeStr = 'Mensageria'; 
+                } else if (window.abaAtiva === 'saidas') {
+                    typeStr = 'Saída';
                 } else {
-                    if (window.abaAtiva === 'entregues') {
-                        dateStr = d.saida ? new Date(d.saida).toLocaleDateString('pt-PT') : 'Sem Data'; 
-                        timestamp = d.saida ? new Date(d.saida).setHours(0,0,0,0) : 0; 
-                        typeStr = (d.destino === 'entregue_mensageria' ? 'Mensageria' : (d.tipo === 'saida' ? 'Saída' : 'Portaria'));
-                    } else if (window.abaAtiva === 'mensageria') {
-                        const refDate = d.dataMensageria || d.saida; 
-                        dateStr = refDate ? new Date(refDate).toLocaleDateString('pt-PT') : 'Sem Data'; 
-                        timestamp = refDate ? new Date(refDate).setHours(0,0,0,0) : 0; 
-                        typeStr = 'Mensageria';
-                    } else {
-                        dateStr = d.data || 'Sem Data';
-                        if (d.data) { 
-                            const parts = d.data.split('/'); 
-                            if (parts.length === 3) {
-                                timestamp = new Date(parts[2], parts[1]-1, parts[0]).getTime(); 
-                            } else {
-                                timestamp = 0; 
-                            }
-                        } else {
-                            timestamp = 0; 
-                        }
-                        typeStr = window.abaAtiva === 'saidas' ? 'Saída' : 'Portaria';
-                    }
+                    typeStr = 'Portaria';
                 }
 
-                if (!historyData[dateStr]) {
-                    historyData[dateStr] = { timestamp, Portaria: {}, Mensageria: {}, Saída: {} };
-                }
-                
                 const k = `${d.bloco}-${d.apto}`;
-                if (!historyData[dateStr][typeStr][k]) { 
-                    historyData[dateStr][typeStr][k] = { 
+                if (!groupedData[typeStr][k]) { 
+                    groupedData[typeStr][k] = { 
                         b: d.bloco, 
                         a: d.apto, 
                         itens: [], 
                         total: 0, 
                         morador: d.morador, 
-                        statusNotificado: (window.abaAtiva === 'pendentes' ? d.notificadoPortariaMorador : d.notificadoMensageria) 
+                        statusNotificado: false 
                     }; 
                 }
                 
-                historyData[dateStr][typeStr][k].itens.push(d); 
-                historyData[dateStr][typeStr][k].total += d.qtd;
+                groupedData[typeStr][k].itens.push(d); 
+                groupedData[typeStr][k].total += d.qtd;
+
+                if (window.abaAtiva === 'pendentes' && d.notificadoPortariaMorador) groupedData[typeStr][k].statusNotificado = true;
+                if (window.abaAtiva !== 'pendentes' && d.notificadoMensageria) groupedData[typeStr][k].statusNotificado = true;
             });
 
-            const sortedDates = Object.keys(historyData).sort((a, b) => historyData[b].timestamp - historyData[a].timestamp);
-
-            sortedDates.forEach(date => {
-                const dateSection = document.createElement('div'); 
-                dateSection.className = "mb-8";
+            ['Portaria', 'Saída', 'Mensageria'].forEach(type => {
+                const typeGroups = groupedData[type]; 
+                const typeKeys = Object.keys(typeGroups);
                 
-                const isOfflineBucket = date === '🔄 OFFLINE - AGUARDANDO SINCRONIZAÇÃO';
-                const badgeStyle = isOfflineBucket ? 'bg-orange-100 text-orange-600 border border-orange-200 animate-pulse' : 'bg-slate-100 text-slate-500';
-
-                dateSection.innerHTML = `
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="bg-slate-200 h-px flex-1"></div>
-                        <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm ${badgeStyle}">
-                            <i data-lucide="${isOfflineBucket ? 'wifi-off' : 'calendar'}" class="w-3 h-3 inline pb-0.5"></i> ${date}
-                        </span>
-                        <div class="bg-slate-200 h-px flex-1"></div>
-                    </div>
-                `;
-                container.appendChild(dateSection);
-
-                ['Portaria', 'Saída', 'Mensageria'].forEach(type => {
-                    const typeGroups = historyData[date][type]; 
-                    if (!typeGroups) return; 
+                if (typeKeys.length > 0) {
+                    const typeContainer = document.createElement('div'); 
+                    typeContainer.className = "mb-4";
                     
-                    const typeKeys = Object.keys(typeGroups);
-                    
-                    if (typeKeys.length > 0) {
-                        const typeContainer = document.createElement('div'); 
-                        typeContainer.className = "mb-4";
-                        
-                        let typeHeaderTitle = ''; 
-                        let color = ''; 
-                        let icon = '';
+                    let typeHeaderTitle = ''; 
+                    let color = ''; 
+                    let icon = '';
 
-                        if (window.abaAtiva === 'entregues') { 
-                            if(type === 'Portaria') { color = 'text-emerald-600 bg-emerald-50 border-emerald-100'; icon = 'building'; typeHeaderTitle = `Entregues aos Moradores`; }
-                            else if(type === 'Mensageria') { color = 'text-indigo-600 bg-indigo-50 border-indigo-100'; icon = 'package-check'; typeHeaderTitle = `Entregues via Mensageria`; }
-                            else { color = 'text-purple-600 bg-purple-50 border-purple-100'; icon = 'truck'; typeHeaderTitle = `Saídas Coletadas`; }
-                        } else if (window.abaAtiva === 'pendentes') { 
-                            color = 'text-blue-600 bg-blue-50 border-blue-100'; 
-                            icon = 'log-in'; 
-                            typeHeaderTitle = `Recebidas na Portaria`; 
-                        } else if (window.abaAtiva === 'saidas') {
-                            color = 'text-purple-600 bg-purple-50 border-purple-100'; 
-                            icon = 'arrow-up-right'; 
-                            typeHeaderTitle = `Aguardando Coleta da Transportadora`; 
-                        } else if (window.abaAtiva === 'mensageria') { 
-                            color = 'text-orange-600 bg-orange-50 border-orange-100'; 
-                            icon = 'package'; 
-                            typeHeaderTitle = `Aguardando na Mensageria`; 
-                        }
-                        
-                        const typeHeader = document.createElement('h4'); 
-                        typeHeader.className = `text-[10px] font-black uppercase mb-3 px-3 py-2 rounded-xl flex items-center gap-2 ${color} inline-block shadow-sm border`; 
-                        typeHeader.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${typeHeaderTitle}`; 
-                        typeContainer.appendChild(typeHeader);
-
-                        const filtrados = Object.values(typeGroups).sort((x,y) => x.b.localeCompare(y.b) || x.a.localeCompare(y.a, undefined, {numeric: true}));
-                        
-                        filtrados.forEach(g => {
-                            const key = `${date}-${type}-${g.b}-${g.a}`; 
-                            let badgesHist = '';
-                            
-                            if (window.abaAtiva === 'entregues') { 
-                                if(type === 'Portaria') badgesHist = `<span class="text-[8px] bg-emerald-100 text-emerald-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE</span>`; 
-                                else if(type === 'Mensageria') badgesHist = `<span class="text-[8px] bg-indigo-100 text-indigo-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE (MENS)</span>`; 
-                                else badgesHist = `<span class="text-[8px] bg-purple-100 text-purple-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">COLETADO (SAÍDA)</span>`; 
-                            } else if (window.abaAtiva === 'mensageria') {
-                                badgesHist = `<span class="text-[8px] bg-orange-100 text-orange-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">NA MENSAGERIA</span>`;
-                                
-                                const itensAtrasados = g.itens.filter(it => { 
-                                    const refDate = it.dataMensageria || it.saida; 
-                                    if (!refDate) return false; 
-                                    const msDiff = Date.now() - new Date(refDate).getTime(); 
-                                    return Math.floor(msDiff / (1000 * 60 * 60 * 24)) >= 4; 
-                                });
-                                
-                                if (itensAtrasados.length > 0) { 
-                                    const maxDays = Math.max(...itensAtrasados.map(it => Math.floor((Date.now() - new Date(it.dataMensageria || it.saida).getTime()) / (1000 * 60 * 60 * 24)))); 
-                                    badgesHist += `<span class="text-[8px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-600 uppercase animate-pulse border border-red-200 shadow-sm ml-1">⚠️ ${maxDays} DIAS</span>`; 
-                                }
-                            }
-
-                            const htmlStr = window.createCardHTML(g, key, badgesHist); 
-                            const div = document.createElement('div'); 
-                            div.innerHTML = htmlStr; 
-                            typeContainer.appendChild(div.firstElementChild);
-                        });
-                        
-                        dateSection.appendChild(typeContainer);
+                    if (window.abaAtiva === 'entregues') { 
+                        if(type === 'Portaria') { color = 'text-emerald-600 bg-emerald-50 border-emerald-100'; icon = 'building'; typeHeaderTitle = `Entregues aos Moradores`; }
+                        else if(type === 'Mensageria') { color = 'text-indigo-600 bg-indigo-50 border-indigo-100'; icon = 'package-check'; typeHeaderTitle = `Entregues via Mensageria`; }
+                        else { color = 'text-purple-600 bg-purple-50 border-purple-100'; icon = 'truck'; typeHeaderTitle = `Saídas Coletadas`; }
+                    } else if (window.abaAtiva === 'pendentes') { 
+                        color = 'text-blue-600 bg-blue-50 border-blue-100'; 
+                        icon = 'log-in'; 
+                        typeHeaderTitle = `Recebidas na Portaria`; 
+                    } else if (window.abaAtiva === 'saidas') {
+                        color = 'text-purple-600 bg-purple-50 border-purple-100'; 
+                        icon = 'arrow-up-right'; 
+                        typeHeaderTitle = `Aguardando Coleta da Transportadora`; 
+                    } else if (window.abaAtiva === 'mensageria') { 
+                        color = 'text-orange-600 bg-orange-50 border-orange-100'; 
+                        icon = 'package'; 
+                        typeHeaderTitle = `Aguardando na Mensageria`; 
                     }
-                });
+                    
+                    const typeHeader = document.createElement('h4'); 
+                    typeHeader.className = `text-[10px] font-black uppercase mb-3 px-3 py-2 rounded-xl flex items-center gap-2 ${color} inline-block shadow-sm border`; 
+                    typeHeader.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${typeHeaderTitle}`; 
+                    typeContainer.appendChild(typeHeader);
+
+                    const filtrados = Object.values(typeGroups).sort((x,y) => x.b.localeCompare(y.b) || String(x.a).localeCompare(String(y.a), undefined, {numeric: true}));
+                    
+                    filtrados.forEach(g => {
+                        // Ordenar itens internos pela data mais recente (Mais novos primeiro)
+                        g.itens.sort((itemA, itemB) => {
+                            const getTimestamp = (it) => {
+                                let ref = it.data;
+                                let time = it.hora || '00:00';
+                                if (window.abaAtiva === 'entregues' || window.abaAtiva === 'mensageria') {
+                                    if (it.saida) return new Date(it.saida).getTime();
+                                    if (it.dataMensageria) return new Date(it.dataMensageria).getTime();
+                                }
+                                if (ref) {
+                                    const parts = ref.split('/');
+                                    if(parts.length === 3) {
+                                        const [h, m] = time.split(':');
+                                        return new Date(parts[2], parts[1]-1, parts[0], h||0, m||0).getTime();
+                                    }
+                                }
+                                return 0;
+                            };
+                            return getTimestamp(itemB) - getTimestamp(itemA);
+                        });
+
+                        const key = `${type}-${g.b}-${g.a}`; 
+                        let badgesHist = '';
+                        
+                        if (window.abaAtiva === 'entregues') { 
+                            if(type === 'Portaria') badgesHist = `<span class="text-[8px] bg-emerald-100 text-emerald-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE</span>`; 
+                            else if(type === 'Mensageria') badgesHist = `<span class="text-[8px] bg-indigo-100 text-indigo-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE (MENS)</span>`; 
+                            else badgesHist = `<span class="text-[8px] bg-purple-100 text-purple-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">COLETADO (SAÍDA)</span>`; 
+                        } else if (window.abaAtiva === 'mensageria') {
+                            badgesHist = `<span class="text-[8px] bg-orange-100 text-orange-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">NA MENSAGERIA</span>`;
+                            
+                            const itensAtrasados = g.itens.filter(it => { 
+                                const refDate = it.dataMensageria || it.saida; 
+                                if (!refDate) return false; 
+                                const msDiff = Date.now() - new Date(refDate).getTime(); 
+                                return Math.floor(msDiff / (1000 * 60 * 60 * 24)) >= 4; 
+                            });
+                            
+                            if (itensAtrasados.length > 0) { 
+                                const maxDays = Math.max(...itensAtrasados.map(it => Math.floor((Date.now() - new Date(it.dataMensageria || it.saida).getTime()) / (1000 * 60 * 60 * 24)))); 
+                                badgesHist += `<span class="text-[8px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-600 uppercase animate-pulse border border-red-200 shadow-sm ml-1">⚠️ ${maxDays} DIAS</span>`; 
+                            }
+                        }
+
+                        const htmlStr = window.createCardHTML(g, key, badgesHist); 
+                        const div = document.createElement('div'); 
+                        div.innerHTML = htmlStr; 
+                        typeContainer.appendChild(div.firstElementChild);
+                    });
+                    
+                    container.appendChild(typeContainer);
+                }
             });
 
             lucide.createIcons();
