@@ -3428,7 +3428,7 @@
             }
         };
 
-        window.carregarDadosMaster = (tenantId) => {
+        window.carregarDadosMaster = async (tenantId) => {
             const dataArea = document.getElementById('master-data-area');
             if (!tenantId) { 
                 dataArea.classList.add('hidden'); 
@@ -3438,78 +3438,78 @@
             }
             
             dataArea.classList.remove('hidden');
+
+            // --- NOVO: TROCA DE CONTEXTO GLOBAL PARA A CONTA MASTER ---
+            if (window.isMaster) {
+                await window.carregarRegrasSaaS(tenantId);
+                const headerCondName = document.getElementById('nome-condominio-header');
+                if (headerCondName) headerCondName.innerText = window.condominioLogado.nome;
+
+                const collectionName = tenantId === 'default' ? 'encomendas' : `encomendas_${tenantId}`;
+                window.encomendasRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', collectionName);
+                window.chavesRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', `chaves_${tenantId}`);
+
+                // Reinicia Ouvinte de Encomendas
+                if (unsubscribeSnapshot) unsubscribeSnapshot();
+                unsubscribeSnapshot = onSnapshot(window.encomendasRefAtiva, { includeMetadataChanges: true }, (snapshot) => {
+                    const hasPendingWrites = snapshot.metadata.hasPendingWrites;
+                    window.updateStatusUI(navigator.onLine, hasPendingWrites);
+                    window.db = snapshot.docs.map(doc => {
+                        const data = doc.data();
+                        data.isOffline = doc.metadata.hasPendingWrites; 
+                        if(!data.tipo) data.tipo = 'entrada';
+                        return data;
+                    });
+                    if(window.abaAtiva === 'admin') window.renderAdminStats(); 
+                    if(window.abaAtiva !== 'chaves' && window.abaAtiva !== 'admin' && window.abaAtiva !== 'master') window.render(); 
+                }, (error) => console.error("Erro Sync:", error));
+
+                // Reinicia Ouvinte de Chaves
+                if (unsubChaves) unsubChaves();
+                unsubChaves = onSnapshot(window.chavesRefAtiva, (snap) => {
+                    window.dbChaves = [];
+                    snap.forEach(doc => window.dbChaves.push({id: doc.id, ...doc.data()}));
+                    if (window.abaAtiva === 'chaves') window.renderChaves();
+                });
+
+                // Reinicia Ouvinte de Moradores (Auto-completar global)
+                if (unsubscribeMoradores) unsubscribeMoradores();
+                const moradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantId}`);
+                unsubscribeMoradores = onSnapshot(moradoresRef, (snap) => {
+                    window.bancoMoradoresFake = {};
+                    window.listaMoradoresBD = [];
+                    const datalist = document.getElementById('lista-moradores');
+                    datalist.innerHTML = '';
+                    const todosNomes = new Set();
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const key = `${data.bloco}-${data.apto}`;
+                        if (!window.bancoMoradoresFake[key]) window.bancoMoradoresFake[key] = [];
+                        window.bancoMoradoresFake[key].push(data.nome);
+                        todosNomes.add(data.nome);
+                        window.listaMoradoresBD.push({id: doc.id, ...data});
+                    });
+                    todosNomes.forEach(nome => datalist.innerHTML += `<option value="${nome}"></option>`);
+                    if(window.abaAtiva === 'admin') window.renderAdminMoradores();
+                });
+                
+                // Reinicia Ouvinte de Funcionários para aba Gestão
+                if (unsubListaFuncionarios) unsubListaFuncionarios();
+                const funcsRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`);
+                unsubListaFuncionarios = onSnapshot(funcsRef, (snap) => {
+                    window.listaFuncionariosBD = [];
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        if (!data.excluido) window.listaFuncionariosBD.push({id: doc.id, ...data});
+                    });
+                    if(window.abaAtiva === 'admin') window.renderFuncionariosAdmin();
+                });
+            }
+            // --- FIM DA TROCA DE CONTEXTO ---
             
             if(unsubMasterMoradores) unsubMasterMoradores();
-            const moradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantId}`);
-            unsubMasterMoradores = onSnapshot(moradoresRef, (snap) => {
-                window.listaMoradoresMasterLocal = [];
-                snap.forEach(doc => window.listaMoradoresMasterLocal.push({id: doc.id, ...doc.data()}));
-                document.getElementById('master-count-moradores').innerText = window.listaMoradoresMasterLocal.length;
-                window.renderMasterMoradores('');
-            });
-
-            if(unsubMasterFuncionarios) unsubMasterFuncionarios();
-            const funcRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`);
-            unsubMasterFuncionarios = onSnapshot(funcRef, (snap) => {
-                window.listaFuncionariosMasterLocal = [];
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    if (!data.excluido) {
-                        window.listaFuncionariosMasterLocal.push({id: doc.id, ...data});
-                    }
-                });
-                window.renderFuncionariosMaster('');
-            });
-        };
-
-        window.renderMasterMoradores = (termo = '') => {
-            const container = document.getElementById('lista-moradores-master');
-            if(!container) return;
-            
-            const txt = termo.toLowerCase().trim();
-            const filtrados = window.listaMoradoresMasterLocal.filter(m => {
-                if(!txt) return true; 
-                return `${m.bloco} ${m.apto} ${m.nome}`.toLowerCase().includes(txt);
-            }).sort((a,b) => a.bloco.localeCompare(b.bloco, undefined, {numeric: true}) || String(a.apto).localeCompare(String(b.apto), undefined, {numeric: true}));
-
-            if(filtrados.length === 0) { 
-                container.innerHTML = '<p class="text-[9px] text-slate-400 text-center font-bold p-2">Vazio</p>'; 
-                return; 
-            }
-
-            container.innerHTML = filtrados.map(m => `
-                <div class="flex justify-between items-center p-1.5 hover:bg-slate-50 border-b border-slate-100 last:border-0">
-                    <p class="text-[10px] font-bold text-slate-700 uppercase"><span class="text-blue-500 mr-1">${m.apto}${m.bloco}</span> ${m.nome}</p>
-                    <button onclick="excluirMoradorMaster('${m.id}')" class="text-red-400 hover:text-red-600"><i data-lucide="x" class="w-3 h-3"></i></button>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        };
-
-        window.filtrarMoradoresMaster = (t) => window.renderMasterMoradores(t);
-        
-        window.excluirMoradorMaster = async (idMorador) => {
-            const tenantIdAlvo = document.getElementById('master-select-condo').value;
-            if(!tenantIdAlvo) return;
-            if(confirm("Remover este morador?")) {
-                const ref = doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantIdAlvo}`, idMorador);
-                deleteDoc(ref).catch(e => alert("Erro"));
-            }
-        };
-
-        // --- RENDERIZAÇÃO DA UI PRINCIPAL ---
-        window.createCardHTML = (g, key, badgesHist) => {
-            const isExp = window.expandidoKey === key;
-            return `
-                <div class="card-unidade bg-white rounded-2xl border ${window.abaAtiva==='pendentes'&&g.total>1?'border-orange-200 ring-2 ring-orange-50':'border-slate-100'} shadow-sm overflow-hidden mb-3 animate-fade-in">
-                    <div onclick="toggleExpand('${key}')" class="p-4 flex items-center gap-3 cursor-pointer active:bg-slate-50">
-                        <div class="w-12 h-12 flex items-center justify-center rounded-xl font-bold text-lg ${window.abaAtiva!=='pendentes'&&window.abaAtiva!=='saidas'?'bg-slate-100 text-slate-400 border border-dashed':(window.abaAtiva==='saidas'?'bg-purple-600 text-white shadow-md':'bg-blue-600 text-white shadow-md')}">${g.b}</div>
-                        <div class="flex-1">
-                            <h3 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                                Apto ${g.a} - ${g.morador}
-                                ${g.statusNotificado ? '<i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>' : ''}
-                            </h3>
-                            <div class="flex gap-1 items-center flex-wrap mt-0.5">
+            const masterMoradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantId}`);
+            unsubMasterMoradores = onSnapshot(masterMoradoresRef, (snap) => {
                                 <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${g.total>1?'bg-orange-500 text-white':'bg-slate-100 text-slate-400'} uppercase">${g.total} VOLS</span>
                                 ${badgesHist}
                             </div>
