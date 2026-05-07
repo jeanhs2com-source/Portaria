@@ -819,6 +819,25 @@
                     </button>
                 </div>
 
+                <!-- Botões de Controle e Backups - CHAVES -->
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 animate-fade-in mt-4">
+                    <h3 class="font-black text-slate-800 uppercase text-xs mb-4 flex items-center gap-2"><i data-lucide="key" class="w-4 h-4 text-amber-500"></i> Backups e Limpeza - Chaves</h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button onclick="exportarExcelChaves()" class="bg-slate-50 py-3 rounded-xl border border-emerald-200 shadow-sm flex flex-col items-center justify-center gap-1 hover:bg-emerald-50 active:scale-95 transition-all text-slate-700 text-center">
+                            <i data-lucide="file-spreadsheet" class="text-emerald-600 w-5 h-5"></i>
+                            <span class="text-[8px] font-black uppercase mt-1">Exportar CSV</span>
+                        </button>
+                        <button onclick="exportarDadosChaves()" class="bg-slate-50 py-3 rounded-xl border border-blue-200 shadow-sm flex flex-col items-center justify-center gap-1 hover:bg-blue-50 active:scale-95 transition-all text-slate-700 text-center">
+                            <i data-lucide="download-cloud" class="text-blue-600 w-5 h-5"></i>
+                            <span class="text-[8px] font-black uppercase mt-1">Backup JSON</span>
+                        </button>
+                        <button onclick="limparHistoricoChaves()" class="bg-slate-50 py-3 rounded-xl border border-red-200 shadow-sm flex flex-col items-center justify-center gap-1 hover:bg-red-50 active:scale-95 transition-all text-slate-700 text-center">
+                            <i data-lucide="trash-2" class="text-red-600 w-5 h-5"></i>
+                            <span class="text-[8px] font-black uppercase mt-1 text-red-600">Limpar Mês</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Visualizador isolado de Backup JSON -->
                 <div class="mt-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                     <div class="flex items-center gap-2 mb-1">
@@ -1782,18 +1801,24 @@
                    `⏰ *Chegada:* ${it.data} às ${it.hora}\n` +
                    `⏳ *Portaria até:* ${it.permanencia || 'N/A'}`;
             
-            const file = await window.obterFicheiroFoto(it.foto, `encomenda.jpg`);
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
-            if (navigator.share && file) {
-                try {
-                    await navigator.share({ files: [file], title: 'Controle Portaria', text: msg });
-                    return;
-                } catch (err) {
-                    if (err.name === 'AbortError') return; 
+            if (isMobile) {
+                const file = await window.obterFicheiroFoto(it.foto, `encomenda.jpg`);
+                if (navigator.share && file) {
+                    try {
+                        await navigator.share({ files: [file], title: 'Controle Portaria', text: msg });
+                        return;
+                    } catch (err) {
+                        if (err.name === 'AbortError') return; 
+                    }
                 }
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+            } else {
+                // No PC, abre o Modal de escolha (Web ou Nativo)
+                window.currentWhatsAppMsg = encodeURIComponent(msg);
+                document.getElementById('modal-whatsapp').classList.remove('hidden');
             }
-            
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         window.closeWhatsAppModal = () => document.getElementById('modal-whatsapp').classList.add('hidden');
@@ -2536,6 +2561,27 @@
             } 
         }
 
+        window.limparHistoricoChaves = async () => { 
+            if(confirm("Deseja realmente apagar permanentemente o histórico de CHAVES DEVOLVIDAS?")) { 
+                const paraExcluir = window.dbChaves.filter(c => c.status === 'devolvida');
+                
+                if (paraExcluir.length === 0) {
+                    alert("Não há chaves devolvidas para limpar.");
+                    return;
+                }
+
+                const batch = writeBatch(dbFS);
+                paraExcluir.forEach(item => {
+                    const ref = doc(window.chavesRefAtiva, String(item.id));
+                    batch.delete(ref);
+                });
+                
+                batch.commit().then(() => {
+                    alert(`${paraExcluir.length} registros de chaves apagados com sucesso do banco de dados.`);
+                }).catch(e => console.error(e));
+            } 
+        }
+
         // FUNÇÕES DE EXPORTAÇÃO E BACKUP
         window.exportarExcel = () => {
             let csv = 'Data Entrada;Hora Entrada;Bloco;Apartamento;Morador;Empresa;Remetente;Descricao;Qtd;NF/Doc;Recebedor/Atendente;Status;Tipo;Data Saida/Mensageria;Quem Entregou;Quem Retirou\n';
@@ -2581,6 +2627,48 @@
             const a = document.createElement('a'); 
             a.href = u; 
             a.download = `backup-sistema-${month}-${year}.json`; 
+            a.click(); 
+        }
+
+        window.exportarExcelChaves = () => {
+            let csv = 'Identificacao;Unidade;Retirado Por;Entregue Por;Data Saida;Hora Saida;Devolvida Por;Recebida Por;Data Devolucao;Hora Devolucao;Status\n';
+            
+            window.dbChaves.forEach(it => {
+                const safeStr = (str) => {
+                    if (!str) return '';
+                    return `"${String(str).replace(/"/g, '""').replace(/;/g, ',').replace(/\n/g, ' ')}"`;
+                };
+
+                const dataDevolucao = it.dataDevolucao || '';
+                const horaDevolucao = it.horaDevolucao || '';
+                const devolvidaPor = it.devolvidaPor || '';
+                const recebidaPor = it.recebidaPor || '';
+
+                csv += `${safeStr(it.chave)};${safeStr(it.unidade)};${safeStr(it.pessoa)};${safeStr(it.entreguePor)};${safeStr(it.dataSaida)};${safeStr(it.horaSaida)};${safeStr(devolvidaPor)};${safeStr(recebidaPor)};${safeStr(dataDevolucao)};${safeStr(horaDevolucao)};${safeStr(it.status)}\n`;
+            });
+
+            const blob = new Blob(["\ufeff", csv], {type: 'text/csv;charset=utf-8;'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const d = new Date();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            
+            a.href = url;
+            a.download = `Relatorio-Chaves-${month}-${year}.csv`;
+            a.click();
+        };
+
+        window.exportarDadosChaves = () => { 
+            const d = new Date();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+
+            const b = new Blob([JSON.stringify(window.dbChaves,null,2)],{type:'application/json'}); 
+            const u = URL.createObjectURL(b); 
+            const a = document.createElement('a'); 
+            a.href = u; 
+            a.download = `backup-chaves-${month}-${year}.json`; 
             a.click(); 
         }
 
