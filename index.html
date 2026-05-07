@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portaria Control - TrackEasy SaaS</title>
+    <title>TrackEasy - Sistema de Portaria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Scanner de Código de Barras -->
@@ -45,7 +45,7 @@
                     <i data-lucide="shield-check" class="w-8 h-8"></i>
                 </div>
             </div>
-            <h2 class="text-xl font-black text-slate-800 text-center uppercase tracking-tight">Portaria Control</h2>
+            <h2 class="text-xl font-black text-slate-800 text-center uppercase tracking-tight">TrackEasy</h2>
             <p class="text-[10px] font-bold text-slate-400 text-center uppercase mb-8 mt-1">Acesso ao Sistema</p>
             
             <div id="login-form" class="space-y-4">
@@ -271,7 +271,7 @@
                         <i data-lucide="package" class="w-5 h-5"></i>
                     </div>
                     <div class="hidden sm:block">
-                        <h1 class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight leading-none">Portaria Control</h1>
+                        <h1 class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight leading-none">TrackEasy</h1>
                         <span id="nome-condominio-header" class="text-[10px] font-black uppercase text-slate-400 tracking-widest block mt-0.5">Carregando...</span>
                     </div>
                     
@@ -283,6 +283,10 @@
                 </div>
                 
                 <div class="flex items-center gap-3 order-1 md:order-3 ml-auto md:ml-0">
+                    <div class="hidden sm:flex flex-col items-end mr-1 text-right">
+                        <span id="header-user-name" class="text-[11px] font-bold text-slate-700 leading-tight">...</span>
+                        <span id="header-user-email" class="text-[9px] font-medium text-slate-400">...</span>
+                    </div>
                     <button onclick="realizarLogout()" class="p-2 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-lg transition-colors" title="Sair">
                         <i data-lucide="log-out" class="w-5 h-5"></i>
                     </button>
@@ -1291,6 +1295,11 @@
                 
                 const recInput = document.getElementById('input-recebedor');
                 if (recInput) recInput.value = window.nomeUsuarioLogado;
+
+                const headerUserName = document.getElementById('header-user-name');
+                if(headerUserName) headerUserName.innerText = window.nomeUsuarioLogado;
+                const headerUserEmail = document.getElementById('header-user-email');
+                if(headerUserEmail) headerUserEmail.innerText = emailStr;
 
                 await window.carregarRegrasSaaS(tenantId);
 
