@@ -164,7 +164,7 @@
             </div>
         </div>
 
-        <!-- Modal de Edição -->
+        <!-- Modal de Edição de Encomendas -->
         <div id="modal-edit" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
             <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-fade-in">
                 <div class="flex justify-between items-center border-b pb-3">
@@ -223,7 +223,7 @@
             </div>
         </div>
 
-        <!-- Modal de Baixa (COM ASSINATURA) -->
+        <!-- Modal de Baixa de Encomendas (COM ASSINATURA) -->
         <div id="modal-baixa" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
             <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center border-b pb-3">
@@ -263,6 +263,64 @@
             </div>
         </div>
 
+        <!-- MODAL NOVA SAÍDA DE CHAVE -->
+        <div id="modal-chave-saida" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="font-black text-slate-800 uppercase text-sm flex items-center gap-2">
+                        <i data-lucide="key" class="w-4 h-4 text-amber-500"></i> Registrar Saída de Chave
+                    </h3>
+                    <button onclick="document.getElementById('modal-chave-saida').classList.add('hidden')" class="text-slate-400 p-2"><i data-lucide="x"></i></button>
+                </div>
+                <form onsubmit="registrarSaidaChave(event)" class="space-y-4 pt-2">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Identificação da Chave</label>
+                        <input id="chave-nome" type="text" required class="input-field" placeholder="Ex: Bomba D'água, Apto 202...">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Quem está retirando? (Nome)</label>
+                        <input id="chave-retirou" type="text" required list="lista-moradores" class="input-field" placeholder="Ex: João da Silva">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Unidade Vinculada (Opcional)</label>
+                        <input id="chave-unidade" type="text" class="input-field uppercase" placeholder="Ex: 202J">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Porteiro / Entregue por</label>
+                        <input id="chave-entreguepor" type="text" class="input-field bg-slate-100 text-slate-500 cursor-not-allowed" readonly>
+                    </div>
+                    <button type="submit" class="w-full bg-amber-500 text-white font-black uppercase text-[10px] py-3 rounded-xl hover:bg-amber-600 transition-colors shadow-lg mt-2">
+                        Registrar Retirada
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL DEVOLUÇÃO DE CHAVE -->
+        <div id="modal-chave-devolucao" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="font-black text-slate-800 uppercase text-sm">Registrar Devolução</h3>
+                    <button onclick="document.getElementById('modal-chave-devolucao').classList.add('hidden')" class="text-slate-400 p-2"><i data-lucide="x"></i></button>
+                </div>
+                <div class="space-y-4 pt-2">
+                    <input type="hidden" id="dev-chave-id">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Quem está devolvendo?</label>
+                        <input id="dev-chave-pessoa" type="text" class="input-field" placeholder="Ex: O mesmo, José, Maria...">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Recebido por (Porteiro)</label>
+                        <input id="dev-chave-recebedor" type="text" class="input-field bg-slate-100 text-slate-500 cursor-not-allowed" readonly>
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button onclick="document.getElementById('modal-chave-devolucao').classList.add('hidden')" class="flex-1 py-3 bg-slate-100 text-slate-500 font-black rounded-xl text-xs uppercase">Cancelar</button>
+                    <button onclick="registrarDevolucaoChave()" class="flex-1 py-3 bg-emerald-600 text-white font-black rounded-xl text-xs uppercase shadow-lg">Confirmar Devolução</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="bg-white border-b border-slate-200 sticky top-0 z-50 no-print">
             <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
@@ -296,6 +354,10 @@
                     <button id="tab-p" onclick="switchTab('pendentes')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-active uppercase transition-all whitespace-nowrap">Portaria</button>
                     <button id="tab-s" onclick="switchTab('saidas')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap">Saídas</button>
                     <button id="tab-m" onclick="switchTab('mensageria')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap">Mensageria</button>
+                    
+                    <!-- NOVA ABA CHAVES -->
+                    <button id="tab-c" onclick="switchTab('chaves')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap text-amber-600 hover:bg-amber-100">Chaves</button>
+                    
                     <button id="tab-h" onclick="switchTab('entregues')" class="px-3 py-2 text-[10px] font-bold rounded-lg tab-inactive uppercase transition-all whitespace-nowrap">Histórico</button>
                     
                     <!-- ABA ADMIN (SÓ APARECE SE TIVER PERMISSÃO) -->
@@ -313,6 +375,32 @@
 
         <main class="max-w-4xl mx-auto px-4 py-6 space-y-6">
             
+            <!-- ÁREA DE CHAVES (NOVIDADE) -->
+            <div id="area-chaves" class="hidden space-y-6 animate-fade-in">
+                <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <div>
+                        <h2 class="text-sm font-black text-slate-800 uppercase flex items-center gap-2"><i data-lucide="key" class="w-4 h-4 text-amber-500"></i> Controle de Chaves</h2>
+                        <p class="text-[10px] text-slate-500 font-medium">Gestão de entrada e saída de chaves do condomínio.</p>
+                    </div>
+                    <button onclick="document.getElementById('modal-chave-saida').classList.remove('hidden')" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-sm flex items-center gap-2 transition-all active:scale-95">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Nova Saída
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Chaves Pendentes -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                        <h3 class="text-[11px] font-black uppercase text-slate-400 mb-3 border-b border-slate-100 pb-2">Chaves em Uso (<span id="count-chaves-out">0</span>)</h3>
+                        <div id="lista-chaves-out" class="space-y-3 max-h-[60vh] overflow-y-auto no-scrollbar"></div>
+                    </div>
+                    <!-- Histórico Recente -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                        <h3 class="text-[11px] font-black uppercase text-slate-400 mb-3 border-b border-slate-100 pb-2">Últimas Devoluções</h3>
+                        <div id="lista-chaves-in" class="space-y-3 max-h-[60vh] overflow-y-auto no-scrollbar"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- ÁREA OPERACIONAL (Portaria, Mensageria, Histórico) -->
             <div id="area-operacional">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2 no-print mb-6">
@@ -430,7 +518,6 @@
                                 </div>
                             </div>
                             <div>
-                                <!-- CAMPO DE RECEBEDOR BLOQUEADO -->
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Recebedor / Atendente</label>
                                 <input id="input-recebedor" type="text" placeholder="Porteiro" class="input-field bg-slate-100 text-slate-500 cursor-not-allowed" readonly>
                             </div>
@@ -916,15 +1003,16 @@
         const auth = getAuth(app);
         const secondaryAuth = getAuth(secondaryApp);
         
-        // Inicializando o Firestore COM cache local ativado para funcionar 100% offline
+        // Inicializando o Firestore COM cache local ativado
         const dbFS = initializeFirestore(app, {
             localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
         });
         
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'portaria-trackeasy';
         
-        // Variável global para apontar para a coleção do condomínio logado
+        // Variáveis globais para apontar para as coleções
         window.encomendasRefAtiva = null; 
+        window.chavesRefAtiva = null;
         
         const loginOverlay = document.getElementById('login-overlay');
         const appContent = document.getElementById('app-content');
@@ -1110,6 +1198,7 @@
 
         // Estado da Aplicação Global
         window.db = [];
+        window.dbChaves = []; // NOVA BASE DE CHAVES
         window.listaVisivel = []; 
         window.abaAtiva = 'pendentes';
         window.termoBusca = '';
@@ -1141,6 +1230,7 @@
         let unsubListaFuncionarios = null;
         let unsubMasterMoradores = null;
         let unsubMasterFuncionarios = null;
+        let unsubChaves = null; // Listener de Chaves
         let intervalEscala = null;
 
         window.carregarRegrasSaaS = async (tenantId) => {
@@ -1286,15 +1376,33 @@
 
                 window.isMaster = emailStr.includes('master@') || emailStr.includes('trackeasy');
                 
-                // Variáveis baseadas em Legacy que serão sobrescritas se acharem doc
-                window.isAdmin = window.isMaster || emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin');
-                window.isMensageria = window.isAdmin || emailStr.includes('mensageria');
+                // Busca o perfil real no banco para não depender do prefixo no email
+                let perfilDB = null;
+                if (!window.isMaster) {
+                    try {
+                        const myRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`, emailStr);
+                        const mySnap = await getDoc(myRef);
+                        if (mySnap.exists()) {
+                            perfilDB = mySnap.data().perfil;
+                        }
+                    } catch(err) { console.error("Erro perfil:", err); }
+                }
+
+                // RESTAURAÇÃO LEGADO: Se não achar na tabela nova, usa a regra do nome do e-mail
+                window.isAdmin = window.isMaster || perfilDB === 'admin' || (!perfilDB && (emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin')));
+                window.isMensageria = window.isAdmin || perfilDB === 'mensageria' || (!perfilDB && emailStr.includes('mensageria'));
                 
                 const prefix = emailStr.split('@')[0];
                 window.nomeUsuarioLogado = prefix.split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 
                 const recInput = document.getElementById('input-recebedor');
                 if (recInput) recInput.value = window.nomeUsuarioLogado;
+                
+                const devReceb = document.getElementById('dev-chave-recebedor');
+                if (devReceb) devReceb.value = window.nomeUsuarioLogado;
+                
+                const entregaChave = document.getElementById('chave-entreguepor');
+                if (entregaChave) entregaChave.value = window.nomeUsuarioLogado;
 
                 const headerUserName = document.getElementById('header-user-name');
                 if(headerUserName) headerUserName.innerText = window.nomeUsuarioLogado;
@@ -1308,8 +1416,9 @@
 
                 const collectionName = window.condominioLogado.id === 'default' ? 'encomendas' : `encomendas_${window.condominioLogado.id}`;
                 window.encomendasRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', collectionName);
+                window.chavesRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', `chaves_${window.condominioLogado.id}`);
 
-                // CONTROLE DE ACESSO POR ESCALA EM TEMPO REAL E LEITURA DE PERFIS
+                // CONTROLE DE ACESSO POR ESCALA EM TEMPO REAL
                 if (unsubFuncionarioSessao) unsubFuncionarioSessao();
                 if (intervalEscala) clearInterval(intervalEscala);
                 
@@ -1320,7 +1429,6 @@
                     if (docSnap.exists()) {
                         currentFuncData = docSnap.data();
                         
-                        // Sobrescreve permissões usando o banco de dados oficial
                         if (!window.isMaster) {
                             window.isAdmin = currentFuncData.perfil === 'admin';
                             window.isMensageria = window.isAdmin || currentFuncData.perfil === 'mensageria';
@@ -1329,14 +1437,12 @@
                         checkAccessRealtime();
                         atualizarTabsVisibilidade();
                     } else {
-                        // LEGADO: Doc não existe. Libera usando a regra do nome do email.
                         currentFuncData = null; 
                         window.hideBlockScreen();
                         atualizarTabsVisibilidade();
                     }
                 }, (err) => {
-                    console.error("Erro ao ler credenciais do funcionário:", err);
-                    window.hideBlockScreen(); // Em caso de erro de rede, não trava quem já tá logado
+                    window.hideBlockScreen(); 
                     atualizarTabsVisibilidade();
                 });
 
@@ -1384,19 +1490,24 @@
                     window.listaMoradoresBD = [];
                     const datalist = document.getElementById('lista-moradores');
                     datalist.innerHTML = '';
+                    const todosNomes = new Set();
                     
                     snap.forEach(doc => {
                         const data = doc.data();
                         const key = `${data.bloco}-${data.apto}`;
-                        window.bancoMoradoresFake[key] = data.nome;
-                        datalist.innerHTML += `<option value="${data.nome}"></option>`;
+                        if (!window.bancoMoradoresFake[key]) window.bancoMoradoresFake[key] = [];
+                        window.bancoMoradoresFake[key].push(data.nome);
+                        todosNomes.add(data.nome);
                         window.listaMoradoresBD.push({id: doc.id, ...data});
+                    });
+
+                    todosNomes.forEach(nome => {
+                        datalist.innerHTML += `<option value="${nome}"></option>`;
                     });
                     
                     if(window.abaAtiva === 'admin') window.renderAdminMoradores();
                 });
 
-                // Este OUVINTE SÓ PODE RODAR SE FOR ADMIN OU MASTER para evitar erros de permissão no Firestore
                 if (unsubListaFuncionarios) unsubListaFuncionarios();
                 if (window.isAdmin || window.isMensageria || window.isMaster) {
                     const funcsRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`);
@@ -1409,9 +1520,20 @@
                             }
                         });
                         if(window.abaAtiva === 'admin') window.renderFuncionariosAdmin();
-                    }, (err) => { console.log("Ouvinte funcionarios sem permissão", err); });
+                    }, (err) => {});
                 }
 
+                // OUVINTE DE CHAVES
+                if (unsubChaves) unsubChaves();
+                unsubChaves = onSnapshot(window.chavesRefAtiva, (snap) => {
+                    window.dbChaves = [];
+                    snap.forEach(doc => {
+                        window.dbChaves.push({id: doc.id, ...doc.data()});
+                    });
+                    if (window.abaAtiva === 'chaves') window.renderChaves();
+                });
+
+                // OUVINTE DE ENCOMENDAS
                 if (unsubscribeSnapshot) unsubscribeSnapshot();
                 unsubscribeSnapshot = onSnapshot(window.encomendasRefAtiva, { includeMetadataChanges: true }, (snapshot) => {
                     const hasPendingWrites = snapshot.metadata.hasPendingWrites;
@@ -1424,10 +1546,8 @@
                         return data;
                     });
                     
-                    window.renderAdminStats(); 
-                    window.render(); 
-                }, (error) => {
-                    console.error("Erro no Sync Firestore:", error);
+                    if(window.abaAtiva === 'admin') window.renderAdminStats(); 
+                    if(window.abaAtiva !== 'chaves' && window.abaAtiva !== 'admin' && window.abaAtiva !== 'master') window.render(); 
                 });
 
                 if (window.isMaster) {
@@ -1453,8 +1573,10 @@
                 if (unsubscribeMoradores) unsubscribeMoradores();
                 if (unsubFuncionarioSessao) unsubFuncionarioSessao();
                 if (unsubListaFuncionarios) unsubListaFuncionarios();
+                if (unsubChaves) unsubChaves();
                 if (intervalEscala) clearInterval(intervalEscala);
                 window.db = [];
+                window.dbChaves = [];
                 window.render();
             }
         });
@@ -1724,7 +1846,7 @@
             window.enviarWhatsAppMorador(msg);
         };
 
-        // FUNÇÕES DE EDIÇÃO E BAIXA
+        // FUNÇÕES DE EDIÇÃO E BAIXA ENCOMENDAS
         window.openEditModal = (id) => {
             const it = window.db.find(d => String(d.id) === String(id));
             if (!it) return;
@@ -1781,7 +1903,6 @@
             document.getElementById('baixa-entregador').value = window.nomeUsuarioLogado;
             document.getElementById('baixa-retirado').value = "";
             
-            // Adapta os textos do Modal baseado na origem
             const tituloModal = document.getElementById('titulo-modal-baixa');
             const labelEntregador = document.getElementById('label-baixa-entregador');
             const labelRetirado = document.getElementById('label-baixa-retirado');
@@ -1910,14 +2031,22 @@
             fb.className = `text-[10px] mt-1 ml-1 font-bold ${res.ok ? 'text-emerald-500' : 'text-red-400'}`;
             document.getElementById('btn-gravar').disabled = !res.ok;
 
+            const datalist = document.getElementById('lista-moradores');
+            datalist.innerHTML = ''; 
+
             if (res.ok) {
                 const key = `${res.bloco}-${res.apto}`;
-                if (window.bancoMoradoresFake[key]) {
-                    const moradorInput = document.getElementById('input-morador');
-                    if (!moradorInput.value || moradorInput.value.trim() === "") { 
-                        moradorInput.value = window.bancoMoradoresFake[key];
-                    }
+                if (window.bancoMoradoresFake[key] && window.bancoMoradoresFake[key].length > 0) {
+                    window.bancoMoradoresFake[key].forEach(nome => {
+                        datalist.innerHTML += `<option value="${nome}"></option>`;
+                    });
                 }
+            } else {
+                const todosNomes = new Set();
+                Object.values(window.bancoMoradoresFake).flat().forEach(n => todosNomes.add(n));
+                todosNomes.forEach(nome => {
+                    datalist.innerHTML += `<option value="${nome}"></option>`;
+                });
             }
         }
 
@@ -1966,6 +2095,14 @@
             document.getElementById('feedback-val').className = 'text-[9px] mt-1 ml-1 font-bold text-slate-400';
             document.getElementById('input-recebedor').value = window.nomeUsuarioLogado;
             document.getElementById('btn-gravar').disabled = true;
+            
+            const datalist = document.getElementById('lista-moradores');
+            datalist.innerHTML = '';
+            const todosNomes = new Set();
+            Object.values(window.bancoMoradoresFake).flat().forEach(n => todosNomes.add(n));
+            todosNomes.forEach(nome => {
+                datalist.innerHTML += `<option value="${nome}"></option>`;
+            });
         }
 
         // FUNÇÕES DO PAINEL ADMIN (Gestão e Estatísticas)
@@ -2096,6 +2233,104 @@
             }
         };
 
+        // GESTÃO DE CHAVES
+        window.renderChaves = () => {
+            const outList = window.dbChaves.filter(c => c.status === 'pendente').sort((a,b) => b.timestampSaida - a.timestampSaida);
+            const inList = window.dbChaves.filter(c => c.status === 'devolvida').sort((a,b) => b.timestampDevolucao - a.timestampDevolucao).slice(0, 50); 
+            
+            document.getElementById('count-chaves-out').innerText = outList.length;
+            
+            document.getElementById('lista-chaves-out').innerHTML = outList.length === 0 ? '<p class="text-[10px] text-center text-slate-400 font-bold uppercase p-4">Nenhuma chave em uso.</p>' : outList.map(c => `
+                <div class="bg-amber-50 border border-amber-100 p-3 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <p class="font-black text-amber-800 text-[11px] uppercase"><i data-lucide="key" class="w-3 h-3 inline pb-0.5"></i> ${c.chave}</p>
+                        <button onclick="abrirModalDevolucaoChave('${c.id}')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase shadow-sm transition-colors active:scale-95">Devolver</button>
+                    </div>
+                    <p class="text-[10px] font-bold text-slate-700 mt-1.5">Com: <span class="text-amber-700">${c.pessoa}</span> ${c.unidade ? `(Ref: ${c.unidade})` : ''}</p>
+                    <p class="text-[9px] text-slate-500 mt-0.5"><i data-lucide="arrow-up-right" class="w-2 h-2 inline"></i> Saída: ${c.dataSaida} às ${c.horaSaida}</p>
+                    <p class="text-[8px] text-slate-400 mt-1 uppercase font-bold border-t border-amber-200/50 pt-1">Lib: ${c.entreguePor}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('lista-chaves-in').innerHTML = inList.length === 0 ? '<p class="text-[10px] text-center text-slate-400 font-bold uppercase p-4">Nenhum histórico recente.</p>' : inList.map(c => `
+                <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl opacity-80 hover:opacity-100 transition-opacity">
+                    <div class="flex justify-between items-start">
+                        <p class="font-black text-slate-700 text-[10px] uppercase">${c.chave}</p>
+                        <span class="bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded text-[8px] font-black uppercase"><i data-lucide="check" class="w-2 h-2 inline"></i> Devolvida</span>
+                    </div>
+                    <p class="text-[9px] text-slate-600 mt-1.5 font-bold">Devolvida por: ${c.devolvidaPor || c.pessoa}</p>
+                    <p class="text-[8px] text-slate-500 mt-0.5">Retorno: ${c.dataDevolucao} às ${c.horaDevolucao}</p>
+                    <p class="text-[8px] text-slate-400 mt-1 uppercase font-bold border-t border-slate-200 pt-1">Lib: ${c.entreguePor} | Rec: ${c.recebidaPor}</p>
+                </div>
+            `).join('');
+            
+            if(window.lucide) lucide.createIcons();
+        };
+
+        window.registrarSaidaChave = async (e) => {
+            e.preventDefault();
+            const chave = document.getElementById('chave-nome').value.trim();
+            const pessoa = document.getElementById('chave-retirou').value.trim();
+            const unidade = document.getElementById('chave-unidade').value.trim().toUpperCase();
+            
+            const now = new Date();
+            const nid = String(Date.now() + Math.floor(Math.random()*1000));
+            
+            const novaChave = {
+                id: nid, chave, pessoa, unidade,
+                entreguePor: window.nomeUsuarioLogado,
+                dataSaida: now.toLocaleDateString('pt-PT'),
+                horaSaida: now.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}),
+                timestampSaida: now.getTime(),
+                status: 'pendente'
+            };
+            
+            try {
+                await setDoc(doc(window.chavesRefAtiva, nid), novaChave);
+                document.getElementById('modal-chave-saida').classList.add('hidden');
+                e.target.reset();
+                document.getElementById('chave-entreguepor').value = window.nomeUsuarioLogado;
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao registrar a saída da chave no sistema.");
+            }
+        };
+
+        window.abrirModalDevolucaoChave = (id) => {
+            const c = window.dbChaves.find(x => String(x.id) === String(id));
+            if(!c) return;
+            document.getElementById('dev-chave-id').value = id;
+            document.getElementById('dev-chave-pessoa').value = ""; // Fica em branco para porteiro preencher
+            document.getElementById('dev-chave-pessoa').placeholder = `Ex: ${c.pessoa}, O mesmo...`;
+            document.getElementById('modal-chave-devolucao').classList.remove('hidden');
+        };
+
+        window.registrarDevolucaoChave = async () => {
+            const id = document.getElementById('dev-chave-id').value;
+            const devolvidaPor = document.getElementById('dev-chave-pessoa').value.trim();
+            
+            const idx = window.dbChaves.findIndex(x => String(x.id) === String(id));
+            if(idx !== -1) {
+                const c = window.dbChaves[idx];
+                const now = new Date();
+                
+                c.status = 'devolvida';
+                c.devolvidaPor = devolvidaPor || c.pessoa; // Se não colocar nada, assume que foi a mesma pessoa
+                c.recebidaPor = window.nomeUsuarioLogado;
+                c.dataDevolucao = now.toLocaleDateString('pt-PT');
+                c.horaDevolucao = now.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
+                c.timestampDevolucao = now.getTime();
+                
+                try {
+                    await setDoc(doc(window.chavesRefAtiva, String(c.id)), c);
+                    document.getElementById('modal-chave-devolucao').classList.add('hidden');
+                } catch(e) {
+                    console.error(e);
+                    alert("Erro ao registrar a devolução.");
+                }
+            }
+        };
+
         // CONTROLE DE NAVEGAÇÃO E ABAS
         window.switchTab = (t) => {
             window.abaAtiva = t; 
@@ -2108,6 +2343,8 @@
             const admInativo = "text-purple-600 hover:bg-purple-100";
             const masterAtivo = "bg-red-600 text-white shadow-sm";
             const masterInativo = "text-red-600 hover:bg-red-100";
+            const chavesAtivo = "bg-amber-500 text-white shadow-sm";
+            const chavesInativo = "text-amber-600 hover:bg-amber-100";
             
             const baseTabA = "px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap";
             
@@ -2116,14 +2353,15 @@
             document.getElementById('tab-m').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='mensageria'?ativo:inativo}`;
             document.getElementById('tab-h').className = `px-3 py-2 text-[10px] font-bold rounded-lg uppercase transition-all whitespace-nowrap ${t==='entregues'?ativo:inativo}`;
             
-            // Garantindo que a aba admin aparece (usando block/inline-block em vez de ocultar)
-            document.getElementById('tab-a').className = `${baseTabA} ${t==='admin'?admAtivo:admInativo} ${(window.isAdmin || window.isMensageria) ? 'inline-block' : 'hidden'}`;
+            document.getElementById('tab-c').className = `${baseTabA} ${t==='chaves'?chavesAtivo:chavesInativo}`;
             
+            document.getElementById('tab-a').className = `${baseTabA} ${t==='admin'?admAtivo:admInativo} ${(window.isAdmin || window.isMensageria) ? 'inline-block' : 'hidden'}`;
             document.getElementById('tab-master').className = `${baseTabA} ${t==='master'?masterAtivo:masterInativo} ${window.isMaster ? 'inline-block' : 'hidden'}`;
 
             if (t === 'admin') {
                 document.getElementById('area-operacional').style.display = 'none';
                 document.getElementById('area-master').style.display = 'none';
+                document.getElementById('area-chaves').style.display = 'none';
                 document.getElementById('area-admin').style.display = 'block';
                 window.renderAdminStats();
                 window.renderAdminMoradores();
@@ -2131,11 +2369,19 @@
             } else if (t === 'master') {
                 document.getElementById('area-operacional').style.display = 'none';
                 document.getElementById('area-admin').style.display = 'none';
+                document.getElementById('area-chaves').style.display = 'none';
                 document.getElementById('area-master').style.display = 'block';
-            } else {
-                document.getElementById('area-operacional').style.display = 'block';
+            } else if (t === 'chaves') {
+                document.getElementById('area-operacional').style.display = 'none';
                 document.getElementById('area-admin').style.display = 'none';
                 document.getElementById('area-master').style.display = 'none';
+                document.getElementById('area-chaves').style.display = 'block';
+                window.renderChaves();
+            } else {
+                document.getElementById('area-admin').style.display = 'none';
+                document.getElementById('area-master').style.display = 'none';
+                document.getElementById('area-chaves').style.display = 'none';
+                document.getElementById('area-operacional').style.display = 'block';
                 
                 let showRegistro = false;
                 if (t === 'pendentes') showRegistro = true;
@@ -2467,7 +2713,6 @@
             const prefixId = isMasterPanel ? 'master-func' : 'func';
             
             const nome = document.getElementById(`${prefixId}-nome`).value.trim();
-            // Sanitização forçada: Remove qualquer espaço ou caractere especial do login
             const rawPrefix = document.getElementById(`${prefixId}-login`).value.trim().toLowerCase();
             const prefixoEmail = rawPrefix.replace(/[^a-z0-9_.-]/g, '');
             const senha = document.getElementById(`${prefixId}-senha`).value;
@@ -2485,18 +2730,15 @@
                 if (!tenantIdAlvo) { alert("Selecione um condomínio no select acima primeiro."); return; }
             }
 
-            // Sanitização do Domínio sem forçar prefixo
             const safeDomain = tenantIdAlvo.replace(/[^a-z0-9-]/g, '');
             const finalEmail = `${prefixoEmail}@${safeDomain}.com`;
 
-            // Verificação Final do E-mail
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(finalEmail)) {
                 alert(`O email gerado é inválido: ${finalEmail}\nVerifique se não usou caracteres especiais no prefixo.`);
                 return;
             }
 
-            // Coletar dados de escala
             let horaInicio = null, horaFim = null, diaFolga = null, diaFolga2 = null, dataBase = null;
             if (escala !== 'livre') {
                 horaInicio = document.getElementById(isMasterPanel ? 'func-hora-ini-master' : 'func-hora-ini')?.value;
@@ -2520,7 +2762,6 @@
             btn.disabled = true;
 
             try {
-                // 1. Cria usuário no Auth Secundário (não desloga o Admin atual)
                 try {
                     await createUserWithEmailAndPassword(secondaryAuth, finalEmail, senha);
                     await signOut(secondaryAuth);
@@ -2532,7 +2773,6 @@
                     }
                 }
 
-                // 2. Grava Regras e Escalas no Firestore
                 const funcRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantIdAlvo}`, finalEmail);
                 await setDoc(funcRef, {
                     nome, email: finalEmail, perfil, escala,
@@ -2713,7 +2953,7 @@
                 if (!res.ok) { alert(`Apto/Bloco não permitidos nas regras: ${res.msg}`); return; }
             }
 
-            const idDoc = `${bloco}-${apto}`; 
+            const idDoc = String(Date.now() + Math.floor(Math.random() * 10000)); 
             const moradorRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantIdAlvo}`, idDoc);
 
             try {
@@ -2810,9 +3050,6 @@
                 }
             }
         };
-
-        window.listaMoradoresMasterLocal = []; 
-        window.listaFuncionariosMasterLocal = [];
 
         window.carregarDadosMaster = (tenantId) => {
             const dataArea = document.getElementById('master-data-area');
