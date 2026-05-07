@@ -978,7 +978,7 @@
                         </div>
                         <div>
                             <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Blocos Permitidos (Separados por vírgula)</label>
-                            <input id="master-condo-blocos" type="text" required class="input-field py-2 text-xs uppercase" placeholder="Ex: A, B, C, J">
+                            <input id="master-condo-blocos" type="text" required class="input-field py-2 text-xs uppercase" placeholder="Ex: 1, 2, A, B">
                         </div>
                         <div class="grid grid-cols-3 gap-3">
                             <div>
@@ -1343,11 +1343,6 @@
             else if (upperText.includes("SHOPEE")) data.empresa = "Shopee";
             else if (upperText.includes("CORREIOS") || /^[A-Z]{2}\d{9}[A-Z]{2}$/.test(upperText)) data.empresa = "Correios";
 
-            const unidadeMatch = upperText.match(/\b(\d{1,3}[A-Z]+)\b/);
-            if (unidadeMatch) {
-                data.unidade = unidadeMatch[1];
-            }
-
             return data;
         };
 
@@ -1373,12 +1368,6 @@
                         document.getElementById('input-empresa').value = extraido.empresa;
                     }
                     
-                    if (extraido.unidade) {
-                        const inputUnidade = document.getElementById('input-unidade');
-                        inputUnidade.value = extraido.unidade;
-                        window.validarInput(inputUnidade);
-                    }
-
                     document.getElementById('input-morador').focus();
                     window.stopScanner();
                 },
@@ -1435,7 +1424,7 @@
 
         // Estado da Aplicação Global
         window.db = [];
-        window.dbChaves = []; // NOVA BASE DE CHAVES
+        window.dbChaves = [];
         window.listaVisivel = []; 
         window.abaAtiva = 'pendentes';
         window.termoBusca = '';
@@ -1466,7 +1455,7 @@
         let unsubListaFuncionarios = null;
         let unsubMasterMoradores = null;
         let unsubMasterFuncionarios = null;
-        let unsubChaves = null; // Listener de Chaves
+        let unsubChaves = null; 
         let intervalEscala = null;
 
         window.carregarRegrasSaaS = async (tenantId) => {
@@ -1492,7 +1481,7 @@
             if(!func.escala || func.escala === 'livre') return true;
 
             if(func.escala === '12x36') {
-                if(!func.dataBase) return true; // Se esqueceu de preencher, libera.
+                if(!func.dataBase) return true; 
                 const parts = func.dataBase.split('-');
                 const ref = new Date(parts[0], parts[1]-1, parts[2]);
                 ref.setHours(0,0,0,0);
@@ -1518,7 +1507,7 @@
             const [sh, sm] = func.horaInicio.split(':').map(Number);
             const [eh, em] = func.horaFim.split(':').map(Number);
             const startMin = sh * 60 + sm;
-            let endMin = eh * 60 + em + 30; // 30 minutos de tolerância na saída
+            let endMin = eh * 60 + em + 30; // Tolerância 30 min
 
             const currMin = now.getHours() * 60 + now.getMinutes();
             const crossesMidnight = startMin > (eh * 60 + em);
@@ -1651,7 +1640,6 @@
                 window.encomendasRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', collectionName);
                 window.chavesRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', `chaves_${window.condominioLogado.id}`);
 
-                // CONTROLE DE ACESSO POR ESCALA EM TEMPO REAL
                 if (unsubFuncionarioSessao) unsubFuncionarioSessao();
                 if (intervalEscala) clearInterval(intervalEscala);
                 
@@ -1715,7 +1703,6 @@
                     }
                 };
 
-                // OUVINTES (MORADORES, FUNCIONÁRIOS E ENCOMENDAS E CHAVES)
                 if (unsubscribeMoradores) unsubscribeMoradores();
                 const moradoresRef = collection(dbFS, 'artifacts', appId, 'public', 'data', `moradores_${tenantId}`);
                 unsubscribeMoradores = onSnapshot(moradoresRef, (snap) => {
@@ -1892,7 +1879,6 @@
                 }
                 window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
             } else {
-                // No PC, abre o Modal de escolha (Web ou Nativo)
                 window.currentWhatsAppMsg = encodeURIComponent(msg);
                 document.getElementById('modal-whatsapp').classList.remove('hidden');
             }
@@ -2101,7 +2087,6 @@
                 document.getElementById('baixa-retirado').placeholder = "Ex: O Próprio, Esposa, Filho...";
                 btnConfirmar.innerText = "Confirmar Entrega";
                 
-                // Exibe Assinatura e Foto para Portaria e Mensageria entregando ao Morador
                 document.getElementById('area-assinatura').classList.remove('hidden');
                 document.getElementById('area-foto-baixa').classList.remove('hidden');
                 setTimeout(() => window.limparAssinatura(), 50); 
@@ -2179,31 +2164,66 @@
             }
         };
 
-        // VALIDAÇÃO E REGISTRO DE ENCOMENDAS
+        // NOVO: VALIDAÇÃO INTELIGENTE DE UNIDADES
         window.validarUnidade = (txt, regras) => {
-            if(!regras) return { ok: false, msg: "Aguarde..." };
+            if(!regras || !regras.blocosPermitidos || regras.blocosPermitidos.length === 0) return { ok: false, msg: "Sem blocos" };
 
-            const clean = txt.toUpperCase().replace(/[.\s,;-]/g, '');
-            const numMatch = clean.match(/\d+/); 
-            const blkMatch = clean.match(/[A-Z]+/); 
-            
-            if (!numMatch || !blkMatch) return { ok: false, msg: "Bloco?" };
-            
-            const n = parseInt(numMatch[0]); 
-            const b = blkMatch[0];
+            let clean = txt.toUpperCase().trim();
+            if(!clean) return { ok: false, msg: "Vazio" };
 
-            if (regras.blocosPermitidos && regras.blocosPermitidos.length > 0 && !regras.blocosPermitidos.includes(b)) {
-                return { ok: false, msg: "Inválido" };
+            let foundBlock = null;
+            let foundApto = null;
+
+            // Ordenar por tamanho (maiores primeiro) para não confundir Bloco "1" com Bloco "10"
+            const blocks = [...regras.blocosPermitidos].sort((a,b) => b.length - a.length);
+
+            for (let b of blocks) {
+                const blockStr = String(b).toUpperCase();
+                
+                if (clean.includes('-') || clean.includes(' ') || clean.includes('/')) {
+                    let parts = clean.split(/[- /]+/);
+                    const matchIndex = parts.findIndex(p => p === blockStr);
+                    if (matchIndex !== -1) {
+                        foundBlock = blockStr;
+                        parts.splice(matchIndex, 1);
+                        foundApto = parts.join(''); 
+                        break;
+                    }
+                }
+                
+                if (!foundBlock) {
+                    if (clean.startsWith(blockStr)) {
+                        foundBlock = blockStr;
+                        foundApto = clean.substring(blockStr.length);
+                        break;
+                    }
+                    if (clean.endsWith(blockStr)) {
+                        foundBlock = blockStr;
+                        foundApto = clean.substring(0, clean.length - blockStr.length);
+                        break;
+                    }
+                }
             }
 
-            if (regras.aptoMin !== undefined && n < regras.aptoMin) return { ok: false, msg: "Inválida" };
-            if (regras.aptoMax !== undefined && n > regras.aptoMax) return { ok: false, msg: "Inválida" };
-            
-            if (regras.terminacaoObrigatoria !== undefined && regras.terminacaoObrigatoria !== null) {
-                if (n % 10 !== regras.terminacaoObrigatoria) return { ok: false, msg: "Inválida" };
+            if (!foundBlock) {
+                return { ok: false, msg: `Use: ${regras.blocosPermitidos.join(', ')}` };
             }
 
-            return { ok: true, apto: n, bloco: b, msg: `✓ ${b}-${n}` };
+            const aptoStr = foundApto ? foundApto.replace(/\D/g, '') : '';
+            if (!aptoStr) {
+                return { ok: false, msg: "Apto?" };
+            }
+            
+            const aptoNum = parseInt(aptoStr);
+
+            if (regras.aptoMin !== undefined && regras.aptoMin !== null && aptoNum < regras.aptoMin) return { ok: false, msg: `Mín: ${regras.aptoMin}` };
+            if (regras.aptoMax !== undefined && regras.aptoMax !== null && aptoNum > regras.aptoMax) return { ok: false, msg: `Máx: ${regras.aptoMax}` };
+            
+            if (regras.terminacaoObrigatoria !== undefined && regras.terminacaoObrigatoria !== null && !isNaN(regras.terminacaoObrigatoria)) {
+                if (aptoNum % 10 !== regras.terminacaoObrigatoria) return { ok: false, msg: `Final ${regras.terminacaoObrigatoria}` };
+            }
+
+            return { ok: true, apto: aptoNum, bloco: foundBlock, msg: `✓ ${foundBlock}-${aptoNum}` };
         }
 
         window.validarInput = (el) => {
@@ -3269,7 +3289,7 @@
             const filtrados = window.listaMoradoresBD.filter(m => {
                 if(!txt) return true;
                 return `${m.bloco} ${m.apto} ${m.nome}`.toLowerCase().includes(txt);
-            }).sort((a,b) => a.bloco.localeCompare(b.bloco) || a.apto - b.apto);
+            }).sort((a,b) => a.bloco.localeCompare(b.bloco, undefined, {numeric: true}) || a.apto - b.apto);
 
             if(filtrados.length === 0) {
                 container.innerHTML = '<p class="text-[10px] text-slate-400 text-center font-bold uppercase p-2">Nenhum morador encontrado.</p>';
@@ -3457,7 +3477,7 @@
             const filtrados = window.listaMoradoresMasterLocal.filter(m => {
                 if(!txt) return true; 
                 return `${m.bloco} ${m.apto} ${m.nome}`.toLowerCase().includes(txt);
-            }).sort((a,b) => a.bloco.localeCompare(b.bloco) || a.apto - b.apto);
+            }).sort((a,b) => a.bloco.localeCompare(b.bloco, undefined, {numeric: true}) || a.apto - b.apto);
 
             if(filtrados.length === 0) { 
                 container.innerHTML = '<p class="text-[9px] text-slate-400 text-center font-bold p-2">Vazio</p>'; 
@@ -3756,66 +3776,7 @@
                     typeHeader.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${typeHeaderTitle}`; 
                     typeContainer.appendChild(typeHeader);
 
-                    const filtrados = Object.values(typeGroups).sort((x,y) => x.b.localeCompare(y.b) || String(x.a).localeCompare(String(y.a), undefined, {numeric: true}));
+                    const filtrados = Object.values(typeGroups).sort((x,y) => x.b.localeCompare(y.b, undefined, {numeric: true}) || String(x.a).localeCompare(String(y.a), undefined, {numeric: true}));
                     
                     filtrados.forEach(g => {
-                        // Ordenar itens internos pela data mais recente (Mais novos primeiro)
                         g.itens.sort((itemA, itemB) => {
-                            const getTimestamp = (it) => {
-                                let ref = it.data;
-                                let time = it.hora || '00:00';
-                                if (window.abaAtiva === 'entregues' || window.abaAtiva === 'mensageria') {
-                                    if (it.saida) return new Date(it.saida).getTime();
-                                    if (it.dataMensageria) return new Date(it.dataMensageria).getTime();
-                                }
-                                if (ref) {
-                                    const parts = ref.split('/');
-                                    if(parts.length === 3) {
-                                        const [h, m] = time.split(':');
-                                        return new Date(parts[2], parts[1]-1, parts[0], h||0, m||0).getTime();
-                                    }
-                                }
-                                return 0;
-                            };
-                            return getTimestamp(itemB) - getTimestamp(itemA);
-                        });
-
-                        const key = `${type}-${g.b}-${g.a}`; 
-                        let badgesHist = '';
-                        
-                        if (window.abaAtiva === 'entregues') { 
-                            if(type === 'Portaria') badgesHist = `<span class="text-[8px] bg-emerald-100 text-emerald-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE</span>`; 
-                            else if(type === 'Mensageria') badgesHist = `<span class="text-[8px] bg-indigo-100 text-indigo-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">ENTREGUE (MENS)</span>`; 
-                            else badgesHist = `<span class="text-[8px] bg-purple-100 text-purple-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">COLETADO (SAÍDA)</span>`; 
-                        } else if (window.abaAtiva === 'mensageria') {
-                            badgesHist = `<span class="text-[8px] bg-orange-100 text-orange-600 font-black px-1.5 py-0.5 rounded uppercase mr-1">NA MENSAGERIA</span>`;
-                            
-                            const itensAtrasados = g.itens.filter(it => { 
-                                const refDate = it.dataMensageria || it.saida; 
-                                if (!refDate) return false; 
-                                const msDiff = Date.now() - new Date(refDate).getTime(); 
-                                return Math.floor(msDiff / (1000 * 60 * 60 * 24)) >= 4; 
-                            });
-                            
-                            if (itensAtrasados.length > 0) { 
-                                const maxDays = Math.max(...itensAtrasados.map(it => Math.floor((Date.now() - new Date(it.dataMensageria || it.saida).getTime()) / (1000 * 60 * 60 * 24)))); 
-                                badgesHist += `<span class="text-[8px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-600 uppercase animate-pulse border border-red-200 shadow-sm ml-1">⚠️ ${maxDays} DIAS</span>`; 
-                            }
-                        }
-
-                        const htmlStr = window.createCardHTML(g, key, badgesHist); 
-                        const div = document.createElement('div'); 
-                        div.innerHTML = htmlStr; 
-                        typeContainer.appendChild(div.firstElementChild);
-                    });
-                    
-                    container.appendChild(typeContainer);
-                }
-            });
-
-            lucide.createIcons();
-        }
-        window.onload = () => window.render();
-    </script>
-</body>
-</html>
