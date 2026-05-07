@@ -1260,8 +1260,6 @@
         // Ouvinte de Autenticação Firebase Principal
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                loginOverlay.classList.add('hidden');
-                
                 const emailStr = user.email ? user.email.toLowerCase() : '';
                 window.currentUserEmail = emailStr;
 
@@ -1271,19 +1269,20 @@
                 window.isMaster = emailStr.includes('master@') || emailStr.includes('trackeasy');
                 
                 // Busca o perfil real no banco para não depender do prefixo no email
-                let perfilDB = 'porteiro';
+                let perfilDB = null;
                 if (!window.isMaster) {
                     try {
                         const myRef = doc(dbFS, 'artifacts', appId, 'public', 'data', `funcionarios_${tenantId}`, emailStr);
                         const mySnap = await getDoc(myRef);
                         if (mySnap.exists()) {
-                            perfilDB = mySnap.data().perfil || 'porteiro';
+                            perfilDB = mySnap.data().perfil;
                         }
                     } catch(err) { console.error("Erro perfil:", err); }
                 }
 
-                window.isAdmin = window.isMaster || perfilDB === 'admin';
-                window.isMensageria = window.isAdmin || perfilDB === 'mensageria';
+                // RESTAURAÇÃO LEGADO: Se não achar na tabela nova, usa a regra do nome do e-mail
+                window.isAdmin = window.isMaster || perfilDB === 'admin' || (!perfilDB && (emailStr.includes('adm') || emailStr.includes('gerente') || emailStr.includes('admin')));
+                window.isMensageria = window.isAdmin || perfilDB === 'mensageria' || (!perfilDB && emailStr.includes('mensageria'));
                 
                 const prefix = emailStr.split('@')[0];
                 window.nomeUsuarioLogado = prefix.split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -1308,9 +1307,6 @@
                     document.getElementById('tab-master').classList.remove('inline-block');
                 }
 
-                const domainPart = emailStr.split('@')[1] || '';
-                const tenantId = domainPart.split('.')[0] || 'default';
-
                 await window.carregarRegrasSaaS(tenantId);
 
                 const headerCondName = document.getElementById('nome-condominio-header');
@@ -1318,6 +1314,9 @@
 
                 const collectionName = window.condominioLogado.id === 'default' ? 'encomendas' : `encomendas_${window.condominioLogado.id}`;
                 window.encomendasRefAtiva = collection(dbFS, 'artifacts', appId, 'public', 'data', collectionName);
+
+                // Oculta a tela de Login apenas DEPOIS de carregar os dados
+                loginOverlay.classList.add('hidden');
 
                 // CONTROLE DE ACESSO POR ESCALA EM TEMPO REAL
                 if (!window.isAdmin && !window.isMaster) {
@@ -1335,6 +1334,10 @@
                             currentFuncData = null; 
                             checkAccessRealtime();
                         }
+                    }, (err) => {
+                        console.error("Erro escala:", err);
+                        document.getElementById('modal-bloqueio-escala').classList.add('hidden');
+                        document.getElementById('app-content').classList.remove('hidden');
                     });
 
                     const checkAccessRealtime = () => {
@@ -1363,7 +1366,7 @@
                                 document.getElementById('app-content').classList.remove('hidden');
                             }
                         } else {
-                            // Legado: Se o admin não criou a regra pra esse e-mail na gestão, libera.
+                            // Legado: Conta criada direto no Firebase Auth, libera o acesso livremente
                             document.getElementById('modal-bloqueio-escala').classList.add('hidden');
                             document.getElementById('app-content').classList.remove('hidden');
                         }
